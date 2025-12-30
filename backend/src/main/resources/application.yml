@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: dev # Define o perfil ativo padrão (pode ser sobrescrito)
+  application:
+    name: marc-web
+  jpa:
+    hibernate:
+      ddl-auto: validate # Importante: validar contra o schema real (Flyway depois)
+    show-sql: false # Mantenha falso em dev também, a menos que precise debugar
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      mode: never # Não rodar scripts iniciais do Spring, usar Flyway
+server:
+  port: 8080
+logging:
+  level:
+    com.marcweb: DEBUG # Nível de log para pacotes do projeto
+    org.springframework.security: DEBUG # Nível de log para segurança (ajustar se necessário)
