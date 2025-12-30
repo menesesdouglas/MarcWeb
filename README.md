@@ -42,10 +42,10 @@ Este README será atualizado ao final de cada dia com:
 
 Pronto para começar o desenvolvimento.
 
-**Dia 30/12/2025 08:43**
+## Dia 30/12/2025 08:43
+
+**Marco Sprint 1 alcançado**
 
 ## Histórico de Commits
 
 Sprint 1: Criado HealthApplication e testado com sucesso.
-
-Marco Sprint 1 alcançado.
