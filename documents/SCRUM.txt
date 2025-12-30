@@ -1,136 +1,194 @@
+### **Plano SCRUM do Projeto Marc Web - 18 Sprints**
 
-### SCRUM.txt Ajustado
+Este plano detalha as 18 sprints do projeto Marc Web, alinhado ao Software Design Document (SDD.txt) e às configurações iniciais (Configs.txt). O desenvolvimento seguirá uma abordagem ágil e incremental, com foco em segurança, backend-first e otimização para máquinas com 4GB RAM.
 
-```markdown
-# 🧩 **Plano de 18 Sprints – Marc Web**
+### **Fase 1: Fundação Local (Sprints 1–4)**
+Objetivo: Estabelecer a infraestrutura local, modelo de dados, segurança básica e configurações iniciais.
 
-**Objetivo:** sair de *zero* até **produto pronto para venda**  
-**Estratégia:** backend-first + segurança cedo + frontend leve (Pico CSS) no final
+*   **Sprint 1: Setup Geral & Infra Local**
+    *   Objetivo: Ambientes 100% funcionais em ambas as máquinas.
+    *   Tarefas:
+        *   Confirmar configurações iniciais (Java 17, Maven, PostgreSQL, Git, VS Code + extensões) conforme `Configs.txt`.
+        *   Criar banco de dados `marcweb_dev` e usuário `marcuser` em ambas as máquinas.
+        *   Criar repositório GitHub privado `marc-web` (se ainda não criado).
+        *   Clonar o repositório nas duas máquinas.
+        *   Gerar projeto Spring Boot via Spring Initializr com as dependências corretas (Spring Web, Spring Security, Spring Data JPA, PostgreSQL Driver, Lombok, Validation).
+        *   Configurar estrutura de pastas inicial conforme SDD (`backend/`, `frontend/`).
+        *   Adicionar `application.yml` e `application-dev.yml` com conexão ao banco local.
+        *   Implementar endpoint simples `/api/health` para teste.
+        *   Primeiro commit e push.
+    *   Marco: `mvn spring-boot:run` inicia a aplicação sem erros e conecta ao PostgreSQL.
 
----
+*   **Sprint 2: Entidades & Segurança Base**
+    *   Objetivo: Modelar dados e implementar autenticação/autorização básica.
+    *   Tarefas:
+        *   Criar as 6 entidades JPA conforme SDD: `User`, `RegistroPonto`, `Feriado`, `Folga`, `LogAuditoria`, `ConfigEmpresa`.
+        *   Criar os repositórios JPA correspondentes.
+        *   Implementar configuração de segurança base com Spring Security e JWT (login, geração de token).
+        *   Implementar endpoint de login `/api/auth/login`.
+        *   Implementar um filtro de segurança para validar JWT nos endpoints protegidos.
+        *   Criar usuário admin padrão para testes iniciais (se necessário).
+    *   Marco: Endpoint `/api/auth/login` funciona e gera JWT. Outros endpoints exigem token válido.
 
-## 🔹 **FASE 1 – Fundação Sólida (Sprints 1–4)**
+*   **Sprint 3: Primeiras Funcionalidades CRUD**
+    *   Objetivo: Implementar operações básicas para usuários e configurações.
+    *   Tarefas:
+        *   Criar controllers REST para `User` e `ConfigEmpresa`.
+        *   Implementar endpoints CRUD básicos para `User` (apenas Admin pode criar/editar/excluir).
+        *   Implementar endpoint para visualizar e atualizar `ConfigEmpresa`.
+        *   Aplicar validação (`@Valid`) nos DTOs de entrada.
+        *   Configurar Flyway e criar a primeira migration (`V1__create_tables.sql`) para refatorar a criação das tabelas.
+        *   Testar os endpoints via `curl` ou Postman.
+    *   Marco: CRUD de Usuários e Configurações funcionando via API, protegido por autenticação.
 
-> Resultado: projeto roda localmente com banco, segurança base e modelo correto
-
----
-
-### **Sprint 1 – Setup Geral & Infra Local**
-
-**Objetivo:** ambiente 100% funcional
-
-**Entregas**
-
-* Repo Git privado criado
-* Spring Boot 3 + Java 17 funcionando
-* Maven configurado
-* Profiles (`application.yml` e `application-dev.yml`)
-* PostgreSQL conectado
-* Health check (`/api/health`)
-* Pico CSS baixado/local para testes iniciais
-
-**Tarefas**
-
-* Criar projeto Spring Initializr
-* Dependências: Web, Security, JPA, Lombok, Validation, Flyway
-* Estrutura de pastas conforme SDD (static/ no backend)
-* Teste de conexão com banco
-
-✅ *Marco:* `mvn spring-boot:run` sobe sem erro
-
----
-
-### **Sprint 2 – Modelagem do Banco & Flyway**
-
-**Objetivo:** base de dados definitiva
-
-**Entregas**
-
-* Flyway configurado
-* Migration V1 criada
-* Todas as 6 tabelas do SDD
-* Índices definidos
-
-**Tarefas**
-
-* Criar SQL V1__create_tables.sql
-* Configurar Flyway no Spring
-* Validar schema no PostgreSQL
-* Ajustar constraints e enums
-
-✅ *Marco:* banco recriado automaticamente ao subir app
+*   **Sprint 4: Validações e Integração Inicial**
+    *   Objetivo: Validar regras de negócio básicas e preparar para a Fase 2.
+    *   Tarefas:
+        *   Criar um `UserService` para encapsular lógica de negócios de usuários (validações de criação, atualização).
+        *   Implementar cadastro de usuário via endpoint `/api/auth/register` (talvez apenas para testes ou com token especial).
+        *   Implementar endpoint para atualizar consentimento de geolocalização do usuário.
+        *   Preparar ambiente para integração com BrasilAPI (definir `WebClient` ou `RestTemplate`).
+        *   Revisar e ajustar estrutura de pastas e configurações se necessário.
+    *   Marco: Funcionalidades de usuário com validações e persistência funcionando. Preparação para sincronização de feriados concluída.
 
 ---
 
-### **Sprint 3 – Entities JPA & Repositories**
+### **Fase 2: Core do Negócio (Sprints 5–12)**
+Objetivo: Implementar o coração do sistema: registro de ponto, cálculos de horas, relatórios e auditoria.
 
-**Objetivo:** camada de persistência pronta
+*   **Sprint 5: Registro de Ponto - Backend**
+    *   Objetivo: Permitir que usuários registrem seus pontos com validações.
+    *   Tarefas:
+        *   Criar `RegistroPontoService` com lógica para validar sequência de registros (ex: Entrada -> Início Descanso -> Fim Descanso -> Saída).
+        *   Criar controller REST `/api/ponto/` com endpoint para registrar ponto (`POST /registrar`) e outro para listar registros do usuário autenticado (`GET /me`).
+        *   Implementar persistência dos registros no banco.
+        *   Adicionar campos de geolocalização (lat, long, precisão) como opcionais no DTO e entidade.
+        *   Implementar validação de IP do cliente (opcional, para rastreabilidade).
+    *   Marco: Usuário pode registrar ponto via API com validações de sequência e dados salvos corretamente.
 
-**Entregas**
+*   **Sprint 6: Calendário e Controle de Ausências**
+    *   Objetivo: Gerenciar feriados e folgas individuais.
+    *   Tarefas:
+        *   Criar `FeriadoService` para sincronizar com a BrasilAPI (GET /api/feriados/sync).
+        *   Criar `FolgaService` para CRUD de folgas individuais (apenas Admin).
+        *   Criar controllers REST `/api/feriados/` e `/api/folgas/`.
+        *   Associar folgas e feriados à entidade `User` ou `RegistroPonto` para cálculos futuros.
+    *   Marco: Feriados podem ser sincronizados e folgas individuais registradas e listadas via API.
 
-* Entities JPA completas
-* Enums mapeados
-* Repositories funcionais
+*   **Sprint 7: Cálculos de Horas**
+    *   Objetivo: Implementar lógica para cálculo de horas trabalhadas e saldo.
+    *   Tarefas:
+        *   Estender `RegistroPontoService` com métodos para calcular horas por dia, semana e mês.
+        *   Considerar feriados e folgas no cálculo (dia de folga ou feriado não gera débito, por exemplo).
+        *   Criar endpoint para obter resumo de horas do usuário em um período (`GET /api/resumo-horas?userId=X&dataInicio=...&dataFim=...`).
+    *   Marco: Sistema consegue calcular horas trabalhadas, extras e débitos com base nos registros, feriados e folgas.
 
-**Tarefas**
+*   **Sprint 8: Auditoria de Ações**
+    *   Objetivo: Registrar todas as ações críticas do sistema.
+    *   Tarefas:
+        *   Criar `LogAuditoriaService` e `LogAuditoriaRepository`.
+        *   Implementar um mecanismo de auditoria (possivelmente via AOP - Aspect Oriented Programming) para registrar ações como login, registro de ponto, alterações de dados, etc.
+        *   Criar controller REST `/api/auditoria/` para listar logs (restrito a Admin).
+        *   Implementar limpeza automática de logs antigos (> 90 dias) via Job ou script simples.
+    *   Marco: Ações críticas são automaticamente registradas e podem ser consultadas por administradores.
 
-* Criar User, RegistroPonto, Feriado, Folga, LogAuditoria, ConfigEmpresa
-* Mapear relacionamentos
-* Criar interfaces JPA
-* Testes básicos de persistência
+*   **Sprint 9: Exportação de Relatórios - Backend**
+    *   Objetivo: Gerar relatórios de ponto em PDF.
+    *   Tarefas:
+        *   Integrar a biblioteca iText 7 ao projeto.
+        *   Criar um `RelatorioService` para gerar PDFs com base nos dados de `RegistroPonto`, `Feriado`, `Folga` e cálculos de horas.
+        *   Criar endpoint `/api/relatorios/mensal/pdf` que gere e retorne um arquivo PDF para um usuário e mês específicos.
+        *   O PDF deve conter detalhes dos registros diários, cálculos de horas e possivelmente assinatura digital (futura).
+    *   Marco: Endpoint gera um arquivo PDF de relatório mensal com dados corretos.
 
-✅ *Marco:* salvar e buscar dados via JPA
+*   **Sprint 10: Integração Geolocalização (JS Puro no Frontend)**
+    *   Objetivo: Adicionar validação de localização ao registro de ponto.
+    *   Tarefas:
+        *   Preparar o backend para receber latitude e longitude no endpoint de registro de ponto.
+        *   Implementar validação de raio geográfico (ex: dentro de X metros do local da empresa) no `RegistroPontoService`, usando dados de `ConfigEmpresa`.
+        *   No frontend (JS puro), solicitar permissão de geolocalização antes de registrar o ponto.
+        *   Enviar os dados de localização juntamente com o registro.
+    *   Marco: Registro de ponto pode incluir e validar dados de geolocalização com base nas configurações da empresa.
+
+*   **Sprint 11: Refinamento e Testes Unitários**
+    *   Objetivo: Garantir qualidade e robustez do backend.
+    *   Tarefas:
+        *   Escrever testes unitários para os serviços principais (`UserService`, `RegistroPontoService`, `FeriadoService`, etc.).
+        *   Escrever testes de integração para os endpoints REST (controllers).
+        *   Realizar testes manuais e de carga básicos (usando ferramentas como JMeter ou Postman Runner).
+        *   Revisar e otimizar consultas JPA/HQL se necessário.
+    *   Marco: Cobertura de testes significativa e funcionalidades backend estáveis.
+
+*   **Sprint 12: Preparação para Fase 3**
+    *   Objetivo: Consolidar backend e preparar para frontend e deploy.
+    *   Tarefas:
+        *   Finalizar documentação da API REST (pode usar Springdoc OpenAPI).
+        *   Revisar e aplicar correções de segurança identificadas (OWASP).
+        *   Configurar perfis de ambiente (dev, prod) para `application.yml`.
+        *   Preparar script de backup automático (`pg_dump`).
+        *   Definir endpoints finais e estrutura de DTOs para o frontend consumir.
+    *   Marco: Backend funcional, testado e documentado, pronto para integração com o frontend.
 
 ---
 
-### **Sprint 4 – Segurança Base (JWT + Roles)**
+### **Fase 3: Frontend Completo + Integrações + Hardening (Sprints 13–18)**
+Objetivo: Desenvolver o frontend completo, integrar com o backend, e preparar para produção.
 
-**Objetivo:** autenticação segura desde o início
+*   **Sprint 13: Estrutura e Telas de Autenticação Frontend**
+    *   Objetivo: Criar a base do frontend e telas de login/cadastro.
+    *   Tarefas:
+        *   Criar arquivos HTML/CSS/JS básicos dentro de `backend/src/main/resources/static/` ou na pasta `frontend/` (definir estrutura).
+        *   Integrar Pico CSS (via CDN ou local).
+        *   Criar telas: `login.html`, `register.html`.
+        *   Implementar chamadas API para login/cadastro via JS puro (Fetch API).
+        *   Armazenar JWT no `localStorage` ou `sessionStorage` e incluir nos headers das próximas requisições.
+    *   Marco: Telas de login/cadastro funcionando e se comunicando com o backend.
 
-**Entregas**
+*   **Sprint 14: Dashboard Funcionário**
+    *   Objetivo: Criar a interface principal para o funcionário comum.
+    *   Tarefas:
+        *   Criar tela `dashboard-funcionario.html`.
+        *   Implementar botões grandes e intuitivos para registrar ponto (Entrada, Início/Fim Descanso, Saída).
+        *   Exibir registros recentes do próprio usuário.
+        *   Exibir resumo de horas do mês atual.
+        *   Implementar funcionalidade de solicitar folga (se permitido).
+    *   Marco: Funcionário pode registrar ponto e visualizar seus dados via interface web.
 
-* Spring Security configurado
-* JWT funcional (8h expiração)
-* BCrypt ativo
-* Roles ADMIN / EMPLOYEE
+*   **Sprint 15: Painel Admin**
+    *   Objetivo: Criar a interface principal para administradores.
+    *   Tarefas:
+        *   Criar tela `admin-panel.html`.
+        *   Implementar CRUD de usuários via frontend (listar, criar, editar, excluir).
+        *   Implementar visualização e aprovação de solicitações de folga.
+        *   Exibir relatórios resumidos de todos os funcionários.
+    *   Marco: Administrador pode gerenciar usuários e ausências via interface web.
 
-**Tarefas**
+*   **Sprint 16: Relatórios e Exportações Frontend**
+    *   Objetivo: Permitir geração e visualização de relatórios no frontend.
+    *   Tarefas:
+        *   Criar tela ou modal para geração de relatórios (filtro por usuário e período).
+        *   Implementar chamada ao endpoint `/api/relatorios/mensal/pdf` e permitir download do arquivo.
+        *   (Opcional) Implementar visualização prévia do relatório em HTML.
+    *   Marco: Usuários podem solicitar e baixar relatórios PDF via frontend.
 
-* AuthController (login)
-* JwtFilter + JwtUtil
-* UserDetailsService
-* Configuração de rotas públicas/privadas
+*   **Sprint 17: Integrações e Ajustes Finais**
+    *   Objetivo: Integrar funcionalidades extras e resolver pendências.
+    *   Tarefas:
+        *   Finalizar integração de geolocalização no frontend.
+        *   Implementar funcionalidade de busca e filtro nas listagens.
+        *   Melhorar a experiência do usuário (UX) com Alpine.js se necessário.
+        *   Realizar testes finais de integração (frontend + backend).
+        *   Corrigir bugs e otimizar performance (especialmente para máquinas com 4GB RAM).
+    *   Marco: Aplicação web funcional com todas as features principais integradas.
 
-✅ *Marco:* login retorna JWT válido
-
----
-
-## 🔹 **FASE 2 – Core do Negócio (Sprints 5–12)**
-
-> Resultado: sistema de ponto completo, seguro e auditável
-
----
-
-(Sprints 5 a 12 permanecem inalterados – já alinhados com SDD)
-
----
-
-## 🔹 **FASE 3 – Frontend & Integrações (Sprints 13–18)**
-
-> Resultado: produto usável, bonito e vendável
-
----
-
-### **Sprint 13 – Frontend Base (Pico CSS)**
-
-* Integração Pico CSS (CDN ou local em static/)
-* Tela de login
-* Layout padrão responsivo
-* Fetch API configurado
-* Alpine.js opcional para interatividade mínima
-
----
-
-(Sprints 14 a 18 permanecem inalterados – já compatíveis com Pico CSS)
-
-✅ *Marco final:* **produto pronto para produção e venda**
+*   **Sprint 18: Deploy e Hardening Final**
+    *   Objetivo: Colocar o sistema em produção e aplicar medidas de segurança finais.
+    *   Tarefas:
+        *   Preparar ambiente de produção (Hetzner ou similar).
+        *   Configurar HTTPS (Let's Encrypt).
+        *   Configurar WAF (ModSecurity no Nginx).
+        *   Configurar firewall (UFW).
+        *   Realizar pentest básicos (OWASP ZAP).
+        *   Documentar o processo de deploy e operação.
+        *   (Opcional) Configurar Telebit para acesso seguro durante a Fase 2.
+    *   Marco: Aplicação web segura, funcional e hospedada em ambiente de produção.
