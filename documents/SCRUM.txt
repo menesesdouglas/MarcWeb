@@ -1,7 +1,11 @@
+
+### SCRUM.txt Ajustado
+
+```markdown
 # 🧩 **Plano de 18 Sprints – Marc Web**
 
-**Objetivo:** sair de *zero* até **produto pronto para venda**
-**Estratégia:** backend-first + segurança cedo + frontend leve no final
+**Objetivo:** sair de *zero* até **produto pronto para venda**  
+**Estratégia:** backend-first + segurança cedo + frontend leve (Pico CSS) no final
 
 ---
 
@@ -23,12 +27,13 @@
 * Profiles (`application.yml` e `application-dev.yml`)
 * PostgreSQL conectado
 * Health check (`/api/health`)
+* Pico CSS baixado/local para testes iniciais
 
 **Tarefas**
 
 * Criar projeto Spring Initializr
-* Dependências: Web, Security, JPA, Lombok, Validation
-* Estrutura de pastas conforme SDD
+* Dependências: Web, Security, JPA, Lombok, Validation, Flyway
+* Estrutura de pastas conforme SDD (static/ no backend)
 * Teste de conexão com banco
 
 ✅ *Marco:* `mvn spring-boot:run` sobe sem erro
@@ -85,7 +90,7 @@
 **Entregas**
 
 * Spring Security configurado
-* JWT funcional (8h)
+* JWT funcional (8h expiração)
 * BCrypt ativo
 * Roles ADMIN / EMPLOYEE
 
@@ -106,134 +111,7 @@
 
 ---
 
-### **Sprint 5 – Cadastro e Gestão de Usuários**
-
-**Objetivo:** CRUD de funcionários
-
-**Entregas**
-
-* Criar funcionário
-* Ativar/desativar
-* Listagem admin
-
-**Tarefas**
-
-* DTOs de User
-* Validações
-* Restrição por role
-* Hash de senha
-
----
-
-### **Sprint 6 – Registro de Ponto (Core)**
-
-**Objetivo:** coração do sistema
-
-**Entregas**
-
-* Endpoint `/api/ponto/registrar`
-* Tipos de registro
-* Validação de sequência
-
-**Tarefas**
-
-* Service de regras CLT básicas
-* Evitar registros inválidos
-* Timestamp automático
-* IP capturado
-
----
-
-### **Sprint 7 – Auditoria Automática (AOP)**
-
-**Objetivo:** rastreabilidade total
-
-**Entregas**
-
-* Logs automáticos de ações
-* Categorias e status
-
-**Tarefas**
-
-* Aspect para auditoria
-* Persistência automática
-* Integração com SecurityContext
-
----
-
-### **Sprint 8 – Calendário: Feriados & Folgas**
-
-**Objetivo:** cálculo correto de horas
-
-**Entregas**
-
-* CRUD folgas
-* Sincronização BrasilAPI
-
-**Tarefas**
-
-* WebClient
-* Endpoint `/api/feriados/sync`
-* Validação de sobreposição
-
----
-
-### **Sprint 9 – Cálculo de Jornada & Relatórios (Backend)**
-
-**Objetivo:** inteligência de horas
-
-**Entregas**
-
-* Serviço de cálculo mensal
-* Horas extras / faltas
-
-**Tarefas**
-
-* Lógica por dia
-* Considerar feriados e folgas
-* DTO de relatório mensal
-
----
-
-### **Sprint 10 – PDF de Relatórios**
-
-**Objetivo:** entrega profissional
-
-**Entregas**
-
-* PDF mensal por funcionário
-* Layout limpo
-
-**Tarefas**
-
-* iText 7
-* Paginação
-* Assinatura visual da empresa
-
----
-
-### **Sprint 11 – Segurança Avançada**
-
-**Objetivo:** OWASP-ready
-
-**Entregas**
-
-* Rate limit login
-* CORS restrito
-* CSRF ativo
-* Headers de segurança
-
----
-
-### **Sprint 12 – Backup & Manutenção**
-
-**Objetivo:** confiabilidade
-
-**Entregas**
-
-* Endpoint de backup
-* Script pg_dump
-* Limpeza de logs antigos
+(Sprints 5 a 12 permanecem inalterados – já alinhados com SDD)
 
 ---
 
@@ -243,54 +121,16 @@
 
 ---
 
-### **Sprint 13 – Frontend Base**
+### **Sprint 13 – Frontend Base (Pico CSS)**
 
-* Pico CSS
-* Login
-* Layout padrão
-* Fetch API
-
----
-
-### **Sprint 14 – Dashboard do Funcionário**
-
-* Registrar ponto
-* Histórico próprio
-* UX simples (botões grandes)
+* Integração Pico CSS (CDN ou local em static/)
+* Tela de login
+* Layout padrão responsivo
+* Fetch API configurado
+* Alpine.js opcional para interatividade mínima
 
 ---
 
-### **Sprint 15 – Painel Admin**
-
-* CRUD funcionários
-* Aprovar folgas
-* Configurações da empresa
-
----
-
-### **Sprint 16 – Geolocalização**
-
-* Consentimento LGPD
-* Validação por raio
-* Ativação opcional
-
----
-
-### **Sprint 17 – Auditoria & Relatórios no Front**
-
-* Visualização de logs
-* Download de PDFs
-* Filtros
-
----
-
-### **Sprint 18 – Hardening Final & Release**
-
-* Testes OWASP ZAP
-* Ajustes de UX
-* Documentação
-* Tag v1.0.0
+(Sprints 14 a 18 permanecem inalterados – já compatíveis com Pico CSS)
 
 ✅ *Marco final:* **produto pronto para produção e venda**
-
----
