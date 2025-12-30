@@ -1,0 +1,152 @@
+# **Software Design Document (SDD) Detalhado – Marc Web**  
+**Sistema de Ponto Eletrônico Web**  
+**Versão 1.5 – Dezembro 2025**  
+**(Atualizado: Detalhamento Completo para Início do Projeto, Incluindo Tabelas, Configurações e Segurança)**
+
+## **1. Introdução**
+### **1.1 Propósito**
+Este documento fornece um design completo e acionável para o **Marc Web**, uma migração web do sistema de ponto eletrônico offline **Marc** (original em Python). O foco é em segurança, auditoria, operação offline/local inicial e escalabilidade para venda a PMEs brasileiras. O sistema gerencia jornadas de trabalho conforme CLT e LGPD, com acesso remoto seguro.
+
+### **1.2 Escopo**
+- **Funcionalidades Core**: Registro de ponto (entrada/saída/descansos), gestão de funcionários, calendário (feriados nacionais via API + folgas individuais), relatórios mensais com cálculo de horas e exportação PDF, auditoria de ações e backups automáticos.
+- **Melhorias Web**: Login individual por funcionário (restrito aos próprios dados), geolocalização opcional (JS puro, a partir da Fase 2), níveis de acesso (Admin/Funcionário).
+- **Frontend**: Responsivo, leve e simples com Pico CSS.
+- **Backend**: API REST segura com Spring Boot.
+- **Banco**: PostgreSQL para concorrência e robustez.
+- **Segurança**: Integrada desde o início, mitigando riscos como XSS, CSRF e injeções.
+- **Desenvolvimento**: Três fases; versionamento Git; auxílio de IA para aceleração.
+- **Objetivo Final**: Produto comercializável (SaaS ou licença única para PMEs sem gestão de ponto).
+
+### **1.3 Restrições e Requisitos Iniciais**
+- **Hardware**: Notebook Dell Latitude E6400 (Linux Mint, 4GB RAM) e PC Windows 10 (4GB RAM). Evitar ferramentas pesadas; builds leves.
+- **Tempo**: 2h/dia; estimativa total 6-9 meses (reduzível para 5-8 com IA como Grok/Copilot).
+- **Assunções**: Usuários adultos; conformidade LGPD (consentimento geoloc); conhecimento básico de Java/JS.
+- **Pré-requisitos para Início**: Configurações nas máquinas (detalhadas na Seção 8); repo GitHub privado.
+
+## **2. Arquitetura do Sistema**
+### **2.1 Visão Geral**
+Arquitetura full-stack monolítica (frontend estático servido pelo backend), com foco em segurança e portabilidade. Suporte a multi-usuário simultâneo via PostgreSQL.
+
+```
+Usuário (Browser/Mobile) ──HTTPS──> Frontend (HTML + Pico CSS + JS Puro/Alpine.js) ──Fetch API──> Backend (Spring Boot REST + JWT) ──JPA──> PostgreSQL
+                                      ↑
+                                Segurança (Spring Security, CSP, CORS) + Auditoria/Backups
+```
+
+### **2.2 Componentes Principais**
+| Camada      | Tecnologias                                      | Detalhes |
+|-------------|--------------------------------------------------|----------|
+| **Frontend**| HTML5, Pico CSS v2 (~11 KB, CDN/local), JS puro (Fetch API para chamadas, Geolocation API), Alpine.js opcional (~7 KB para interatividade) | Layout clean com HTML semântico; responsivo mobile-first; dark mode nativo. Sem Node.js/build. |
+| **Backend** | Java 17+, Spring Boot 3, Spring Data JPA, Spring Security + JWT, Lombok, Maven | API REST; lógica de negócio (cálculos de horas, validações). |
+| **Banco**   | PostgreSQL 16+                                   | 6 tabelas principais; migrations com Flyway. |
+| **PDF**     | iText 7 (Community)                              | Relatórios paginados e profissionais. |
+| **Outros**  | WebClient (BrasilAPI), BCrypt, SLF4J (logs)      | Auditoria via AOP; backups via pg_dump. |
+
+### **2.3 Estrutura de Pastas**
+```
+marc-web/
+├── backend/
+│   ├── src/main/java/com/marcweb/
+│   │   ├── controller/     # Endpoints REST
+│   │   ├── service/        # Lógica de negócio
+│   │   ├── repository/     # JPA interfaces
+│   │   ├── entity/         # Classes JPA
+│   │   ├── dto/            # Request/Response objects
+│   │   ├── security/       # JWT config, filters
+│   │   └── MarcWebApplication.java
+│   ├── src/main/resources/
+│   │   ├── application.yml # Configs gerais
+│   │   ├── application-dev.yml # Perfil dev
+│   │   └── static/         # Frontend files
+│   └── pom.xml             # Dependências Maven
+├── frontend/               # Desenvolvimento separado
+│   ├── index.html
+│   ├── login.html
+│   ├── dashboard-funcionario.html
+│   ├── admin-panel.html
+│   ├── js/                 # api.js, geoloc.js
+│   └── css/                # pico.min.css (local)
+└── README.md               # Instruções projeto
+```
+
+## **3. Modelo de Dados**
+O banco terá **6 tabelas principais** (entities JPA), mapeadas para PostgreSQL. Todas com índices para performance (ex: userId, timestamp). Schema inicial via Flyway migrations.
+
+| Tabela (Entity)    | Campos Principais (com Tipos) | Descrição |
+|--------------------|-------------------------------|-----------|
+| **users** (User)  | id (Long PK), nome (String), username (String unique), password (String BCrypt), role (Enum: ADMIN/EMPLOYEE), ativo (Boolean), consentGeoloc (Boolean), createdAt (Timestamp) | Cadastro de funcionários/admins; níveis de acesso. |
+| **registros_ponto** (RegistroPonto) | id (Long PK), userId (Long FK), tipo (Enum: ENTRADA/INICIO_DESCANSO/FIM_DESCANSO/SAIDA), timestamp (Timestamp), latitude (Double nullable), longitude (Double nullable), ip (String), precisao (Double), justificativa (String nullable) | Registros diários; geoloc opcional; validação de sequência no service. |
+| **feriados** (Feriado) | id (Long PK), data (Date), nome (String), origem (Enum: API/MANUAL) | Feriados nacionais (sync via BrasilAPI) ou regionais. |
+| **folgas** (Folga) | id (Long PK), userId (Long FK), dataInicio (Date), dataFim (Date), justificativa (String) | Ausências individuais; aprovado por admin. |
+| **logs_auditoria** (LogAuditoria) | id (Long PK), timestamp (Timestamp), userId (Long FK), acao (String), categoria (Enum: PONTO/ADMIN/AUDITORIA), detalhes (String), status (Enum: SUCESSO/ERRO) | Registro de todas ações críticas; limpeza automática >90 dias. |
+| **configs_empresa** (ConfigEmpresa) | id (Long PK), nomeEmpresa (String), latCentro (Double), longCentro (Double), raioGeoloc (Integer metros), geolocAtiva (Boolean) | Configurações gerais (ex: validação de raio para geoloc). |
+
+- **Relacionamentos**: OneToMany (User → RegistroPonto/Folga/LogAuditoria).
+- **Índices**: userId + timestamp em RegistroPonto; data em Feriados/Folgas.
+- **Migrations**: Flyway para criar/alterar tabelas (ex: V1__create_tables.sql).
+
+## **4. Cibersegurança Integrada**
+Alinhada a OWASP Top 10 2025; defesa em profundidade.
+
+### **4.1 Medidas por Camada**
+- **Backend**: Spring Security para JWT (expiração 8h), BCrypt senhas, rate limiting logins. Injeções prevenidas via JPA parametrizada + @Valid DTOs. CSRF habilitado. CORS limitado a origens confiáveis.
+- **Frontend**: XSS via textContent + CSP headers ("default-src 'self'"). Geoloc com consentimento. JWT em localStorage.
+- **Banco**: Usuários PostgreSQL com privilégios mínimos; queries seguras.
+- **Infra**: HTTPS (Let's Encrypt), UFW firewall, ModSecurity WAF no Nginx. Backups criptografados.
+
+### **4.2 Testes e Monitoramento**
+- Pentests: OWASP ZAP.
+- Logs: SLF4J para auditoria; escanear dependências com Snyk.
+
+## **5. Funcionalidades Detalhadas**
+- **Autenticação**: POST /api/auth/login → JWT; roles para restrições.
+- **Registro de Ponto**: POST /api/ponto/registrar (com geoloc via JS puro); valida sequência e raio.
+- **Gestão Funcionários**: CRUD /api/funcionarios (admin only).
+- **Calendário**: GET /api/feriados/sync (BrasilAPI); CRUD folgas.
+- **Relatórios**: GET /api/relatorios/mensal; export PDF via iText.
+- **Auditoria**: GET /api/auditoria/logs; export PDF.
+- **Backup**: Endpoint /api/backup/download (pg_dump); cron automático na produção.
+
+## **6. Frontend com Pico CSS**
+- CDN: <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+- Interatividade: JS puro para Fetch/Geolocation; Alpine.js para modals/tabs.
+- Telas: Login, Dashboard Funcionário (botões grandes), Painel Admin, Relatórios.
+
+## **7. Backend Endpoints Exemplo**
+- POST /api/auth/login {username, password} → JWT.
+- POST /api/ponto/registrar {tipo, lat, long} (autenticado).
+- GET /api/relatorios/mensal?userId=1&mes=12 (restrito).
+
+## **8. Configurações Iniciais nas Máquinas**
+Para iniciar imediatamente:
+
+| Item                          | PC Windows 10 (Eclipse/VSCode, JDK 17, PostgreSQL) | Notebook Linux Mint (Eclipse) |
+|-------------------------------|----------------------------------------------------|-------------------------------|
+| **Java**                      | Verifique `java -version`. OK.                     | `sudo apt install openjdk-17-jdk` |
+| **Maven**                     | Baixe zip; adicione ao PATH.                       | `sudo apt install maven`      |
+| **PostgreSQL**                | OK; crie DB marcweb_dev.                           | `sudo apt install postgresql`; crie DB. |
+| **Git**                       | Instale Git for Windows.                           | `sudo apt install git`        |
+| **VS Code** (recomendado)     | OK; extensões: Java Pack, Spring Boot, Lombok.     | Baixe .deb; mesmas extensões. |
+| **Pico CSS/Alpine.js**        | CDN no HTML; sem setup.                            | Mesmo.                        |
+
+- **Banco Comum**: `CREATE DATABASE marcweb_dev; CREATE USER marcuser WITH PASSWORD 'senha'; GRANT ALL ON DATABASE marcweb_dev TO marcuser;`
+- **Repo Git**: Crie privado no GitHub; clone em ambas máquinas.
+
+## **9. Fases de Desenvolvimento**
+### **9.1 Fase 1: Localhost (4-6 meses)**
+- Setup + entities + segurança básica + frontend telas + testes.
+
+### **9.2 Fase 2: Pública Gratuita (2-3 semanas)**
+- Telebit tunnel + geoloc + BrasilAPI.
+
+### **9.3 Fase 3: Cloud (3-4 semanas)**
+- Hetzner deploy + HTTPS + WAF.
+
+## **10. Cronograma e Milestones**
+- **Sprint 1-4 (1 mês)**: Setup + DB model.
+- **Sprint 5-12 (3 meses)**: Backend core + segurança.
+- **Sprint 13-18 (2 meses)**: Frontend + integrações.
+- Total: 18 sprints (~20h cada); reduzível com IA.
+
+## **11. Considerações Finais**
+Pronto para iniciar: Clone repo, rode `mvn spring-boot:run`. Custos Fase 3 < R$100/mês. Use IA para código boilerplate. Boa sorte!

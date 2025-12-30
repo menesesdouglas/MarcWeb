@@ -1,0 +1,296 @@
+# 🧩 **Plano de 18 Sprints – Marc Web**
+
+**Objetivo:** sair de *zero* até **produto pronto para venda**
+**Estratégia:** backend-first + segurança cedo + frontend leve no final
+
+---
+
+## 🔹 **FASE 1 – Fundação Sólida (Sprints 1–4)**
+
+> Resultado: projeto roda localmente com banco, segurança base e modelo correto
+
+---
+
+### **Sprint 1 – Setup Geral & Infra Local**
+
+**Objetivo:** ambiente 100% funcional
+
+**Entregas**
+
+* Repo Git privado criado
+* Spring Boot 3 + Java 17 funcionando
+* Maven configurado
+* Profiles (`application.yml` e `application-dev.yml`)
+* PostgreSQL conectado
+* Health check (`/api/health`)
+
+**Tarefas**
+
+* Criar projeto Spring Initializr
+* Dependências: Web, Security, JPA, Lombok, Validation
+* Estrutura de pastas conforme SDD
+* Teste de conexão com banco
+
+✅ *Marco:* `mvn spring-boot:run` sobe sem erro
+
+---
+
+### **Sprint 2 – Modelagem do Banco & Flyway**
+
+**Objetivo:** base de dados definitiva
+
+**Entregas**
+
+* Flyway configurado
+* Migration V1 criada
+* Todas as 6 tabelas do SDD
+* Índices definidos
+
+**Tarefas**
+
+* Criar SQL V1__create_tables.sql
+* Configurar Flyway no Spring
+* Validar schema no PostgreSQL
+* Ajustar constraints e enums
+
+✅ *Marco:* banco recriado automaticamente ao subir app
+
+---
+
+### **Sprint 3 – Entities JPA & Repositories**
+
+**Objetivo:** camada de persistência pronta
+
+**Entregas**
+
+* Entities JPA completas
+* Enums mapeados
+* Repositories funcionais
+
+**Tarefas**
+
+* Criar User, RegistroPonto, Feriado, Folga, LogAuditoria, ConfigEmpresa
+* Mapear relacionamentos
+* Criar interfaces JPA
+* Testes básicos de persistência
+
+✅ *Marco:* salvar e buscar dados via JPA
+
+---
+
+### **Sprint 4 – Segurança Base (JWT + Roles)**
+
+**Objetivo:** autenticação segura desde o início
+
+**Entregas**
+
+* Spring Security configurado
+* JWT funcional (8h)
+* BCrypt ativo
+* Roles ADMIN / EMPLOYEE
+
+**Tarefas**
+
+* AuthController (login)
+* JwtFilter + JwtUtil
+* UserDetailsService
+* Configuração de rotas públicas/privadas
+
+✅ *Marco:* login retorna JWT válido
+
+---
+
+## 🔹 **FASE 2 – Core do Negócio (Sprints 5–12)**
+
+> Resultado: sistema de ponto completo, seguro e auditável
+
+---
+
+### **Sprint 5 – Cadastro e Gestão de Usuários**
+
+**Objetivo:** CRUD de funcionários
+
+**Entregas**
+
+* Criar funcionário
+* Ativar/desativar
+* Listagem admin
+
+**Tarefas**
+
+* DTOs de User
+* Validações
+* Restrição por role
+* Hash de senha
+
+---
+
+### **Sprint 6 – Registro de Ponto (Core)**
+
+**Objetivo:** coração do sistema
+
+**Entregas**
+
+* Endpoint `/api/ponto/registrar`
+* Tipos de registro
+* Validação de sequência
+
+**Tarefas**
+
+* Service de regras CLT básicas
+* Evitar registros inválidos
+* Timestamp automático
+* IP capturado
+
+---
+
+### **Sprint 7 – Auditoria Automática (AOP)**
+
+**Objetivo:** rastreabilidade total
+
+**Entregas**
+
+* Logs automáticos de ações
+* Categorias e status
+
+**Tarefas**
+
+* Aspect para auditoria
+* Persistência automática
+* Integração com SecurityContext
+
+---
+
+### **Sprint 8 – Calendário: Feriados & Folgas**
+
+**Objetivo:** cálculo correto de horas
+
+**Entregas**
+
+* CRUD folgas
+* Sincronização BrasilAPI
+
+**Tarefas**
+
+* WebClient
+* Endpoint `/api/feriados/sync`
+* Validação de sobreposição
+
+---
+
+### **Sprint 9 – Cálculo de Jornada & Relatórios (Backend)**
+
+**Objetivo:** inteligência de horas
+
+**Entregas**
+
+* Serviço de cálculo mensal
+* Horas extras / faltas
+
+**Tarefas**
+
+* Lógica por dia
+* Considerar feriados e folgas
+* DTO de relatório mensal
+
+---
+
+### **Sprint 10 – PDF de Relatórios**
+
+**Objetivo:** entrega profissional
+
+**Entregas**
+
+* PDF mensal por funcionário
+* Layout limpo
+
+**Tarefas**
+
+* iText 7
+* Paginação
+* Assinatura visual da empresa
+
+---
+
+### **Sprint 11 – Segurança Avançada**
+
+**Objetivo:** OWASP-ready
+
+**Entregas**
+
+* Rate limit login
+* CORS restrito
+* CSRF ativo
+* Headers de segurança
+
+---
+
+### **Sprint 12 – Backup & Manutenção**
+
+**Objetivo:** confiabilidade
+
+**Entregas**
+
+* Endpoint de backup
+* Script pg_dump
+* Limpeza de logs antigos
+
+---
+
+## 🔹 **FASE 3 – Frontend & Integrações (Sprints 13–18)**
+
+> Resultado: produto usável, bonito e vendável
+
+---
+
+### **Sprint 13 – Frontend Base**
+
+* Pico CSS
+* Login
+* Layout padrão
+* Fetch API
+
+---
+
+### **Sprint 14 – Dashboard do Funcionário**
+
+* Registrar ponto
+* Histórico próprio
+* UX simples (botões grandes)
+
+---
+
+### **Sprint 15 – Painel Admin**
+
+* CRUD funcionários
+* Aprovar folgas
+* Configurações da empresa
+
+---
+
+### **Sprint 16 – Geolocalização**
+
+* Consentimento LGPD
+* Validação por raio
+* Ativação opcional
+
+---
+
+### **Sprint 17 – Auditoria & Relatórios no Front**
+
+* Visualização de logs
+* Download de PDFs
+* Filtros
+
+---
+
+### **Sprint 18 – Hardening Final & Release**
+
+* Testes OWASP ZAP
+* Ajustes de UX
+* Documentação
+* Tag v1.0.0
+
+✅ *Marco final:* **produto pronto para produção e venda**
+
+---

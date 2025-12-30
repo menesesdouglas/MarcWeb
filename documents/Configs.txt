@@ -1,0 +1,60 @@
+### **Configurações Iniciais Recomendadas nas Duas Máquinas**  
+Para iniciar o projeto **Marc Web** de forma eficiente, sincronizada e sem perder tempo com setup repetitivo, configure as duas máquinas conforme abaixo.  
+Tudo é gratuito e leve (considerando 4GB RAM).
+
+| Item                          | PC Windows 10 (já tem mais coisas)                          | Notebook Linux Mint (recém formatado)                          |
+|-------------------------------|-------------------------------------------------------------|---------------------------------------------------------------|
+| **Java**                      | Já tem JDK 17 → Verifique com `java -version` e `javac -version`. OK. | Instale OpenJDK 17: <br>`sudo apt update` <br>`sudo apt install openjdk-17-jdk` <br>Verifique: `java -version` |
+| **Maven** (build tool)        | Instale se não tiver: <br>Baixe do https://maven.apache.org/download.cgi (binário zip) <br>Extraia em C:\Program Files\Maven <br>Adicione ao PATH: `C:\Program Files\Maven\bin` <br>Verifique: `mvn -version` | `sudo apt install maven` <br>Verifique: `mvn -version` |
+| **PostgreSQL**                | Já instalado → OK. Crie banco e usuário do projeto (veja abaixo). | Instale: <br>`sudo apt install postgresql postgresql-contrib` <br>`sudo systemctl start postgresql` <br>`sudo systemctl enable postgresql` |
+| **Git**                       | Instale Git for Windows (https://git-scm.com/download/win) + Git Bash. Configure nome/email global. | `sudo apt install git` <br>Configure: <br>`git config --global user.name "Seu Nome"` <br>`git config --global user.email "seu@email.com"` |
+| **VS Code** (recomendado)     | Já tem → Instale extensões essenciais (abaixo).             | Instale VS Code (baixe .deb do https://code.visualstudio.com/) <br>Ou via flatpak: `flatpak install flathub com.visualstudio.code` |
+| **Extensões VS Code** (ambas máquinas) | - Extension Pack for Java (Microsoft) <br>- Spring Boot Extension Pack <br>- Lombok Annotations Support <br>- Tailwind CSS IntelliSense <br>- Live Server <br>- GitLens | Instale as mesmas extensões |
+| **Eclipse** (opcional)        | Já tem → Pode usar, mas VS Code é mais leve nas máquinas antigas. | Já tem → OK, mas recomendo migrar para VS Code (mais rápido com IA). |
+| **Node.js** (para Tailwind)   | Instale Node.js LTS (https://nodejs.org) → necessário para compilar Tailwind no frontend. | `sudo apt install nodejs npm` <br>(versão do repo pode ser antiga → melhor usar nvm: <br>`curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash` <br>Depois `nvm install --lts`) |
+| **Telebit** (Fase 2)          | Baixe manualmente quando chegar na Fase 2 (funciona no PowerShell). | Instale quando precisar: `curl -fsSL https://get.telebit.cloud | bash` |
+
+### **Configuração Comum do Banco PostgreSQL (nas duas máquinas)**
+Execute como usuário postgres:
+
+```bash
+sudo -u postgres psql
+```
+
+Dentro do psql:
+```sql
+CREATE DATABASE marcweb_dev;
+CREATE USER marcuser WITH ENCRYPTED PASSWORD 'sua_senha_forte';
+GRANT ALL PRIVILEGES ON DATABASE marcweb_dev TO marcuser;
+\q
+```
+
+No `application-dev.yml` do Spring Boot (depois):
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/marcweb_dev
+    username: marcuser
+    password: sua_senha_forte
+  jpa:
+    hibernate:
+      ddl-auto: validate  # depois mudar para update ou usar Flyway
+```
+
+### **Criação do Repositório Git (faça uma vez só)**
+1. Crie repositório privado no GitHub (ou GitLab).
+2. No notebook ou PC:
+```bash
+git clone https://github.com/seu-usuario/marc-web.git
+cd marc-web
+```
+3. Crie estrutura inicial de pastas (backend/, frontend/).
+4. Commit inicial e push.
+5. Na outra máquina, faça clone também → sempre trabalhe com `git pull` / `git push`.
+
+### **Dica para Máquinas com 4GB RAM**
+- Feche navegadores e apps desnecessários durante build (`mvn clean install` pode usar ~2-3GB).
+- Use VS Code em vez de Eclipse (mais leve).
+- No Windows: desative efeitos visuais se necessário.
+
+Com essas configurações feitas (leva 1-2 dias no total), você estará pronto para começar a codar na primeira sprint sem perda de tempo.
