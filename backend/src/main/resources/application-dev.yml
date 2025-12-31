@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate # Validar contra o schema existente (ou criar se não existir via Flyway depois)
+      ddl-auto: create-drop # Validar contra o schema existente (ou criar se não existir via Flyway depois)
     show-sql: true # Mostrar SQL no console em DEV
     properties:
       hibernate:
