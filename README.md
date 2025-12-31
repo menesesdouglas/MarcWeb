@@ -49,3 +49,7 @@ Pronto para começar o desenvolvimento.
 ## Histórico de Commits
 
 Sprint 1: Criado HealthApplication e testado com sucesso.
+
+## Dia 31/12/2025 13:48
+
+**Marco Sprint 2 alcançado**
