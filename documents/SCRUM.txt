@@ -5,7 +5,7 @@ Este plano detalha as 18 sprints do projeto Marc Web, alinhado ao Software Desig
 ### **Fase 1: Fundação Local (Sprints 1–4)**
 Objetivo: Estabelecer a infraestrutura local, modelo de dados, segurança básica e configurações iniciais.
 
-*   **Sprint 1: Setup Geral & Infra Local**
+*   **Sprint 1: Setup Geral & Infra Local** Concluido 30/12/2025
     *   Objetivo: Ambientes 100% funcionais em ambas as máquinas.
     *   Tarefas:
         *   Confirmar configurações iniciais (Java 17, Maven, PostgreSQL, Git, VS Code + extensões) conforme `Configs.txt`.
@@ -19,7 +19,7 @@ Objetivo: Estabelecer a infraestrutura local, modelo de dados, segurança básic
         *   Primeiro commit e push.
     *   Marco: `mvn spring-boot:run` inicia a aplicação sem erros e conecta ao PostgreSQL.
 
-*   **Sprint 2: Entidades & Segurança Base**
+*   **Sprint 2: Entidades & Segurança Base** Concluido 31/12/2025
     *   Objetivo: Modelar dados e implementar autenticação/autorização básica.
     *   Tarefas:
         *   Criar as 6 entidades JPA conforme SDD: `User`, `RegistroPonto`, `Feriado`, `Folga`, `LogAuditoria`, `ConfigEmpresa`.
