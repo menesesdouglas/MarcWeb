@@ -8,8 +8,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,6 +27,7 @@ import java.util.List;
 
 @Configuration // Marca como uma classe de configuração do Spring
 @EnableWebSecurity // Habilita a segurança web do Spring
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true) // HABILITANDO METÓDOS DE SEGURANÇA NOS END POINTS
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok) - NÃO USAREMOS PARA jwtAuthenticationFilter
 public class SecurityConfig {
 
@@ -39,10 +42,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Desativa CSRF para API stateless (sem sessões)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Política de sessão stateless
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Liberar login
-                    .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll() // Exemplo, se tiver outro público
-                    // Adicione outros endpoints públicos de autenticação aqui se necessário
-                    .anyRequest().authenticated() // Qualquer outro endpoint requer autenticação
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Liberar login
+                        .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll() // Exemplo, se tiver outro público
+                        // Adicione outros endpoints públicos de autenticação aqui se necessário
+                        .anyRequest().authenticated() // Qualquer outro endpoint requer autenticação
                 )
                 .authenticationProvider(authenticationProvider()) // Define o provedor de autenticação
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona o filtro JWT antes do filtro padrão de login
@@ -93,4 +96,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+
 }

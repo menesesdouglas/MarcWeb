@@ -85,11 +85,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.warn("Token JWT inválido para o usuário: {}", username);
             }
         } else {
-             log.debug("Username nulo ou contexto de segurança já contém autenticação.");
+            log.debug("Username nulo ou contexto de segurança já contém autenticação.");
         }
 
         // Continua a cadeia de filtros
         log.debug("Continuando cadeia de filtros.");
         filterChain.doFilter(request, response);
     }
+
+
+
 }
