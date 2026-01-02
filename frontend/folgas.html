@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Folgas - Marc Web</title>
+    <!-- Carrega o Pico CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Carrega o CSS customizado para aplicar a paleta de cores -->
+    <link rel="stylesheet" href="css/custom-styles.css">
+    <!-- Favicon opcional -->
+    <!-- <link rel="icon" href="path/to/favicon.ico"> -->
+</head>
+
+<body>
+    <!-- Cabeçalho (exemplo para Funcionário, pode ser adaptado para Admin) -->
+    <header class="container">
+        <nav>
+            <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+            <ul>
+                <li><strong>Funcionário: Maria Oliveira</strong></li>
+                <!-- Placeholder para nome do usuário -->
+                <li><a href="login.html">Sair</a></li>
+            </ul>
+            <!-- Botão Hamburger (aparece em telas pequenas) -->
+            <ul>
+                <li>
+                    <details role="list" class="dropdown">
+                        <summary aria-haspopup="list" role="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </summary>
+                        <!-- Menu de navegação que aparece no dropdown -->
+                        <ul role="list">
+                            <li><a href="dashboard-funcionario.html">Dashboard</a></li>
+                            <li><a href="relatorios.html">Relatórios</a></li>
+                            <li><a href="admin-panel.html">Painel Admin</a></li>
+                            <!-- Apenas se for Admin -->
+                            <li><a href="configs-empresa.html">Configurações</a></li>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" id="main-content">
+        <h2>Minhas Folgas</h2>
+        <p>Aqui você pode solicitar novas folgas e acompanhar o status das suas solicitações.</p>
+
+        <!-- Seção de Solicitação de Folga (Funcionário) -->
+        <section id="solicitar-folga">
+            <h3>Solicitar Nova Folga</h3>
+            <form id="formSolicitarFolga">
+                <fieldset>
+                    <label for="dataInicio">Data Início</label>
+                    <input type="date" id="dataInicio" name="dataInicio" required>
+
+                    <label for="dataFim">Data Fim</label>
+                    <input type="date" id="dataFim" name="dataFim" required>
+
+                    <label for="justificativa">Justificativa</label>
+                    <textarea id="justificativa" name="justificativa" rows="3" placeholder="Descreva o motivo da solicitação..." required></textarea>
+
+                    <button type="submit" class="contrast">Enviar Solicitação</button>
+                </fieldset>
+            </form>
+        </section>
+
+        <!-- Seção de Folgas Solicitadas (Funcionário) -->
+        <section id="folgas-solicitadas">
+            <h3>Folgas Solicitadas</h3>
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Data Início</th>
+                        <th>Data Fim</th>
+                        <th>Justificativa</th>
+                        <th>Status</th>
+                        <!-- <th>Ações</th> Se for possível cancelar uma solicitação -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026-01-15</td>
+                        <td>2026-01-17</td>
+                        <td>Viagem médica</td>
+                        <td><span class="badge warning">Pendente</span></td>
+                        <!-- <td><a href="#" class="secondary">Cancelar</a></td> -->
+                    </tr>
+                    <tr>
+                        <td>2025-12-25</td>
+                        <td>2025-12-25</td>
+                        <td>Feriado local (não solicitado)</td>
+                        <td><span class="badge success">Aprovado</span></td>
+                        <!-- <td></td> -->
+                    </tr>
+                    <!-- Mais linhas conforme necessário -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Seção de Folgas Pendentes (Admin) - Exemplo de conteúdo adicional -->
+        <!-- <section id="folgas-pendentes-admin" style="display: none;"> <!-- Escondido por padrão para Funcionário -->
+        <!--     <h3>Folgas Pendentes (Admin)</h3> -->
+        <!--     <table class="striped"> -->
+        <!--         <thead> -->
+        <!--             <tr> -->
+        <!--                 <th>Funcionário</th> -->
+        <!--                 <th>Data Início</th> -->
+        <!--                 <th>Data Fim</th> -->
+        <!--                 <th>Justificativa</th> -->
+        <!--                 <th>Ações</th> -->
+        <!--             </tr> -->
+        <!--         </thead> -->
+        <!--         <tbody> -->
+        <!--             <tr> -->
+        <!--                 <td>Roberto Santos</td> -->
+        <!--                 <td>2026-01-20</td> -->
+        <!--                 <td>2026-01-20</td> -->
+        <!--                 <td>Problemas pessoais</td> -->
+        <!--                 <td> -->
+        <!--                     <a href="#" class="contrast">Aprovar</a> | -->
+        <!--                     <a href="#" class="secondary">Reprovar</a> -->
+        <!--                 </td> -->
+        <!--             </tr> -->
+        <!--         </tbody> -->
+        <!--     </table> -->
+        <!-- </section> -->
+
+    </main>
+
+    <!-- Footer opcional -->
+    <footer class="container">
+        <small>Marc Web - Sistema de Ponto Eletrônico &copy; 2026</small>
+    </footer>
+
+    <!-- Script JS opcional (não necessário para design puro) -->
+    <!-- <script src="js/folgas.js"></script> -->
+</body>
+
+</html>

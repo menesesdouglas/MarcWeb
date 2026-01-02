@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Funcionário - Marc Web</title>
+    <!-- Carrega o Pico CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Carrega o CSS customizado para aplicar a paleta de cores -->
+    <link rel="stylesheet" href="css/custom-styles.css">
+    <!-- Favicon opcional -->
+    <!-- <link rel="icon" href="path/to/favicon.ico"> -->
+</head>
+
+<body>
+    <!-- Cabeçalho com nome do usuário e botão Sair -->
+    <header class="container">
+        <nav>
+            <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+            <ul>
+                <li><strong>Funcionário: Maria Oliveira</strong></li>
+                <!-- Placeholder para nome do usuário -->
+                <li><a href="login.html">Sair</a></li>
+            </ul>
+            <!-- Botão Hamburger (aparece em telas pequenas) -->
+            <ul>
+                <li>
+                    <details role="list" class="dropdown">
+                        <summary aria-haspopup="list" role="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </summary>
+                        <!-- Menu de navegação que aparece no dropdown -->
+                        <ul role="list">
+                            <li><a href="#resumo-horas">Resumo de Horas</a></li>
+                            <li><a href="#registros-recentes">Registros Recentes</a></li>
+                            <li><a href="#solicitar-folga">Solicitar Folga</a></li>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" id="main-content">
+        <h2>Dashboard do Funcionário</h2>
+        <p>Olá, Maria! Aqui você pode registrar seu ponto e acompanhar seu histórico.</p>
+
+        <!-- Seção de Controle de Ponto -->
+        <section id="controle-ponto">
+            <h3>Registrar Ponto</h3>
+            <div class="grid">
+                <button class="btn-entrada btn-large">Registrar Entrada</button>
+                <!-- Cor verde -->
+                <button class="btn-inicio-almoço btn-large">Início do Almoço</button>
+                <!-- Cor vermelha -->
+                <button class="btn-fim-almoço btn-large">Fim do Almoço</button>
+                <!-- Cor verde -->
+                <button class="btn-saida btn-large">Registrar Saída</button>
+                <!-- Cor vermelha -->
+            </div>
+        </section>
+
+        <!-- Seção de Resumo de Horas -->
+        <section id="resumo-horas">
+            <h3>Resumo de Horas</h3>
+            <div class="grid">
+                <div class="card">
+                    <h4>Hoje</h4>
+                    <p>4h 20m</p>
+                    <!-- Placeholder -->
+                </div>
+                <div class="card">
+                    <h4>Este Mês</h4>
+                    <p>+10h 30m</p>
+                    <!-- Placeholder -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Registros Recentes -->
+        <section id="registros-recentes">
+            <h3>Registros Recentes</h3>
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>03/01/2026</td>
+                        <td>08:00</td>
+                        <td><span class="badge success">Entrada</span></td>
+                    </tr>
+                    <tr>
+                        <td>03/01/2026</td>
+                        <td>12:00</td>
+                        <td><span class="badge error">Início do Almoço</span></td>
+                    </tr>
+                    <tr>
+                        <td>03/01/2026</td>
+                        <td>13:00</td>
+                        <td><span class="badge success">Fim do Almoço</span></td>
+                    </tr>
+                    <tr>
+                        <td>03/01/2026</td>
+                        <td>17:30</td>
+                        <td><span class="badge error">Saída</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Seção de Solicitação de Folga -->
+        <section id="solicitar-folga">
+            <h3>Solicitar Folga</h3>
+            <button class="button secondary">Solicitar Nova Folga</button>
+        </section>
+
+    </main>
+
+    <!-- Footer opcional -->
+    <footer class="container">
+        <small>Marc Web - Sistema de Ponto Eletrônico &copy; 2026</small>
+    </footer>
+
+    <!-- Script JS opcional (não necessário para design puro) -->
+    <!-- <script src="js/dashboard-funcionario.js"></script> -->
+
+    <!-- Script para os botões grandes (opcional, para efeito visual ou futura lógica) -->
+    <script>
+        // Adiciona classe para botões grandes (exemplo de como pode ser estilizado via JS se necessário)
+        document.querySelectorAll('.btn-large').forEach(button => {
+            button.classList.add('large'); // Adiciona classe 'large' do Pico CSS
+        });
+    </script>
+
+</body>
+
+</html>
