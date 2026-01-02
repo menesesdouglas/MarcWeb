@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações da Empresa - Marc Web</title>
+    <!-- Carrega o Pico CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Carrega o CSS customizado para aplicar a paleta de cores -->
+    <link rel="stylesheet" href="css/custom-styles.css">
+    <!-- Favicon opcional -->
+    <!-- <link rel="icon" href="path/to/favicon.ico"> -->
+</head>
+
+<body>
+    <!-- Cabeçalho -->
+    <header class="container">
+        <nav>
+            <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+            <ul>
+                <li><strong>Admin: João Silva</strong></li>
+                <!-- Placeholder para nome do usuário -->
+                <li><a href="login.html">Sair</a></li>
+            </ul>
+            <!-- Botão Hamburger (aparece em telas pequenas) -->
+            <ul>
+                <li>
+                    <details role="list" class="dropdown">
+                        <summary aria-haspopup="list" role="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </summary>
+                        <!-- Menu de navegação que aparece no dropdown -->
+                        <ul role="list">
+                            <li><a href="admin-panel.html">Painel Admin</a></li>
+                            <li><a href="dashboard-funcionario.html">Dashboard Funcionário</a></li>
+                            <li><a href="relatorios.html">Relatórios</a></li>
+                            <li><a href="folgas.html">Folgas</a></li>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" id="main-content">
+        <h2>Configurações da Empresa</h2>
+        <p>Gerencie as configurações gerais do sistema.</p>
+
+        <!-- Seção de Configurações -->
+        <section id="configuracoes-empresa">
+            <h3>Informações da Empresa</h3>
+            <form id="formConfigsEmpresa">
+                <fieldset>
+                    <label for="nomeEmpresa">Nome da Empresa</label>
+                    <input type="text" id="nomeEmpresa" name="nomeEmpresa" value="Minha Empresa Ltda" required>
+                    <!-- Valor placeholder -->
+
+                    <label for="latCentro">Latitude do Local de Trabalho</label>
+                    <input type="number" id="latCentro" name="latCentro" step="any" value="-23.550520" required>
+                    <!-- Valor placeholder -->
+
+                    <label for="longCentro">Longitude do Local de Trabalho</label>
+                    <input type="number" id="longCentro" name="longCentro" step="any" value="-46.633308" required>
+                    <!-- Valor placeholder -->
+
+                    <label for="raioGeoloc">Raio de Geolocalização (metros)</label>
+                    <input type="number" id="raioGeoloc" name="raioGeoloc" min="1" value="100" required>
+                    <!-- Valor padrão -->
+
+                    <label for="geolocAtiva">
+                        <input type="checkbox" id="geolocAtiva" name="geolocAtiva" checked> <!-- Valor placeholder -->
+                        Ativar Geolocalização para Registros de Ponto
+                    </label>
+
+                    <button type="submit" class="contrast">Salvar Configurações</button>
+                </fieldset>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer opcional -->
+    <footer class="container">
+        <small>Marc Web - Sistema de Ponto Eletrônico &copy; 2026</small>
+    </footer>
+
+    <!-- Script JS opcional (não necessário para design puro) -->
+    <!-- <script src="js/configs-empresa.js"></script> -->
+</body>
+
+</html>

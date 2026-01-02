@@ -1,0 +1,67 @@
+/* frontend/css/custom-styles.css */
+
+
+/* Sobrescreve a cor primária do Pico CSS */
+
+:root {
+    --pico-color-primary: #0a58ca;
+    /* Azul profissional */
+    --pico-color-primary-focus: #084298;
+    /* Tom mais escuro para foco */
+    --pico-color-primary-background: #e7f1ff;
+    /* Tom mais claro para fundo */
+    /* As demais cores (secundária, sucesso, erro) permanecem as padrão do Pico */
+}
+
+
+/* Estilos para os botões de ponto */
+
+.btn-entrada,
+.btn-fim-almoço {
+    background-color: #198754;
+    /* Verde Sucesso */
+    border-color: #198754;
+    /* Mantém borda consistente */
+}
+
+.btn-entrada:hover,
+.btn-fim-almoço:hover {
+    background-color: #157347;
+    /* Verde Sucesso mais escuro no hover */
+    border-color: #157347;
+}
+
+.btn-saida,
+.btn-inicio-almoço {
+    background-color: #dc3545;
+    /* Vermelho Erro */
+    border-color: #dc3545;
+}
+
+.btn-saida:hover,
+.btn-inicio-almoço:hover {
+    background-color: #bb2d3b;
+    /* Vermelho Erro mais escuro no hover */
+    border-color: #bb2d3b;
+}
+
+
+/* Estilo para botões grandes (opcional, pode usar a classe 'large' do Pico CSS) */
+
+
+/* O script JS no HTML já adiciona a classe 'large' do Pico */
+
+
+/* Se quiser estilizar de forma diferente, pode substituir ou complementar: */
+
+
+/* .btn-large { */
+
+
+/*   padding: 1rem 2rem; */
+
+
+/*   font-size: 1.2em; */
+
+
+/* } */

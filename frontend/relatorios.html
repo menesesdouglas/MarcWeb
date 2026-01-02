@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Marc Web</title>
+    <!-- Carrega o Pico CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Carrega o CSS customizado para aplicar a paleta de cores -->
+    <link rel="stylesheet" href="css/custom-styles.css">
+    <!-- Favicon opcional -->
+    <!-- <link rel="icon" href="path/to/favicon.ico"> -->
+</head>
+
+<body>
+    <!-- Cabeçalho (exemplo para Admin, pode ser adaptado para Funcionário) -->
+    <header class="container">
+        <nav>
+            <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+            <ul>
+                <li><strong>Admin: João Silva</strong></li>
+                <!-- Placeholder para nome do usuário -->
+                <li><a href="login.html">Sair</a></li>
+            </ul>
+            <!-- Botão Hamburger (aparece em telas pequenas) -->
+            <ul>
+                <li>
+                    <details role="list" class="dropdown">
+                        <summary aria-haspopup="list" role="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </summary>
+                        <!-- Menu de navegação que aparece no dropdown -->
+                        <ul role="list">
+                            <li><a href="admin-panel.html">Painel Admin</a></li>
+                            <li><a href="dashboard-funcionario.html">Dashboard Funcionário</a></li>
+                            <li><a href="folgas.html">Folgas</a></li>
+                            <li><a href="configs-empresa.html">Configurações</a></li>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" id="main-content">
+        <h2>Relatórios</h2>
+        <p>Gere e visualize relatórios de horas trabalhadas por funcionário.</p>
+
+        <!-- Seção de Filtros -->
+        <section id="filtros-relatorio">
+            <h3>Filtros</h3>
+            <form id="formRelatorio">
+                <fieldset>
+                    <!-- Campo de Usuário (apenas para Admin) -->
+                    <label for="userId">Funcionário</label>
+                    <select id="userId" name="userId">
+                        <option value="">Todos</option> <!-- Placeholder para "Todos" -->
+                        <option value="1">Maria Oliveira</option>
+                        <option value="2">Carlos Souza</option>
+                        <option value="3">Ana Costa</option>
+                        <!-- Mais opções conforme necessário -->
+                    </select>
+
+                    <label for="mes">Mês</label>
+                    <input type="month" id="mes" name="mes" value="2026-01">
+                    <!-- Valor padrão -->
+
+                    <button type="submit" class="contrast">Gerar Relatório</button>
+                </fieldset>
+            </form>
+        </section>
+
+        <!-- Seção de Visualização/Download -->
+        <section id="visualizacao-relatorio">
+            <h3>Relatório Gerado</h3>
+            <p>Nenhum relatório gerado ainda. Use os filtros acima.</p>
+            <!-- Exemplo de conteúdo após geração (placeholder) -->
+            <!-- <div class="alert success">Relatório gerado com sucesso!</div> -->
+            <!-- <p>Resumo para Maria Oliveira - Janeiro/2026:</p> -->
+            <!-- <ul> -->
+            <!--     <li>Horas Trabalhadas: 220h</li> -->
+            <!--     <li>Horas Extras: 10h</li> -->
+            <!--     <li>Débito: 0h</li> -->
+            <!-- </ul> -->
+            <a href="#" class="button contrast" download>
+                <!-- Atributo 'download' para forçar download -->
+                Baixar Relatório em PDF
+            </a>
+        </section>
+
+    </main>
+
+    <!-- Footer opcional -->
+    <footer class="container">
+        <small>Marc Web - Sistema de Ponto Eletrônico &copy; 2026</small>
+    </footer>
+
+    <!-- Script JS opcional (não necessário para design puro) -->
+    <!-- <script src="js/relatorios.js"></script> -->
+</body>
+
+</html>
