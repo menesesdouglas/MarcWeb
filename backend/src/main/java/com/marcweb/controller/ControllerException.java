@@ -1,6 +1,7 @@
 package com.marcweb.controller;
 
 import com.marcweb.exceptions.ConfigEmpresaNotFoundException;
+import com.marcweb.exceptions.RegistroPontoSequenciaInvalidaException;
 import com.marcweb.exceptions.UsernameDuplicatedException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -38,6 +39,14 @@ public class ControllerException {
     @ExceptionHandler(ConfigEmpresaNotFoundException.class)
     public String handlerConfigEmpresaNotFoundException(ConfigEmpresaNotFoundException e) {
         log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(RegistroPontoSequenciaInvalidaException.class)
+    public String handlerRegistroPontoSequenciaInvalidaException(RegistroPontoSequenciaInvalidaException e) {
+        log.warn("Erro na ordem dos registros de ponto");
         return e.getMessage();
     }
 }

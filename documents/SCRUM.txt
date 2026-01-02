@@ -30,7 +30,7 @@ Objetivo: Estabelecer a infraestrutura local, modelo de dados, segurança básic
         *   Criar usuário admin padrão para testes iniciais (se necessário).
     *   Marco: Endpoint `/api/auth/login` funciona e gera JWT. Outros endpoints exigem token válido.
 
-*   **Sprint 3: Primeiras Funcionalidades CRUD**
+*   **Sprint 3: Primeiras Funcionalidades CRUD** Concluido 01/01/2026
     *   Objetivo: Implementar operações básicas para usuários e configurações.
     *   Tarefas:
         *   Criar controllers REST para `User` e `ConfigEmpresa`.
@@ -41,7 +41,7 @@ Objetivo: Estabelecer a infraestrutura local, modelo de dados, segurança básic
         *   Testar os endpoints via `curl` ou Postman.
     *   Marco: CRUD de Usuários e Configurações funcionando via API, protegido por autenticação.
 
-*   **Sprint 4: Validações e Integração Inicial**
+*   **Sprint 4: Validações e Integração Inicial** Concluido 02/01/2026
     *   Objetivo: Validar regras de negócio básicas e preparar para a Fase 2.
     *   Tarefas:
         *   Criar um `UserService` para encapsular lógica de negócios de usuários (validações de criação, atualização).

@@ -1,0 +1,22 @@
+package com.marcweb.dto;
+
+import com.marcweb.entity.TipoRegistro;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+
+
+@Data
+public class CreateRegistroPonto {
+
+    @NotNull(message = "Informe o tipo de registro")
+    private TipoRegistro tipo; // ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
+
+    // Campos de geolocalização (opcionais)
+    private Double latitude;
+    private Double longitude;
+
+    private Double precisao; // Precisão da geolocalização em metros
+    private String justificativa;
+}

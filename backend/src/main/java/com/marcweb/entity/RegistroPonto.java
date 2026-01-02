@@ -1,13 +1,19 @@
 package com.marcweb.entity;
 
+import com.marcweb.dto.CreateRegistroPonto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+
+@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "registros_ponto")
 @Data
@@ -28,6 +34,7 @@ public class RegistroPonto {
     @Column(nullable = false)
     private TipoRegistro tipo; // ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
 
+    @CreatedDate
     @Column(nullable = false)
     private LocalDateTime timestamp; // Data e hora do registro
 
@@ -46,4 +53,10 @@ public class RegistroPonto {
 
     @Column(name = "justificativa", length = 500) // Para justificar um registro fora do padrão
     private String justificativa;
+
+    public RegistroPonto(CreateRegistroPonto data, User user, String ip) {
+        BeanUtils.copyProperties(data, this);
+        this.user = user;
+        this.ip = ip;
+    }
 }

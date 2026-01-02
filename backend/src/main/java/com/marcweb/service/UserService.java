@@ -7,6 +7,8 @@ import com.marcweb.repository.UserRepository;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,10 +58,22 @@ public class UserService {
         repository.deleteById(id);
     }
 
+    public User findByUsername(String username) {
+        return repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+    }
+
 
     private void validateUsername(String username) {
         if (repository.existsByUsername(username)) {
             throw new UsernameDuplicatedException();
         }
     }
+
+    public static UserDetails getUserDetailsBySecurityContext() {
+        return (UserDetails) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+    }
+
 }
