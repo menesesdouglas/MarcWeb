@@ -28,4 +28,5 @@ public class DataConfigEmpresa {
     public DataConfigEmpresa(ConfigEmpresa configEmpresa) {
         BeanUtils.copyProperties(configEmpresa, this);
     }
+
 }

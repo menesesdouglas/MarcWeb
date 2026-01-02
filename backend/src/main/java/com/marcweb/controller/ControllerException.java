@@ -1,18 +1,43 @@
 package com.marcweb.controller;
 
+import com.marcweb.exceptions.ConfigEmpresaNotFoundException;
 import com.marcweb.exceptions.UsernameDuplicatedException;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@RequiredArgsConstructor
 @RestControllerAdvice
 public class ControllerException {
 
 
+    private static final Logger log = LoggerFactory.getLogger(ControllerException.class);
+
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(UsernameDuplicatedException.class)
-    public String handlerUsernameDuplicatedException(UsernameDuplicatedException e){
+    public String handlerUsernameDuplicatedException(UsernameDuplicatedException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public String handlerUsernameNotFoundException(UsernameNotFoundException e) {
+        log.error(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ConfigEmpresaNotFoundException.class)
+    public String handlerConfigEmpresaNotFoundException(ConfigEmpresaNotFoundException e) {
+        log.warn(e.getMessage());
         return e.getMessage();
     }
 }

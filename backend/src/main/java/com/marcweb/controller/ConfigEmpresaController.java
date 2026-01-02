@@ -3,6 +3,7 @@ package com.marcweb.controller;
 import com.marcweb.dto.DataConfigEmpresa;
 import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.repository.ConfigEmpresaRepository;
+import com.marcweb.service.ConfigEmpresaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,28 +16,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/config-empresa")
 public class ConfigEmpresaController {
 
-    private final ConfigEmpresaRepository repository;
+    private final ConfigEmpresaService service;
 
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     @PutMapping
     public void updateConfigEmpresa(@RequestBody @Valid DataConfigEmpresa data) {
-        Long idConfigEmpresa = repository.findFirst().orElseThrow(() -> new RuntimeException("Não existe registro correspondente"))
-                .getId();
-        ConfigEmpresa configEmpresa = ConfigEmpresa.builder()
-                .id(idConfigEmpresa)
-                .nomeEmpresa(data.getNomeEmpresa())
-                .geolocAtiva(data.getGeolocAtiva())
-                .latCentro(data.getLatCentro())
-                .longCentro(data.getLongCentro())
-                .raioGeoloc(data.getRaioGeoloc())
-                .build();
-        repository.save(configEmpresa);
+        service.updateConfigEmpresa(data);
     }
 
     @GetMapping
     public ResponseEntity<DataConfigEmpresa> findConfigsEmpresa() {
-        var configEmpresa = repository.findFirst().orElse(null);
-        return configEmpresa != null ? ResponseEntity.ok(new DataConfigEmpresa(configEmpresa)) : ResponseEntity.notFound().build();
+        var configEmpresa = service.findConfigsEmpresa();
+        return ResponseEntity.ok(configEmpresa);
     }
 }
