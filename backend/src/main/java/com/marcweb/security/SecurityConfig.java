@@ -42,10 +42,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Desativa CSRF para API stateless (sem sessões)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Política de sessão stateless
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Liberar login
-                        .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll() // Exemplo, se tiver outro público
-                        // Adicione outros endpoints públicos de autenticação aqui se necessário
-                        .anyRequest().authenticated() // Qualquer outro endpoint requer autenticação
+                    .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll()
+                    .requestMatchers("/error").permitAll() // <-- Adicione esta linha
+                    .requestMatchers(HttpMethod.POST, "/api/registro-ponto/registrar").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/registro-ponto/buscar").authenticated()
+                    .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider()) // Define o provedor de autenticação
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona o filtro JWT antes do filtro padrão de login
