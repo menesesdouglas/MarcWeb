@@ -1,10 +1,12 @@
 package com.marcweb.entity;
 
+import com.marcweb.dto.CreateFeriado;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDate;
 
@@ -29,4 +31,10 @@ public class Feriado {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrigemFeriado origem; // API (BrasilAPI), MANUAL
+
+
+    public Feriado(CreateFeriado data, OrigemFeriado origem) {
+        BeanUtils.copyProperties(data, this);
+        this.origem = origem;
+    }
 }

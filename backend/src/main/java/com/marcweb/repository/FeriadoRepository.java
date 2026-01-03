@@ -12,4 +12,7 @@ public interface FeriadoRepository extends JpaRepository<Feriado, Long> {
     List<Feriado> findByDataBetweenOrderByDataAsc(LocalDate startDate, LocalDate endDate);
     List<Feriado> findByData(LocalDate date); // Para verificar se uma data específica é feriado
     // Outros métodos específicos, se necessário
+
+
+
 }
