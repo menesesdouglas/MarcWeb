@@ -84,6 +84,10 @@ public class RegistroPontoService {
 
 
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 }
 >>>>>>> Stashed changes
