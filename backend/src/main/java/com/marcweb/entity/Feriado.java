@@ -1,6 +1,7 @@
 package com.marcweb.entity;
 
 import com.marcweb.dto.CreateFeriado;
+import com.marcweb.dto.FeriadoNacionalDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,21 @@ public class Feriado {
 
     public Feriado(CreateFeriado data, OrigemFeriado origem) {
         BeanUtils.copyProperties(data, this);
+        this.origem = origem;
+    }
+
+    // USADO PARA CADASTRO AUTOMÁTICO DE FERIADOS NACIONAIS
+    public Feriado(FeriadoNacionalDTO dadosFeriado) {
+        this.nome = dadosFeriado.name();
+        this.data = dadosFeriado.date();
+        this.origem = OrigemFeriado.API;
+    }
+
+
+    // USADO PARA RECEBER REGISTROS SEM REFERENCIA DE ID
+    public Feriado(LocalDate data, String nome, OrigemFeriado origem) {
+        this.data = data;
+        this.nome = nome;
         this.origem = origem;
     }
 }

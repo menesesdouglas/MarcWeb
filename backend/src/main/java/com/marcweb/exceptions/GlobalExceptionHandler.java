@@ -1,18 +1,64 @@
 package com.marcweb.exceptions; // ou o pacote que você usar para handlers/configs
 
-import com.marcweb.exceptions.RegistroPontoSequenciaInvalidaException;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice // Aplica a todos os @RestController
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(UsernameDuplicatedException.class)
+    public String handlerUsernameDuplicatedException(UsernameDuplicatedException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public String handlerUsernameNotFoundException(UsernameNotFoundException e) {
+        log.error(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ConfigEmpresaNotFoundException.class)
+    public String handlerConfigEmpresaNotFoundException(ConfigEmpresaNotFoundException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroPontoSequenciaInvalidaException.class)
-    public ResponseEntity<String> handleRegistroPontoSequenciaInvalida(RegistroPontoSequenciaInvalidaException ex) {
-        // Retorna 400 Bad Request com mensagem da exceção
-        return ResponseEntity.badRequest().body(ex.getMessage());
+    public String handlerRegistroPontoSequenciaInvalidaException(RegistroPontoSequenciaInvalidaException e) {
+        log.warn("Erro na ordem dos registros de ponto");
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(FeriadoAnoInvalidoException.class)
+    public String handlerFeriadoAnoInvalidoException(FeriadoAnoInvalidoException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(FeriadoDuplicadoException.class)
+    public String handlerFeriadoAnoInvalidoException(FeriadoDuplicadoException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
     }
 
     /*@ExceptionHandler(Exception.class)

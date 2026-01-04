@@ -78,16 +78,10 @@ public class RegistroPontoService {
         else ip = ip.split(",")[0];
         return ip;
     }
-<<<<<<< Updated upstream
-}
-=======
-
-
-
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 
 }
->>>>>>> Stashed changes
+
+
+
+
+
