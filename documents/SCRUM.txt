@@ -91,10 +91,8 @@ Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 
   - Calcular horas trabalhadas, extras e débitos por dia
   - Identificar tipo de dia (UTIL, DOMINGO, FERIADO, FOLGA)
   - Gerar JSON conforme estrutura do SDD
-- Criar endpoint `GET /api/folha-ponto/gerar?mes=X&ano=Y`
-- Criar endpoint `GET /api/folha-ponto/me?mes=X&ano=Y` (funcionário)
-- Persistir folha de ponto gerada no banco
-- Validações: não regenerar se já existe, permitir forçar atualização
+- Criar endpoint `GET /api/folha-ponto/gerar?mes=X&ano=Y` (role admin)
+- Criar endpoint `GET /api/folha-ponto/me?mes=X&ano=Y` (role employee)
 
 **Marco:** Folha de ponto detalhada em JSON disponível via API, com todas as informações estruturadas.
 
@@ -116,7 +114,6 @@ Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 
 - Criar endpoint `GET /api/auditoria/logs` (admin only)
 - Implementar filtros (data, usuário, ação, status)
 - Adicionar paginação nos logs
-- Implementar limpeza automática de logs antigos (> 90 dias)
 
 **Marco:** Sistema de auditoria completo, todas as ações críticas registradas e rastreáveis.
 
@@ -143,6 +140,7 @@ Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 
   - `EmpresasPublicController` (endpoints públicos)
   - `AdminEmpresaController` (gerenciamento)
 - Implementar frontend do portal:
+  - Tela de apresentação do sistema (ex.: página inicial do totvs)
   - Tela de login com select de empresas
   - Buscar lista de empresas via API
   - Enviar login para API específica da empresa
