@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin | MarcWeb</title>
+    <link rel="stylesheet" href="custom-styles_admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">Marc<span>Web</span></div>
+                <small>ADMIN PANEL</small>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-section="dashboard">📊 Dashboard</a>
+                <a href="#" class="nav-link" data-section="employees">👥 Funcionários</a>
+                <a href="#" class="nav-link" data-section="adjustments">⚙️ Ajustes de Ponto</a>
+                <a href="#" class="nav-link" data-section="reports">📄 Relatórios</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="btnLogout" class="btn-logout">Sair do Sistema</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <section id="dashboard" class="content-section active">
+                <header class="section-header">
+                    <h1>Dashboard</h1>
+                    <p>Visão geral da operação hoje.</p>
+                </header>
+                <div class="stats-grid">
+                    <div class="stat-card"><h3>Ativos</h3><p id="countActive">12</p></div>
+                    <div class="stat-card"><h3>Em Pausa</h3><p id="countBreak">3</p></div>
+                    <div class="stat-card"><h3>Faltas</h3><p id="countAbsence">1</p></div>
+                </div>
+                <div class="recent-activity card">
+                    <h3>Status Recentes</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Status</th>
+                                <th>Horário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentActivityBody">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="employees" class="content-section">
+                <header class="section-header">
+                    <h1>Gestão de Funcionários</h1>
+                    <button class="btn-primary" onclick="openModal('add')">+ Novo Funcionário</button>
+                </header>
+                <div class="card">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Cargo</th>
+                                <th>Situação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeListBody">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="adjustments" class="content-section">
+                <header class="section-header">
+                    <h1>Ajustes de Ponto</h1>
+                </header>
+                <div class="card form-card">
+                    <form id="adjustmentForm">
+                        <div class="input-group">
+                            <label>Selecionar Funcionário</label>
+                            <select id="adjEmployee" required></select>
+                        </div>
+                        <div class="input-group">
+                            <label>Data do Ajuste</label>
+                            <input type="date" id="adjDate" required>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Novo Status</label>
+                                <select id="adjStatus">
+                                    <option value="Entrada">Entrada</option>
+                                    <option value="Início Descanso">Início Descanso</option>
+                                    <option value="Fim Descanso">Fim Descanso</option>
+                                    <option value="Saída">Saída</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Novo Horário</label>
+                                <input type="time" id="adjTime" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Salvar Alteração</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="reports" class="content-section">
+                <header class="section-header">
+                    <h1>Relatórios e Folhas</h1>
+                </header>
+                <div class="card">
+                    <p>Selecione o funcionário e o período para gerar o espelho de ponto.</p>
+                    <div class="input-row" style="margin-top: 20px;">
+                        <select id="reportEmployee"></select>
+                        <input type="month" id="reportMonth">
+                        <button class="btn-primary" onclick="generateReport()">Gerar Folha de Ponto (PDF)</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal card">
+            <h2 id="modalTitle">Cadastrar Funcionário</h2>
+            <form id="employeeForm">
+                <input type="hidden" id="editIndex">
+                <div class="input-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="empName" required>
+                </div>
+                <div class="input-group">
+                    <label>Cargo</label>
+                    <input type="text" id="empRole" required>
+                </div>
+                <div class="input-group">
+                    <label>Situação no Cadastro</label>
+                    <select id="empActive">
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script_admin.js"></script>
+</body>
+</html>
