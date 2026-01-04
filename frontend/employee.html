@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Colaborador | MarcWeb</title>
+    <link rel="stylesheet" href="custom-styles_employee.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">Marc<span>Web</span></div>
+            <div class="user-info">
+                <span>Olá, <strong>João Silva</strong></span>
+                <button id="btnLogout" class="btn-logout">Sair</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <section class="clock-card">
+            <div class="date-display" id="currentDate">-- de -- de ----</div>
+            <div class="digital-clock" id="digitalClock">00:00:00</div>
+            <div class="status-badge" id="currentStatus">Status: Fora de Serviço</div>
+        </section>
+
+        <section class="actions-grid">
+            <button class="punch-btn" data-type="Entrada">
+                <span class="icon">🚀</span>
+                Entrada
+            </button>
+            <button class="punch-btn" data-type="Início Descanso">
+                <span class="icon">☕</span>
+                Início Descanso
+            </button>
+            <button class="punch-btn" data-type="Fim Descanso">
+                <span class="icon">⏳</span>
+                Fim Descanso
+            </button>
+            <button class="punch-btn" data-type="Saída">
+                <span class="icon">🏁</span>
+                Saída
+            </button>
+        </section>
+
+        <section class="history-card">
+            <div class="card-header">
+                <h3>Registros de Hoje</h3>
+                <button id="btnReport" class="btn-secondary">Gerar Folha de Ponto</button>
+            </div>
+            <ul class="punch-list" id="punchList">
+                <li class="empty-msg">Nenhum registro hoje.</li>
+            </ul>
+        </section>
+    </main>
+
+    <script src="script_employee.js"></script>
+</body>
+</html>
