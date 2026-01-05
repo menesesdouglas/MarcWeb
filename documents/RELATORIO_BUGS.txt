@@ -68,7 +68,7 @@ Adicionada validação específica para verificar se a localização do usuário
 ---
 
 ### BUG-004: Validação de Dia Útil NÃO Implementada
-**Status**: ❌ PENDENTE
+**Status**: ✅ CORRIGIDO
 
 **Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
 
@@ -89,14 +89,8 @@ Sistema aceita registro em qualquer dia da semana, incluindo domingos e feriados
 2. Bloquear registro em feriados cadastrados no banco
 3. Retornar mensagem clara informando o motivo da rejeição
 
-**Funcionalidades Faltantes**:
-- Método `validarDiaUtil(LocalDateTime)`
-- Exceção `RegistroEmDomingoException`
-- Exceção `RegistroEmFeriadoException`
-- Handler no `GlobalExceptionHandler`
-
-**Dependências Faltantes**:
-- Injeção de `FeriadoRepository` no `RegistroPontoService`
+**Correção Implementada**:
+Adicionada validação para feriados e domingos.
 
 ---
 
