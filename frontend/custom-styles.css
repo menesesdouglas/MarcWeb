@@ -1,0 +1,223 @@
+:root {
+    --bg-dark: #0a0e12;
+    --bg-card: #141b22;
+    --petrol-blue: #005f73;
+    --petrol-light: #0a9396;
+    --text-main: #e9ecef;
+    --text-dim: #adb5bd;
+    --accent: #94d2bd;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Navbar */
+.navbar {
+    padding: 1.5rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    background: rgba(10, 14, 18, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.logo span {
+    color: var(--petrol-light);
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--text-dim);
+    margin-left: 2rem;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    color: var(--petrol-light);
+}
+
+.btn-login {
+    border: 1px solid var(--petrol-blue);
+    padding: 0.6rem 1.5rem;
+    border-radius: 5px;
+    color: white !important;
+}
+
+.btn-login:hover {
+    background: var(--petrol-blue);
+}
+
+/* Hero Section */
+.hero {
+    padding: 10rem 0 6rem;
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.hero .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+h1 {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+}
+
+.text-gradient {
+    background: linear-gradient(90deg, var(--petrol-light), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: var(--text-dim);
+    margin-bottom: 2.5rem;
+}
+
+.btn-primary {
+    background-color: var(--petrol-blue);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+    display: inline-block;
+}
+
+.btn-primary:hover {
+    background-color: var(--petrol-light);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 95, 115, 0.3);
+}
+
+.btn-secondary {
+    color: white;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-weight: 600;
+}
+
+/* Dashboard Mockup Effect */
+.hero-visual {
+    position: relative;
+}
+
+.dashboard-mockup {
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(135deg, #1a222a 0%, #0a0e12 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.circle-effect {
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0, 95, 115, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Features */
+.features {
+    padding: 8rem 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    padding: 3rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: 0.4s;
+}
+
+.feature-card:hover {
+    border-color: var(--petrol-blue);
+    transform: translateY(-10px);
+}
+
+.feature-card .icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Footer CTA */
+footer {
+    padding: 6rem 0 2rem;
+    text-align: center;
+    background: linear-gradient(to top, #001a1f, var(--bg-dark));
+}
+
+.footer-bottom {
+    margin-top: 6rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+/* Animations */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}

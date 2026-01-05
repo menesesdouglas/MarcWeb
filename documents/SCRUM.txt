@@ -1,194 +1,423 @@
-### **Plano SCRUM do Projeto Marc Web - 18 Sprints**
+# **Plano SCRUM do Projeto Marc Web - 16 Sprints (+2 Opcionais)**
 
-Este plano detalha as 18 sprints do projeto Marc Web, alinhado ao Software Design Document (SDD.txt) e às configurações iniciais (Configs.txt). O desenvolvimento seguirá uma abordagem ágil e incremental, com foco em segurança, backend-first e otimização para máquinas com 4GB RAM.
+Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 2 sprints opcionais para funcionalidades avançadas.
 
-### **Fase 1: Fundação Local (Sprints 1–4)**
-Objetivo: Estabelecer a infraestrutura local, modelo de dados, segurança básica e configurações iniciais.
-
-*   **Sprint 1: Setup Geral & Infra Local** Concluido 30/12/2025
-    *   Objetivo: Ambientes 100% funcionais em ambas as máquinas.
-    *   Tarefas:
-        *   Confirmar configurações iniciais (Java 17, Maven, PostgreSQL, Git, VS Code + extensões) conforme `Configs.txt`.
-        *   Criar banco de dados `marcweb_dev` e usuário `marcuser` em ambas as máquinas.
-        *   Criar repositório GitHub privado `marc-web` (se ainda não criado).
-        *   Clonar o repositório nas duas máquinas.
-        *   Gerar projeto Spring Boot via Spring Initializr com as dependências corretas (Spring Web, Spring Security, Spring Data JPA, PostgreSQL Driver, Lombok, Validation).
-        *   Configurar estrutura de pastas inicial conforme SDD (`backend/`, `frontend/`).
-        *   Adicionar `application.yml` e `application-dev.yml` com conexão ao banco local.
-        *   Implementar endpoint simples `/api/health` para teste.
-        *   Primeiro commit e push.
-    *   Marco: `mvn spring-boot:run` inicia a aplicação sem erros e conecta ao PostgreSQL.
-
-*   **Sprint 2: Entidades & Segurança Base** Concluido 31/12/2025
-    *   Objetivo: Modelar dados e implementar autenticação/autorização básica.
-    *   Tarefas:
-        *   Criar as 6 entidades JPA conforme SDD: `User`, `RegistroPonto`, `Feriado`, `Folga`, `LogAuditoria`, `ConfigEmpresa`.
-        *   Criar os repositórios JPA correspondentes.
-        *   Implementar configuração de segurança base com Spring Security e JWT (login, geração de token).
-        *   Implementar endpoint de login `/api/auth/login`.
-        *   Implementar um filtro de segurança para validar JWT nos endpoints protegidos.
-        *   Criar usuário admin padrão para testes iniciais (se necessário).
-    *   Marco: Endpoint `/api/auth/login` funciona e gera JWT. Outros endpoints exigem token válido.
-
-*   **Sprint 3: Primeiras Funcionalidades CRUD** Concluido 01/01/2026
-    *   Objetivo: Implementar operações básicas para usuários e configurações.
-    *   Tarefas:
-        *   Criar controllers REST para `User` e `ConfigEmpresa`.
-        *   Implementar endpoints CRUD básicos para `User` (apenas Admin pode criar/editar/excluir).
-        *   Implementar endpoint para visualizar e atualizar `ConfigEmpresa`.
-        *   Aplicar validação (`@Valid`) nos DTOs de entrada.
-        *   Configurar Flyway e criar a primeira migration (`V1__create_tables.sql`) para refatorar a criação das tabelas.
-        *   Testar os endpoints via `curl` ou Postman.
-    *   Marco: CRUD de Usuários e Configurações funcionando via API, protegido por autenticação.
-
-*   **Sprint 4: Validações e Integração Inicial** Concluido 02/01/2026
-    *   Objetivo: Validar regras de negócio básicas e preparar para a Fase 2.
-    *   Tarefas:
-        *   Criar um `UserService` para encapsular lógica de negócios de usuários (validações de criação, atualização).
-        *   Implementar cadastro de usuário via endpoint `/api/auth/register` (talvez apenas para testes ou com token especial).
-        *   Implementar endpoint para atualizar consentimento de geolocalização do usuário.
-        *   Preparar ambiente para integração com BrasilAPI (definir `WebClient` ou `RestTemplate`).
-        *   Revisar e ajustar estrutura de pastas e configurações se necessário.
-    *   Marco: Funcionalidades de usuário com validações e persistência funcionando. Preparação para sincronização de feriados concluída.
+**Mudanças principais:**
+- ✅ Foco no MVP: Sistema de ponto robusto
+- ✅ Folha de ponto detalhada
+- ✅ Multi-tenant completo
+- 🔄 Contracheque movido para sprints opcionais (não prioritário)
 
 ---
 
-### **Fase 2: Core do Negócio (Sprints 5–12)**
-Objetivo: Implementar o coração do sistema: registro de ponto, cálculos de horas, relatórios e auditoria.
+## **Fase 1: Fundação Local (Sprints 1–4)** ✅ COMPLETO
+**Objetivo:** Estabelecer infraestrutura local, modelo de dados, segurança básica e configurações iniciais.
 
-*   **Sprint 5: Registro de Ponto - Backend**
-    *   Objetivo: Permitir que usuários registrem seus pontos com validações.
-    *   Tarefas:
-        *   Criar `RegistroPontoService` com lógica para validar sequência de registros (ex: Entrada -> Início Descanso -> Fim Descanso -> Saída).
-        *   Criar controller REST `/api/ponto/` com endpoint para registrar ponto (`POST /registrar`) e outro para listar registros do usuário autenticado (`GET /me`).
-        *   Implementar persistência dos registros no banco.
-        *   Adicionar campos de geolocalização (lat, long, precisão) como opcionais no DTO e entidade.
-        *   Implementar validação de IP do cliente (opcional, para rastreabilidade).
-    *   Marco: Usuário pode registrar ponto via API com validações de sequência e dados salvos corretamente.
+### **Sprint 1: Setup Geral & Infra Local** ✅ Concluído 30/12/2025
+- ✅ Ambientes funcionais em ambas as máquinas
+- ✅ Banco `marcweb_dev` criado
+- ✅ Projeto Spring Boot inicializado
+- ✅ Endpoint `/api/health` funcional
+- ✅ Primeiro commit realizado
 
-*   **Sprint 6: Calendário e Controle de Ausências**
-    *   Objetivo: Gerenciar feriados e folgas individuais.
-    *   Tarefas:
-        *   Criar `FeriadoService` para sincronizar com a BrasilAPI (GET /api/feriados/sync).
-        *   Criar `FolgaService` para CRUD de folgas individuais (apenas Admin).
-        *   Criar controllers REST `/api/feriados/` e `/api/folgas/`.
-        *   Associar folgas e feriados à entidade `User` ou `RegistroPonto` para cálculos futuros.
-    *   Marco: Feriados podem ser sincronizados e folgas individuais registradas e listadas via API.
+### **Sprint 2: Entidades & Segurança Base** ✅ Concluído 31/12/2025
+- ✅ 6 entidades JPA criadas
+- ✅ Repositórios JPA
+- ✅ JWT implementado
+- ✅ Endpoint `/api/auth/login`
+- ✅ Usuário admin padrão
 
-*   **Sprint 7: Cálculos de Horas**
-    *   Objetivo: Implementar lógica para cálculo de horas trabalhadas e saldo.
-    *   Tarefas:
-        *   Estender `RegistroPontoService` com métodos para calcular horas por dia, semana e mês.
-        *   Considerar feriados e folgas no cálculo (dia de folga ou feriado não gera débito, por exemplo).
-        *   Criar endpoint para obter resumo de horas do usuário em um período (`GET /api/resumo-horas?userId=X&dataInicio=...&dataFim=...`).
-    *   Marco: Sistema consegue calcular horas trabalhadas, extras e débitos com base nos registros, feriados e folgas.
+### **Sprint 3: Primeiras Funcionalidades CRUD** ✅ Concluído 01/01/2026
+- ✅ Controllers REST (User, ConfigEmpresa)
+- ✅ CRUD de usuários (admin only)
+- ✅ Validações com `@Valid`
+- ✅ Flyway configurado (V1__create_tables)
+- ✅ Testes manuais via Postman/cURL
 
-*   **Sprint 8: Auditoria de Ações**
-    *   Objetivo: Registrar todas as ações críticas do sistema.
-    *   Tarefas:
-        *   Criar `LogAuditoriaService` e `LogAuditoriaRepository`.
-        *   Implementar um mecanismo de auditoria (possivelmente via AOP - Aspect Oriented Programming) para registrar ações como login, registro de ponto, alterações de dados, etc.
-        *   Criar controller REST `/api/auditoria/` para listar logs (restrito a Admin).
-        *   Implementar limpeza automática de logs antigos (> 90 dias) via Job ou script simples.
-    *   Marco: Ações críticas são automaticamente registradas e podem ser consultadas por administradores.
+### **Sprint 4: Validações e Integração Inicial** ✅ Concluído 02/01/2026
+- ✅ UserService com lógica de negócio
+- ✅ Endpoint `/api/auth/register`
+- ✅ BrasilApiService preparado
+- ✅ Estrutura de pastas ajustada
 
-*   **Sprint 9: Exportação de Relatórios - Backend**
-    *   Objetivo: Gerar relatórios de ponto em PDF.
-    *   Tarefas:
-        *   Integrar a biblioteca iText 7 ao projeto.
-        *   Criar um `RelatorioService` para gerar PDFs com base nos dados de `RegistroPonto`, `Feriado`, `Folga` e cálculos de horas.
-        *   Criar endpoint `/api/relatorios/mensal/pdf` que gere e retorne um arquivo PDF para um usuário e mês específicos.
-        *   O PDF deve conter detalhes dos registros diários, cálculos de horas e possivelmente assinatura digital (futura).
-    *   Marco: Endpoint gera um arquivo PDF de relatório mensal com dados corretos.
-
-*   **Sprint 10: Integração Geolocalização (JS Puro no Frontend)**
-    *   Objetivo: Adicionar validação de localização ao registro de ponto.
-    *   Tarefas:
-        *   Preparar o backend para receber latitude e longitude no endpoint de registro de ponto.
-        *   Implementar validação de raio geográfico (ex: dentro de X metros do local da empresa) no `RegistroPontoService`, usando dados de `ConfigEmpresa`.
-        *   No frontend (JS puro), solicitar permissão de geolocalização antes de registrar o ponto.
-        *   Enviar os dados de localização juntamente com o registro.
-    *   Marco: Registro de ponto pode incluir e validar dados de geolocalização com base nas configurações da empresa.
-
-*   **Sprint 11: Refinamento e Testes Unitários**
-    *   Objetivo: Garantir qualidade e robustez do backend.
-    *   Tarefas:
-        *   Escrever testes unitários para os serviços principais (`UserService`, `RegistroPontoService`, `FeriadoService`, etc.).
-        *   Escrever testes de integração para os endpoints REST (controllers).
-        *   Realizar testes manuais e de carga básicos (usando ferramentas como JMeter ou Postman Runner).
-        *   Revisar e otimizar consultas JPA/HQL se necessário.
-    *   Marco: Cobertura de testes significativa e funcionalidades backend estáveis.
-
-*   **Sprint 12: Preparação para Fase 3**
-    *   Objetivo: Consolidar backend e preparar para frontend e deploy.
-    *   Tarefas:
-        *   Finalizar documentação da API REST (pode usar Springdoc OpenAPI).
-        *   Revisar e aplicar correções de segurança identificadas (OWASP).
-        *   Configurar perfis de ambiente (dev, prod) para `application.yml`.
-        *   Preparar script de backup automático (`pg_dump`).
-        *   Definir endpoints finais e estrutura de DTOs para o frontend consumir.
-    *   Marco: Backend funcional, testado e documentado, pronto para integração com o frontend.
+**Marco Fase 1:** Backend básico funcional, autenticação implementada, CRUD de usuários operacional.
 
 ---
 
-### **Fase 3: Frontend Completo + Integrações + Hardening (Sprints 13–18)**
-Objetivo: Desenvolver o frontend completo, integrar com o backend, e preparar para produção.
+## **Fase 2: Core do Negócio (Sprints 5–12)**
+**Objetivo:** Implementar funcionalidades principais do sistema de ponto e arquitetura multi-tenant.
 
-*   **Sprint 13: Estrutura e Telas de Autenticação Frontend**
-    *   Objetivo: Criar a base do frontend e telas de login/cadastro.
-    *   Tarefas:
-        *   Criar arquivos HTML/CSS/JS básicos dentro de `backend/src/main/resources/static/` ou na pasta `frontend/` (definir estrutura).
-        *   Integrar Pico CSS (via CDN ou local).
-        *   Criar telas: `login.html`, `register.html`.
-        *   Implementar chamadas API para login/cadastro via JS puro (Fetch API).
-        *   Armazenar JWT no `localStorage` ou `sessionStorage` e incluir nos headers das próximas requisições.
-    *   Marco: Telas de login/cadastro funcionando e se comunicando com o backend.
+### **Sprint 5: Registro de Ponto - Backend** 🔄 Em Andamento (90%)
+**Objetivo:** Completar sistema de registro de ponto com validações.
 
-*   **Sprint 14: Dashboard Funcionário**
-    *   Objetivo: Criar a interface principal para o funcionário comum.
-    *   Tarefas:
-        *   Criar tela `dashboard-funcionario.html`.
-        *   Implementar botões grandes e intuitivos para registrar ponto (Entrada, Início/Fim Descanso, Saída).
-        *   Exibir registros recentes do próprio usuário.
-        *   Exibir resumo de horas do mês atual.
-        *   Implementar funcionalidade de solicitar folga (se permitido).
-    *   Marco: Funcionário pode registrar ponto e visualizar seus dados via interface web.
+**Tarefas:**
+- [x] RegistroPontoService com validação de sequência
+- [x] Controller REST `/api/ponto`
+- [x] Correção BUG-001 (NullPointerException primeiro registro)
+- [ ] Implementar validação de geolocalização (BUG-003)
+- [ ] Validação de dia útil (não permitir domingos/feriados)
+- [ ] Testes unitários básicos
 
-*   **Sprint 15: Painel Admin**
-    *   Objetivo: Criar a interface principal para administradores.
-    *   Tarefas:
-        *   Criar tela `admin-panel.html`.
-        *   Implementar CRUD de usuários via frontend (listar, criar, editar, excluir).
-        *   Implementar visualização e aprovação de solicitações de folga.
-        *   Exibir relatórios resumidos de todos os funcionários.
-    *   Marco: Administrador pode gerenciar usuários e ausências via interface web.
+**Marco:** Registro de ponto funcionando com todas as validações, incluindo restrição de domingos.
 
-*   **Sprint 16: Relatórios e Exportações Frontend**
-    *   Objetivo: Permitir geração e visualização de relatórios no frontend.
-    *   Tarefas:
-        *   Criar tela ou modal para geração de relatórios (filtro por usuário e período).
-        *   Implementar chamada ao endpoint `/api/relatorios/mensal/pdf` e permitir download do arquivo.
-        *   (Opcional) Implementar visualização prévia do relatório em HTML.
-    *   Marco: Usuários podem solicitar e baixar relatórios PDF via frontend.
+---
 
-*   **Sprint 17: Integrações e Ajustes Finais**
-    *   Objetivo: Integrar funcionalidades extras e resolver pendências.
-    *   Tarefas:
-        *   Finalizar integração de geolocalização no frontend.
-        *   Implementar funcionalidade de busca e filtro nas listagens.
-        *   Melhorar a experiência do usuário (UX) com Alpine.js se necessário.
-        *   Realizar testes finais de integração (frontend + backend).
-        *   Corrigir bugs e otimizar performance (especialmente para máquinas com 4GB RAM).
-    *   Marco: Aplicação web funcional com todas as features principais integradas.
+### **Sprint 6: Calendário e Controle de Ausências**
+**Objetivo:** Gerenciar feriados e folgas individuais.
 
-*   **Sprint 18: Deploy e Hardening Final**
-    *   Objetivo: Colocar o sistema em produção e aplicar medidas de segurança finais.
-    *   Tarefas:
-        *   Preparar ambiente de produção (Hetzner ou similar).
-        *   Configurar HTTPS (Let's Encrypt).
-        *   Configurar WAF (ModSecurity no Nginx).
-        *   Configurar firewall (UFW).
-        *   Realizar pentest básicos (OWASP ZAP).
-        *   Documentar o processo de deploy e operação.
-        *   (Opcional) Configurar Telebit para acesso seguro durante a Fase 2.
-    *   Marco: Aplicação web segura, funcional e hospedada em ambiente de produção.
+**Tarefas:**
+- Completar FeriadoService (sincronização BrasilAPI + persistência)
+- Criar endpoint `POST /api/feriados/sync`
+- Criar FolgaService com CRUD completo
+- Implementar validação de tipos de folga (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
+- **Lógica de folgas automáticas aos domingos**
+- Controllers REST `/api/feriados` e `/api/folgas`
+- Validar sobreposição de folgas
+- Criar migration para persistir feriados
+
+**Marco:** Feriados sincronizados e persistidos, folgas gerenciáveis, domingos automaticamente marcados como folga.
+
+---
+
+### **Sprint 7: Folha de Ponto Detalhada** ⭐
+**Objetivo:** Implementar geração de folha de ponto em JSON estruturado.
+
+**Tarefas:**
+- Criar entidade `FolhaPonto` com campo JSONB
+- Criar migration V2__add_folhas_ponto
+- Criar FolhaPontoService:
+  - Método `gerarFolhaPonto(userId, mes, ano)`
+  - Agrupar registros por dia
+  - Calcular horas trabalhadas, extras e débitos por dia
+  - Identificar tipo de dia (UTIL, DOMINGO, FERIADO, FOLGA)
+  - Gerar JSON conforme estrutura do SDD
+- Criar endpoint `GET /api/folha-ponto/gerar?mes=X&ano=Y` (role admin)
+- Criar endpoint `GET /api/folha-ponto/me?mes=X&ano=Y` (role employee)
+
+**Marco:** Folha de ponto detalhada em JSON disponível via API, com todas as informações estruturadas.
+
+---
+
+### **Sprint 8: Sistema de Logs Unificado** ⭐
+**Objetivo:** Implementar logging abrangente em todo o sistema.
+
+**Tarefas:**
+- Criar LogAuditoriaService centralizado
+- Implementar Aspect (@Auditado) para logar ações automaticamente
+- Adicionar logs em:
+  - Login/Logout
+  - Registro de ponto
+  - Criação/edição/exclusão de usuários
+  - Geração de relatórios
+  - Alterações em configurações
+  - Sincronização de feriados
+- Criar endpoint `GET /api/auditoria/logs` (admin only)
+- Implementar filtros (data, usuário, ação, status)
+- Adicionar paginação nos logs
+
+**Marco:** Sistema de auditoria completo, todas as ações críticas registradas e rastreáveis.
+
+---
+
+### **Sprint 9: Arquitetura Multi-tenant - Portal Principal** ⭐
+**Objetivo:** Criar portal de login centralizado e API de gerenciamento de empresas.
+
+**Tarefas:**
+- Criar projeto separado: `marcweb-portal` (frontend + API principal)
+- Criar banco `marcweb_main`
+- Criar migrations para tabelas:
+  - `empresas` (com campos url_api, porta_api, slug)
+  - `empresas_config_visual` (logos, cores)
+  - `logs_sistema`
+- Criar entidades: Empresa, EmpresaConfigVisual, LogSistema
+- Criar EmpresaService com métodos:
+  - `listarEmpresasAtivas()` - para select do login
+  - `obterConfigApi(empresaId)` - retorna URL e porta
+  - `criarEmpresa()` - provisiona nova empresa
+  - `editarEmpresa()`
+  - `desativarEmpresa()`
+- Criar controllers:
+  - `EmpresasPublicController` (endpoints públicos)
+  - `AdminEmpresaController` (gerenciamento)
+- Implementar frontend do portal:
+  - Tela de apresentação do sistema (ex.: página inicial do totvs)
+  - Tela de login com select de empresas
+  - Buscar lista de empresas via API
+  - Enviar login para API específica da empresa
+  - Redirecionar após autenticação bem-sucedida
+- Configurar CORS para permitir comunicação entre domínios
+- Implementar rate limiting no portal
+- Criar script de provisionamento de empresa
+
+**Marco:** Portal centralizado funcional, capaz de listar empresas e rotear login para APIs específicas.
+
+---
+
+### **Sprint 10: Multi-tenant - Redirecionamento e Isolamento** ⭐
+**Objetivo:** Implementar fluxo completo de autenticação multi-tenant e isolamento.
+
+**Tarefas:**
+- Adicionar campo `empresaId` no payload do JWT de cada empresa
+- Modificar JwtService para incluir empresaId no token
+- Criar filter de validação que verifica:
+  - Token é válido
+  - EmpresaId no token corresponde à empresa da API
+  - Empresa está ativa
+- Implementar RedirectService:
+  - Determina URL de redirecionamento baseado em role
+  - ADMIN → `/admin-panel.html`
+  - EMPLOYEE → `/dashboard-funcionario.html`
+  - Retorna URL completa com subdomínio
+- Modificar endpoint de login para retornar:
+  ```json
+  {
+    "token": "...",
+    "redirectUrl": "https://empresa-x.marcweb.com.br/dashboard",
+    "empresaSlug": "empresa-x"
+  }
+  ```
+- Implementar logout universal:
+  - Limpa token do localStorage
+  - Redireciona para portal principal
+  - Registra log de logout
+- Configurar DNS para subdomínios (wildcard)
+- Criar script de deploy por empresa
+- Implementar systemd services por empresa
+- Testes de isolamento:
+  - Usuário da Empresa A não acessa dados da Empresa B
+  - Token de uma empresa não funciona em outra
+  - Validação de domínio/subdomínio
+- Documentar fluxo completo de autenticação
+
+**Marco:** Sistema multi-tenant completo, com login centralizado, redirecionamento automático e isolamento total de dados.
+
+---
+
+### **Sprint 11: Relatórios e Exportação PDF**
+**Objetivo:** Implementar geração de relatórios profissionais em PDF.
+
+**Tarefas:**
+- Integrar iText 7 para geração de PDF
+- Criar RelatorioService
+- Implementar templates de relatório:
+  - Folha de ponto mensal
+  - Relatório de horas por período
+  - Relatório consolidado (admin)
+- Criar endpoints:
+  - `GET /api/relatorios/mensal/pdf?userId=X&mes=Y&ano=Z`
+  - `GET /api/relatorios/periodo/pdf?userId=X&inicio=...&fim=...`
+- Adicionar cabeçalho com logo e dados da empresa
+- Implementar tabelas formatadas com dados de registro
+- Adicionar totalizações e cálculos
+- Implementar assinatura digital (opcional)
+- Permitir download direto do PDF
+- Validar permissões (funcionário só vê próprios relatórios)
+
+**Marco:** Relatórios PDF profissionais disponíveis para download.
+
+---
+
+### **Sprint 12: Refinamento e Testes Unitários**
+**Objetivo:** Garantir qualidade e robustez do backend.
+
+**Tarefas:**
+- Escrever testes unitários para services principais:
+  - UserService
+  - RegistroPontoService
+  - FeriadoService
+  - FolhaPontoService
+  - EmpresaService
+- Escrever testes de integração para controllers
+- Implementar testes de segurança:
+  - Validação de JWT
+  - Isolamento multi-tenant
+  - CORS
+- Realizar testes manuais de fluxos completos
+- Testes de carga básicos (JMeter ou similar)
+- Revisar e otimizar queries JPA
+- Adicionar índices faltantes no banco
+- Code review e refatoração
+- Documentar decisões técnicas
+
+**Marco:** Cobertura de testes significativa, funcionalidades backend estáveis e otimizadas.
+
+---
+
+## **Fase 3: Frontend Completo (Sprints 13–16)**
+**Objetivo:** Desenvolver interface completa e integrar com backend.
+
+### **Sprint 13: Frontend - Portal e Autenticação**
+**Objetivo:** Criar portal de login e estrutura JavaScript.
+
+**Tarefas:**
+- Criar estrutura frontend do portal:
+  - `login.html` com select de empresas
+  - `js/auth-portal.js`
+  - `js/api-portal.js`
+  - `css/custom-styles.css`
+- Implementar carregamento de empresas via API
+- Implementar envio de login para API da empresa
+- Armazenar/recuperar JWT do localStorage
+- Implementar validação de formulários
+- Tratamento de erros de autenticação
+- Implementar feedback visual (loading, sucesso, erro)
+- Implementar redirecionamento automático
+- Testes em múltiplos navegadores
+
+**Marco:** Login centralizado funcional, comunicação com APIs estabelecida.
+
+---
+
+### **Sprint 14: Frontend - Dashboard Funcionário**
+**Objetivo:** Criar interface completa para funcionário.
+
+**Tarefas:**
+- Implementar `dashboard-funcionario.js`
+- Conectar botões de registro de ponto ao backend
+- Implementar requisição de geolocalização (se ativa)
+- Exibir registros recentes do usuário
+- Implementar visualização de folhas de ponto
+- Criar interface para listagem de folgas
+- Implementar download de relatório PDF
+- Adicionar feedback visual em todas ações
+- Validar campos antes de enviar
+- Implementar atualização automática de dados
+- Adicionar confirmações para ações críticas
+- Testes de usabilidade
+
+**Marco:** Funcionário pode registrar ponto, visualizar folhas e relatórios pela interface.
+
+---
+
+### **Sprint 15: Frontend - Painel Admin**
+**Objetivo:** Criar funcionalidades administrativas completas.
+
+**Tarefas:**
+- Implementar `admin-panel.js`
+- CRUD de usuários via interface:
+  - Listar usuários com filtros
+  - Criar novo usuário
+  - Editar usuário existente
+  - Desativar/ativar usuário
+- Gerenciar folgas:
+  - Visualizar solicitações
+  - Aprovar/reprovar folgas
+  - Criar folga manualmente
+- Sincronizar feriados da BrasilAPI
+- Visualizar logs de auditoria com filtros
+- Editar configurações da empresa:
+  - Dados básicos
+  - Configuração de geolocalização
+  - Carga horária mensal
+- Implementar filtros e paginação em listagens
+- Adicionar gráficos/estatísticas básicas (opcional)
+- Validações e confirmações
+
+**Marco:** Admin pode gerenciar todo o sistema pela interface.
+
+---
+
+### **Sprint 16: Deploy Multi-tenant e Testes Finais**
+**Objetivo:** Preparar sistema para produção e validar completamente.
+
+**Tarefas:**
+- Configurar servidor VPS (Hetzner, DigitalOcean ou similar)
+- Instalar e configurar PostgreSQL:
+  - Banco principal (`marcweb_main`)
+  - Template para empresas
+- Configurar DNS:
+  - Domínio principal
+  - Wildcard para subdomínios
+- Configurar SSL/HTTPS com Let's Encrypt
+- Criar scripts de deploy:
+  - `deploy-portal.sh`
+  - `deploy-nova-empresa.sh`
+  - `backup-empresas.sh`
+- Configurar firewall (UFW)
+- Implementar backup automático (cron)
+- Configurar monitoramento básico (logs, uptime)
+- Criar empresa de teste em produção
+- Testar fluxo completo end-to-end:
+  - Criação de empresa
+  - Cadastro de funcionários
+  - Registro de ponto mês completo
+  - Geração de folha de ponto
+  - Download de relatórios
+  - Logs de auditoria
+- Pentests básicos (OWASP ZAP)
+- Revisar logs de segurança
+- Criar documentação:
+  - Manual do funcionário
+  - Manual do administrador
+  - Manual de instalação
+  - Guia de troubleshooting
+- Preparar materiais de demonstração
+
+**Marco:** Sistema completo em produção, testado e documentado.
+
+---
+
+## **Fase 4: Funcionalidades Avançadas (Sprints 17-18)** 🔄 OPCIONAL
+**Objetivo:** Implementar funcionalidades secundárias conforme demanda.
+
+### **Sprint 17: Contracheque Básico** 🔄 Opcional
+**Objetivo:** Implementar geração básica de contracheque (se houver demanda).
+
+**Pré-condição:** MVP estável e em uso por pelo menos 2-3 empresas.
+
+**Tarefas:**
+- Adicionar campos em User:
+  - `tipoContrato` (HORISTA / SALARIO_BASE)
+  - `salarioBase`
+  - `valorHora`
+- Criar entidade `Contracheque`
+- Criar migration para tabela `contracheques`
+- Implementar ContrachequeService:
+  - Cálculo de salário bruto
+  - Cálculo de horas extras (50% adicional)
+  - Cálculos básicos de INSS e FGTS
+- Criar endpoints básicos
+- Gerar PDF simples de contracheque
+- **Nota:** Cálculos completos e conformidade legal requerem consultoria jurídica
+
+**Status:** Não prioritário - Implementar apenas se houver demanda real
+
+---
+
+### **Sprint 18: Refinamentos e Integrações Extras** 🔄 Opcional
+**Objetivo:** Melhorias e funcionalidades extra conforme necessidade.
+
+**Possíveis tarefas:**
+- Dashboard com gráficos avançados
+- Exportação de dados para Excel
+- Integração com sistemas de RH
+- Notificações por email
+- Relatórios customizáveis
+- Melhorias de performance
+- Funcionalidades solicitadas por clientes
+
+**Status:** A definir conforme feedback de usuários
+
+---
+
+## **📊 Resumo de Mudanças vs Versão Anterior**
+
+### **Removido/Reduzido:**
+- ❌ 5 sprints dedicadas ao contracheque (8-11)
+- ❌ Contracheque como funcionalidade principal
+- ❌ Cálculos trabalhistas complexos do MVP
+
+### **Mantido/Priorizado:**
+- ✅ Sistema de ponto robusto e confiável
+- ✅ Folha de ponto detalhada (JSON)
+- ✅ Multi-tenant completo
+- ✅ Relatórios PDF profissionais
+- ✅ Sistema de logs abrangente
+- ✅ Frontend completo e intuitivo
+
+### **Adicionado:**
+- ⭐ Foco reforçado em testes (Sprint 12)
+- ⭐ Deploy e documentação reforçados (Sprint 16)
+- 🔄 Contracheque como opcional (Sprint 17)
+
+---

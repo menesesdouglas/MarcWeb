@@ -1,69 +1,62 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Marc Web</title>
-    <!-- Carrega o Pico CSS via CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    <!-- Carrega o CSS customizado para aplicar a paleta de cores -->
-    <link rel="stylesheet" href="css/custom-styles.css">
-    <!-- Favicon opcional -->
-    <!-- <link rel="icon" href="path/to/favicon.ico"> -->
+    <title>Login | MarcWeb - Sistema de Ponto</title>
+    <link rel="stylesheet" href="custom-styles_login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <main class="container">
-        <!-- Cabeçalho -->
-        <header class="text-center">
-            <hgroup>
-                <h1>Marc Web</h1>
-                <p>Sistema de Ponto Eletrônico</p>
-            </hgroup>
-        </header>
 
-        <!-- Seção Principal do Formulário -->
-        <section class="grid">
-            <!-- Espaçador (opcional, para centralização visual em telas maiores) -->
-            <div></div>
+    <div class="login-container">
+        <div class="login-box reveal">
+            <header>
+                <div class="logo">Marc<span>Web</span></div>
+                <p>Acesse o painel de controle</p>
+            </header>
 
-            <article>
-                <h2>Entrar</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="company">Empresa</label>
+                    <select id="company" required>
+                        <option value="" disabled selected>Selecione sua empresa</option>
+                        <option value="matriz">MarcWeb Matriz</option>
+                        <option value="filial_sp">Filial São Paulo</option>
+                        <option value="cliente_demo">Cliente Demonstração</option>
+                    </select>
+                </div>
 
-                <!-- Formulário de Login -->
-                <form id="loginForm">
-                    <fieldset>
-                        <label for="username">
-                            <abbr title="Nome de Usuário ou E-mail">Usuário</abbr>
-                        </label>
-                        <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
+                <div class="input-group">
+                    <label for="username">Usuário ou E-mail</label>
+                    <input type="text" id="username" placeholder="Digite seu usuário" required>
+                </div>
 
+                <div class="input-group">
+                    <div class="label-wrapper">
                         <label for="password">Senha</label>
-                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <a href="#" class="forgot-link">Esqueci a senha</a>
+                    </div>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <button type="button" id="togglePassword" class="eye-btn">👁️</button>
+                    </div>
+                </div>
 
-                        <!-- Placeholder para mensagem de erro (exemplo) -->
-                        <!-- <div class="toast error">Usuário ou senha inválidos.</div> -->
+                <button type="submit" class="btn-login">Entrar no Sistema</button>
+            </form>
 
-                        <button type="submit" class="contrast">Entrar</button>
-                    </fieldset>
-                </form>
+            <footer>
+                <p>Ainda não é cliente? <a href="index.html">Solicite um orçamento</a></p>
+            </footer>
+        </div>
+    </div>
 
-                <!-- Links Secundários -->
-                <small>
-                    <a href="#">Esqueci minha senha</a> |
-                    <a href="register.html">Registrar</a>
-                </small>
+    <div class="bg-decoration">
+        <div class="blob"></div>
+    </div>
 
-            </article>
-
-            <!-- Espaçador (opcional) -->
-            <div></div>
-        </section>
-    </main>
-
-    <!-- Script JS opcional (não necessário para design puro) -->
-    <!-- <script src="js/login.js"></script> -->
+    <script src="script_login.js"></script>
 </body>
-
 </html>
