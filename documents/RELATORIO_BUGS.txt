@@ -117,8 +117,8 @@ A query JPQL que busca feriados manuais sem ID está usando a referência do enu
 **Comportamento Esperado**:
 Query deve usar string literal 'MANUAL' ou comparação com o enum completo.
 
-**Solução Necessária**:
-Alterar `f.origem = MANUAL` para `f.origem = 'MANUAL'` na query.
+**Correção Implementada**:
+Corrigida sintaxe MANUAL para 'MANUAL'.
 
 ---
 
