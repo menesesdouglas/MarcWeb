@@ -3,12 +3,16 @@ package com.marcweb.service;
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.entity.ConfigEmpresa;
+import com.marcweb.entity.Feriado; // Import necessário
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
 import com.marcweb.exceptions.GeolocalizacaoObrigatoriaException;
+import com.marcweb.exceptions.RegistroEmDomingoException;
+import com.marcweb.exceptions.RegistroEmFeriadoException;
 import com.marcweb.exceptions.RegistroForaDoRaioException;
 import com.marcweb.exceptions.RegistroPontoSequenciaInvalidaException;
+import com.marcweb.repository.FeriadoRepository; // Import necessário
 import com.marcweb.repository.RegistroPontoRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +20,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.DayOfWeek; // Import necessário
+import java.time.LocalDate; // Import necessário
+import java.time.LocalDateTime; // Import necessário
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -26,12 +32,17 @@ public class RegistroPontoService {
     private final UserService userService;
     private final RegistroPontoRepository repository;
     private final ConfigEmpresaService configEmpresaService; // Injetando o serviço de configuração
+    private final FeriadoRepository feriadoRepository; // Injetando o repositório de feriados
 
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
+
+        // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
+        // A validação é feita com base no momento atual do servidor
+        validarDiaUtil(LocalDateTime.now()); // <-- Usando LocalDateTime.now()
 
         // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
         ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
@@ -41,8 +52,31 @@ public class RegistroPontoService {
         validarRegistro(data.getTipo(), user.getId());
 
         // SALVANDO CASO PASSE NAS VALIDAÇÕES
-        repository.save(new RegistroPonto(data, user, getIpUser(request)));
+        // O RegistroPonto deve receber os dados do DTO e o usuário, o timestamp é definido internamente
+        repository.save(new RegistroPonto(data, user, getIpUser(request))); // Assumindo que o construtor da entidade ou o JPA lida com o timestamp
     }
+
+    // VALIDANDO DIA ÚTIL
+    private void validarDiaUtil(LocalDateTime momentoRegistro) { // Recebe LocalDateTime
+        LocalDate dataRegistro = momentoRegistro.toLocalDate(); // Converte para LocalDate para verificar o dia da semana e feriados
+
+        // Verifica se é domingo (DayOfWeek.SUNDAY)
+        if (dataRegistro.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            throw new RegistroEmDomingoException("Não é permitido registrar ponto no domingo.");
+        }
+
+        // Verifica se é feriado cadastrado
+        // findByData retorna List<Feriado>. Se a lista não estiver vazia, é feriado.
+        List<Feriado> feriadosNaData = feriadoRepository.findByData(dataRegistro);
+        if (!feriadosNaData.isEmpty()) { // Se a lista NÃO está vazia, encontrou-se um feriado
+            // Pode usar o primeiro feriado encontrado para a mensagem
+            Feriado feriado = feriadosNaData.get(0);
+            throw new RegistroEmFeriadoException(String.format("Não é permitido registrar ponto em feriado (%s).", feriado.getNome()));
+        }
+
+        // Se passar pelas verificações, é um dia útil (não domingo e não feriado)
+    }
+
 
     // VALIDANDO GEOLOCALIZAÇÃO
     private void validarGeolocalizacao(CreateRegistroPonto data, ConfigEmpresa config) {

@@ -59,7 +59,23 @@ public class GlobalExceptionHandler {
         return e.getMessage();
     }
 
-    // --- NOVAS EXCEÇÕES PARA GEOLOCALIZAÇÃO ---
+    // --- NOVAS EXCEÇÕES PARA DIA ÚTIL ---
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(RegistroEmDomingoException.class)
+    public String handlerRegistroEmDomingoException(RegistroEmDomingoException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(RegistroEmFeriadoException.class)
+    public String handlerRegistroEmFeriadoException(RegistroEmFeriadoException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+    // --- FIM DAS NOVAS EXCEÇÕES ---
+
+    // --- EXCEÇÕES GEOLOCALIZAÇÃO (já implementadas anteriormente) ---
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(GeolocalizacaoObrigatoriaException.class)
     public String handlerGeolocalizacaoObrigatoriaException(GeolocalizacaoObrigatoriaException e) {
@@ -73,7 +89,7 @@ public class GlobalExceptionHandler {
         log.warn(e.getMessage());
         return e.getMessage();
     }
-    // --- FIM DAS NOVAS EXCEÇÕES ---
+    // --- FIM EXCEÇÕES GEOLOCALIZAÇÃO ---
 
     /*@ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception ex) {
