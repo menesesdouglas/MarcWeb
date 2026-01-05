@@ -1,7 +1,5 @@
 package com.marcweb.exceptions; // ou o pacote que você usar para handlers/configs
 
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -56,10 +54,26 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(FeriadoDuplicadoException.class)
-    public String handlerFeriadoAnoInvalidoException(FeriadoDuplicadoException e) {
+    public String handlerFeriadoDuplicadoException(FeriadoDuplicadoException e) { // Corrigido nome do método
         log.warn(e.getMessage());
         return e.getMessage();
     }
+
+    // --- NOVAS EXCEÇÕES PARA GEOLOCALIZAÇÃO ---
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(GeolocalizacaoObrigatoriaException.class)
+    public String handlerGeolocalizacaoObrigatoriaException(GeolocalizacaoObrigatoriaException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(RegistroForaDoRaioException.class)
+    public String handlerRegistroForaDoRaioException(RegistroForaDoRaioException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+    // --- FIM DAS NOVAS EXCEÇÕES ---
 
     /*@ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception ex) {

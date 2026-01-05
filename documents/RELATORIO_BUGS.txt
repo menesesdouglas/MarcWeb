@@ -12,7 +12,7 @@
 | 🔴 CRÍTICA  | 3          | Bloqueia Sprint 5 |
 | 🟡 ALTA     | 4          | Deve ser corrigido |
 | 🟢 MÉDIA    | 2          | Melhoria |
-| **TOTAL**   | **9**      | **8 pendentes** |
+| **TOTAL**   | **9**      | **7 pendentes** |
 
 ---
 
@@ -40,7 +40,7 @@ Adicionada validação específica para verificar se o último registro é null 
 ---
 
 ### BUG-003: Validação de Geolocalização NÃO Implementada
-**Status**: ❌ PENDENTE
+**Status**: ✅ CORRIGIDO
 
 **Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
 
@@ -62,15 +62,8 @@ Sistema aceita latitude/longitude sem nenhuma validação de distância.
 3. Rejeitar registro se distância > `ConfigEmpresa.raioGeoloc`
 4. Lançar exceção apropriada com distância calculada
 
-**Funcionalidades Faltantes**:
-- Método `validarGeolocalizacao(CreateRegistroPonto, ConfigEmpresa)`
-- Método `calcularDistanciaHaversine(lat1, lon1, lat2, lon2)`
-- Exceção `GeolocalizacaoObrigatoriaException`
-- Exceção `RegistroForaDoRaioException`
-- Handler no `GlobalExceptionHandler`
-
-**Dependências Faltantes**:
-- Injeção de `ConfigEmpresaService` no `RegistroPontoService`
+**Correção Implementada**:
+Adicionada validação específica para verificar se a localização do usuário está dentro do perímetro exigido pela empresa.
 
 ---
 

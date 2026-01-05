@@ -2,9 +2,12 @@ package com.marcweb.service;
 
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.RegistroPontoResponse;
+import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
+import com.marcweb.exceptions.GeolocalizacaoObrigatoriaException;
+import com.marcweb.exceptions.RegistroForaDoRaioException;
 import com.marcweb.exceptions.RegistroPontoSequenciaInvalidaException;
 import com.marcweb.repository.RegistroPontoRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +25,7 @@ public class RegistroPontoService {
 
     private final UserService userService;
     private final RegistroPontoRepository repository;
+    private final ConfigEmpresaService configEmpresaService; // Injetando o serviço de configuração
 
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
@@ -29,12 +33,66 @@ public class RegistroPontoService {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
 
-        // VALIDAÇÃO DE REGISTRO
+        // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
+        ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
+        validarGeolocalizacao(data, config); // Chama o método de validação
+
+        // VALIDAÇÃO DE REGISTRO (Sequência)
         validarRegistro(data.getTipo(), user.getId());
 
-        // SALVANDO CASO PASSE NA VALIDAÇÃO
+        // SALVANDO CASO PASSE NAS VALIDAÇÕES
         repository.save(new RegistroPonto(data, user, getIpUser(request)));
     }
+
+    // VALIDANDO GEOLOCALIZAÇÃO
+    private void validarGeolocalizacao(CreateRegistroPonto data, ConfigEmpresa config) {
+        // Verifica se a geolocalização está ativa nas configurações
+        if (Boolean.TRUE.equals(config.getGeolocAtiva())) { // Usando Boolean.TRUE.equals para evitar NPE se for null
+            Double lat = data.getLatitude();
+            Double lon = data.getLongitude();
+
+            // Verifica se latitude e longitude foram fornecidas
+            if (lat == null || lon == null) {
+                throw new GeolocalizacaoObrigatoriaException("Geolocalização é obrigatória para registrar ponto. Latitude e longitude não fornecidas.");
+            }
+
+            // Verifica se as coordenadas da empresa estão configuradas
+            Double latEmpresa = config.getLatCentro();
+            Double lonEmpresa = config.getLongCentro();
+            if (latEmpresa == null || lonEmpresa == null) {
+                 // Poderia lançar uma exceção específica de configuração inválida ou retornar um erro amigável
+                 // Para este caso, lançamos uma exceção informando que a configuração está incompleta.
+                 throw new IllegalStateException("Coordenadas da empresa não configuradas. Contate o administrador.");
+            }
+
+            // Calcula a distância
+            double distancia = calcularDistanciaHaversine(lat, lon, latEmpresa, lonEmpresa);
+
+            // Verifica se a distância está dentro do raio permitido
+            if (distancia > config.getRaioGeoloc()) {
+                throw new RegistroForaDoRaioException(
+                    String.format("Registro fora do raio permitido. Distância calculada: %.2f metros. Raio permitido: %d metros.",
+                        distancia, config.getRaioGeoloc())
+                );
+            }
+        }
+        // Se geolocAtiva for false (ou null), a validação é ignorada e o método termina aqui.
+    }
+
+
+    // CÁLCULO DE DISTÂNCIA USANDO A FÓRMULA DE HAVERSINE
+    private double calcularDistanciaHaversine(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Raio da Terra em quilômetros
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distanceInKm = R * c; // Distância em quilômetros
+        return distanceInKm * 1000; // Converte para metros
+    }
+
 
     // VALIDANDO ORDEM DE TIPO DE REGISTRO DE PONTO
     private void validarRegistro(TipoRegistro tipoRegistro, Long idUsuario) {
@@ -78,10 +136,4 @@ public class RegistroPontoService {
         else ip = ip.split(",")[0];
         return ip;
     }
-
 }
-
-
-
-
-

@@ -11,6 +11,8 @@ import org.springframework.beans.BeanUtils;
 @Data
 public class DataConfigEmpresa {
 
+    private Long id; // Adicionando ID para mapeamento completo, se necessário
+
     @NotBlank(message = "Campo obrigatório")
     private String nomeEmpresa;
 
@@ -29,4 +31,16 @@ public class DataConfigEmpresa {
         BeanUtils.copyProperties(configEmpresa, this);
     }
 
+    // Método para converter DTO em Entidade
+    public ConfigEmpresa toEntity() {
+        ConfigEmpresa entity = new ConfigEmpresa();
+        // Copia as propriedades do DTO para a entidade
+        entity.setId(this.getId());
+        entity.setNomeEmpresa(this.getNomeEmpresa());
+        entity.setLatCentro(this.getLatCentro());
+        entity.setLongCentro(this.getLongCentro());
+        entity.setRaioGeoloc(this.getRaioGeoloc());
+        entity.setGeolocAtiva(this.getGeolocAtiva());
+        return entity;
+    }
 }
