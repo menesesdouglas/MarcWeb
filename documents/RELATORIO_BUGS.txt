@@ -136,7 +136,7 @@ Quando geolocAtiva=true em ConfigEmpresa:
 
 ## 🟠 BUGS DE ALTA PRIORIDADE
 
-### BUG-004: Typo em Nome de Variável
+### BUG-004: Typo em Nome de Variável - CORRIGIDO
 **Arquivo:** `RegistroPontoService.java`  
 **Linha:** 32
 
