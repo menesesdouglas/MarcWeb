@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.List;
+import java.util.ArrayList; // Import necessário
+import java.util.HashMap; // Import necessário
+import java.util.Map;    // Import necessário
 
 @RequiredArgsConstructor
 @Service
@@ -28,21 +31,45 @@ public class FeriadoService {
         repository.save(new Feriado(dadosFeriado, OrigemFeriado.MANUAL));
     }
 
-    // CADASTRO VIA API
-    public void cadastrarFeriado(List<Feriado> feriadosNacionais) {
-        // REMOVENDO FERIADOS CASO JA ESTEJAM CADASTRADOS
-        feriadosNacionais.removeIf(feriado -> {
-                    return validarFeriado(feriado.getData(), true);
-                }
-        );
-        repository.saveAll(feriadosNacionais);
+    // CADASTRO VIA API - Atualizado para retornar estatísticas
+    public Map<String, Integer> cadastrarFeriadoComEstatisticas(List<Feriado> feriadosNacionais) {
+        int totalBuscados = feriadosNacionais.size();
+        int jaExistiam = 0; // Contador efetivamente final (não modificado dentro de lambda)
+        int adicionados = 0; // Contador para novos registros
+
+        // Lista para armazenar apenas os feriados que não existiam
+        List<Feriado> feriadosNovos = new ArrayList<>();
+
+        // Itera manualmente para contabilizar e filtrar
+        for (Feriado feriado : feriadosNacionais) {
+            if (validarFeriado(feriado.getData(), false)) { // isRequest = false para sincronização
+                jaExistiam++; // Conta os que já existiam
+            } else {
+                feriadosNovos.add(feriado); // Adiciona os novos à lista
+            }
+        }
+
+        // Salva apenas os feriados novos
+        if (!feriadosNovos.isEmpty()) {
+            repository.saveAll(feriadosNovos);
+            adicionados = feriadosNovos.size();
+        }
+
+        // Monta e retorna o mapa de estatísticas
+        Map<String, Integer> estatisticas = new HashMap<>();
+        estatisticas.put("totalBuscados", totalBuscados);
+        estatisticas.put("jaExistiam", jaExistiam);
+        estatisticas.put("adicionados", adicionados);
+
+        return estatisticas;
     }
+
 
     private boolean validarFeriado(LocalDate data, boolean isRequest) {
         // PARA VALIDAR QUE O FERIADO É DO ANO VIGENTE
         int anoFeriado = data.getYear();
         int anoAtual = Year.now().getValue();
-        // VALIDAÇÃO APENAS PARA REQUISIÇÕES
+        // VALIDAÇÃO APENAS PARA REQUISIÇÕES MANUAIS (isRequest = true)
         if (isRequest && anoAtual != anoFeriado) {
             throw new FeriadoAnoInvalidoException();
         }
