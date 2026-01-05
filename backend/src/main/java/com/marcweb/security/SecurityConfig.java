@@ -31,22 +31,20 @@ import java.util.List;
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok) - NÃO USAREMOS PARA jwtAuthenticationFilter
 public class SecurityConfig {
 
-    // Removemos a injeção direta do JwtAuthenticationFilter
     // private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final com.marcweb.repository.UserRepository userRepository; // Injetar o repo
+    private final com.marcweb.repository.UserRepository userRepository;
 
-    // Injetamos JwtAuthenticationFilter como parâmetro do método @Bean
-    @Bean // Marca o método como um bean Spring
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // Desativa CSRF para API stateless (sem sessões)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Política de sessão stateless
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll()
-                    .requestMatchers("/error").permitAll() // <-- Adicione esta linha
-                    .requestMatchers(HttpMethod.POST, "/api/registro-ponto/registrar").authenticated()
-                    .requestMatchers(HttpMethod.GET, "/api/registro-ponto/buscar").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                    .requestMatchers("/error").permitAll()
+                    //.requestMatchers(HttpMethod.POST, "/api/ponto").authenticated()
+                    //.requestMatchers(HttpMethod.GET, "/api/registro/me").authenticated()
                     .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider()) // Define o provedor de autenticação
