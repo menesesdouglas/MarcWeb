@@ -1,7 +1,9 @@
 package com.marcweb;
 
+import com.marcweb.entity.ConfigEmpresa; // Import necessário
 import com.marcweb.entity.Role;
 import com.marcweb.entity.User;
+import com.marcweb.repository.ConfigEmpresaRepository; // Import necessário
 import com.marcweb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.List; // Import necessário
 
 @EnableScheduling
 @EnableJpaAuditing
@@ -24,6 +27,7 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
     }
 
     private final UserRepository userRepository; // Injeta o repositório de User
+    private final ConfigEmpresaRepository configEmpresaRepository; // Injeta o repositório de ConfigEmpresa
     private final PasswordEncoder passwordEncoder; // Injeta o encoder de senha
 
     @Override
@@ -41,6 +45,25 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
                     .build();
             userRepository.save(admin); // Salva o usuário no banco
             System.out.println("Usuário admin padrão criado: username='admin', password='admin123' (codificada)");
+        }
+
+        /*  Cria uma configuração padrão da empresa se não existir nenhuma
+         Usamos findAll().isEmpty() pois pode haver mais de uma configuração no futuro
+         ou critérios específicos para a "configuração ativa". Para MVP, apenas uma é esperada. */
+        List<ConfigEmpresa> configsExistentes = configEmpresaRepository.findAll(); // Busca todas as configurações
+        if (configsExistentes.isEmpty()) { // Se a lista estiver vazia, cria a padrão
+            var configPadrao = ConfigEmpresa.builder()
+                    .nomeEmpresa("Empresa Exemplo LTDA") // Nome padrão
+                    .latCentro(-12.2658) // Coordenada padrão (Feira de Santana)
+                    .longCentro(-38.9668) // Coordenada padrão (Feira de Santana)
+                    .raioGeoloc(100) // Raio padrão em metros
+                    .geolocAtiva(false) // Geolocalização desativada por padrão
+                    .build();
+            configEmpresaRepository.save(configPadrao); // Salva a configuração no banco
+            System.out.println("Configuração da empresa padrão criada.");
+        } else {
+            // Opcional: Logar que já existia configuração
+            System.out.println("Configuração da empresa já existente, não foi criada uma nova padrão.");
         }
     }
 }

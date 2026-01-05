@@ -97,7 +97,7 @@ Adicionada validação para feriados e domingos.
 ## 🟡 BUGS ALTA PRIORIDADE
 
 ### BUG-005: Query JPQL com Enum Incorreta
-**Status**: ❌ PENDENTE
+**Status**: ✅ CORRIGIDO
 
 **Localização**: `src/main/java/com/marcweb/repository/FeriadoRepository.java`
 
@@ -123,7 +123,7 @@ Corrigida sintaxe MANUAL para 'MANUAL'.
 ---
 
 ### BUG-006: Configuração Padrão Não Criada no Startup
-**Status**: ❌ PENDENTE
+**Status**: ✅ CORRIGIDO
 
 **Localização**: `src/main/java/com/marcweb/MarcWebApplication.java`
 
