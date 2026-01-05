@@ -1,509 +1,327 @@
-# RELATÓRIO DE BUGS E PROBLEMAS TÉCNICOS
-## Projeto Marc Web - Sistema de Ponto Eletrônico
-**Data do Relatório:** 03 de Janeiro de 2026  
-**Sprint Analisada:** Sprint 5 (Registro de Ponto - Backend)  
-**Análise Completa:** Sprints 1-4 + Sprint 5 Parcial  
-**Severidade:** Crítica (🔴), Alta (🟠), Média (🟡), Baixa (🟢)
+# RELATÓRIO DE BUGS - MARC WEB
+**Data**: 30/12/2025
+**Sprint Atual**: Sprint 5 - Registro de Ponto Completo
+**Versão**: 0.0.1-dev
 
 ---
 
-## 📋 SUMÁRIO EXECUTIVO
+## 📊 RESUMO EXECUTIVO
 
-Este relatório identifica e documenta bugs críticos, problemas de lógica, falhas de validação e oportunidades de melhoria encontradas no projeto Marc Web durante a análise do Sprint 5 e revisão geral das Sprints 1-4.
-
-**Total de Issues Identificadas:** 12  
-- Críticas: 3
-- Alta Prioridade: 4  
-- Média Prioridade: 3
-- Baixa Prioridade: 2
-
----
-
-## 🔴 BUGS CRÍTICOS (Bloqueadores)
-
-### BUG-001: NullPointerException em Primeiro Registro de Ponto - CORRIGIDO
-**Arquivo:** `RegistroPontoService.java`  
-**Método:** `validarRegistro(TipoRegistro tipoRegistro, Long idUsuario)`  
-**Linha:** 31-33
-
-**Descrição Detalhada:**  
-Quando um usuário tenta registrar seu primeiro ponto (não há registros anteriores no banco), o método `repository.findLastTypeRegistration(idUsuario)` retorna NULL. O código não trata este cenário e tenta executar operações de comparação diretamente com o valor NULL, resultando em NullPointerException.
-
-**Cenário de Reprodução:**
-1. Criar um novo usuário no sistema
-2. Fazer login com este usuário
-3. Tentar registrar qualquer tipo de ponto
-4. Sistema lança NullPointerException
-
-**Impacto:**  
-- Severidade: CRÍTICA
-- Nenhum usuário novo consegue registrar seu primeiro ponto
-- Aplicação falha completamente para novos funcionários
-- Bloqueia a funcionalidade principal do sistema
-
-**Comportamento Esperado:**  
-O sistema deve detectar que é o primeiro registro e validar que o tipo seja ENTRADA. Se for outro tipo, deve retornar erro amigável informando que o primeiro registro deve ser uma entrada.
-
-**Solução Requerida:**  
-Adicionar verificação de NULL antes das comparações. Se ultimoTipoRegistro for NULL:
-- Verificar se tipoRegistro é ENTRADA
-- Se sim, permitir o registro (é válido)
-- Se não, lançar exceção informando que primeiro registro deve ser ENTRADA
-- Retornar do método (não executar validações subsequentes)
+| Criticidade | Quantidade | Status |
+|-------------|------------|--------|
+| 🔴 CRÍTICA  | 3          | Bloqueia Sprint 5 |
+| 🟡 ALTA     | 4          | Deve ser corrigido |
+| 🟢 MÉDIA    | 2          | Melhoria |
+| **TOTAL**   | **9**      | **8 pendentes** |
 
 ---
 
-### BUG-002: Falta de Persistência de Feriados da BrasilAPI
-**Arquivo:** `FeriadoController.java`  
-**Método:** `buscarFeriados()`  
-**Linha:** 22-25
+## 🔴 BUGS CRÍTICOS (PRIORIDADE MÁXIMA)
 
-**Descrição Detalhada:**  
-O endpoint GET /api/feriado está implementado apenas para testar a conexão com a BrasilAPI. Os feriados são buscados da API externa mas nunca são salvos no banco de dados local. Segundo o SDD e o plano SCRUM (Sprint 6), deveria haver um endpoint /api/feriados/sync que busca E persiste os feriados.
+### BUG-001: Primeiro Registro Não Validava Tipo ENTRADA
+**Status**: ✅ CORRIGIDO
 
-**Cenário de Reprodução:**
-1. Chamar GET /api/feriado
-2. Sistema retorna lista de feriados
-3. Consultar tabela 'feriados' no banco
-4. Tabela está vazia
+**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
 
-**Impacto:**  
-- Severidade: CRÍTICA
-- Cálculos de horas não consideram feriados (funcionalidade futura depende disso)
-- Relatórios não marcarão dias como feriados
-- Sistema não funciona conforme especificação do SDD
+**Descrição**: 
+O sistema não validava se o primeiro registro de ponto de um usuário era do tipo ENTRADA. Usuários podiam iniciar com INICIO_DESCANSO, FIM_DESCANSO ou SAIDA, quebrando a lógica de negócio.
 
-**Comportamento Esperado:**  
-Deve existir um FeriadoService com método sincronizarFeriados() que:
-- Busca feriados da BrasilAPI para o ano especificado
-- Verifica quais já existem no banco (evitar duplicatas)
-- Salva apenas os novos no banco com origem=API
-- Retorna estatísticas da sincronização (quantos adicionados, quantos já existiam)
+**Impacto**:
+- Quebra de regras de negócio
+- Dados inconsistentes no banco
+- Impossibilidade de calcular horas trabalhadas corretamente
 
-**Solução Requerida:**  
-1. Criar FeriadoService completo
-2. Implementar método sincronizarFeriados(int ano)
-3. Adicionar verificação de duplicatas por data
-4. Criar endpoint POST /api/feriados/sync que aceita ano como parâmetro
-5. Proteger endpoint com @PreAuthorize("hasRole('ADMIN')")
+**Comportamento Esperado**:
+O primeiro registro de ponto de qualquer usuário DEVE ser obrigatoriamente do tipo ENTRADA.
+
+**Correção Implementada**:
+Adicionada validação específica para verificar se o último registro é null (primeiro registro do usuário) e garantir que o tipo seja ENTRADA.
 
 ---
 
-### BUG-003: Ausência de Validação de Geolocalização Implementada
-**Arquivos:** `RegistroPontoService.java`, `ConfigEmpresa.java`  
-**Status:** Funcionalidade Parcialmente Implementada
+### BUG-003: Validação de Geolocalização NÃO Implementada
+**Status**: ❌ PENDENTE
 
-**Descrição Detalhada:**  
-O sistema possui campos para geolocalização (latitude, longitude, precisão) tanto em RegistroPonto quanto em ConfigEmpresa (latCentro, longCentro, raioGeoloc, geolocAtiva). No entanto, não há nenhuma validação implementada que:
-- Verifique se a geolocalização está ativa (geolocAtiva)
-- Calcule a distância entre o ponto registrado e o centro da empresa
-- Rejeite registros fora do raio permitido
-- Valide consentimento do usuário antes de coletar dados
+**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
 
-**Cenário de Problema:**
-1. Admin configura raio de 100 metros e ativa geolocalização
-2. Funcionário registra ponto a 5km de distância
-3. Sistema aceita o registro sem validação
-4. Não há controle de presença física no local de trabalho
+**Descrição**:
+O sistema não valida se o registro de ponto está sendo feito dentro do raio permitido da empresa quando a geolocalização está ativa. O código aceita qualquer coordenada GPS sem verificação.
 
-**Impacto:**  
-- Severidade: CRÍTICA (para a proposta do sistema)
-- Sistema não valida presença física
-- Pode permitir fraudes (registrar de casa quando deveria estar no trabalho)
-- Campos de geolocalização existem mas não são utilizados
-- Violação potencial da LGPD (coleta sem validação de consentimento)
+**Impacto**:
+- CRÍTICO para segurança
+- Funcionários podem registrar ponto de qualquer localização
+- Invalida o propósito da funcionalidade de geolocalização
+- Não respeita configurações de `geolocAtiva` e `raioGeoloc`
 
-**Comportamento Esperado:**  
-Quando geolocAtiva=true em ConfigEmpresa:
-- Verificar consentGeoloc do usuário (se false, rejeitar ou avisar)
-- Calcular distância usando fórmula de Haversine
-- Se distância > raioGeoloc, lançar exceção específica
-- Registrar no log de auditoria se houve tentativa fora do raio
-- Se geolocAtiva=false, aceitar registros sem coordenadas
+**Comportamento Atual**:
+Sistema aceita latitude/longitude sem nenhuma validação de distância.
 
-**Solução Requerida:**  
-1. Criar método calcularDistanciaHaversine() no RegistroPontoService
-2. Adicionar validação no método registrarPonto() que:
-   - Busca ConfigEmpresa
-   - Se geolocAtiva=true, valida coordenadas obrigatórias
-   - Calcula distância
-   - Compara com raio permitido
-   - Lança RegistroPontoForaDoRaioException se inválido
-3. Criar nova exceção customizada: RegistroPontoForaDoRaioException
-4. Adicionar handler no ControllerException
+**Comportamento Esperado**:
+1. Se `ConfigEmpresa.geolocAtiva = true`, validar presença de coordenadas
+2. Calcular distância usando fórmula de Haversine
+3. Rejeitar registro se distância > `ConfigEmpresa.raioGeoloc`
+4. Lançar exceção apropriada com distância calculada
+
+**Funcionalidades Faltantes**:
+- Método `validarGeolocalizacao(CreateRegistroPonto, ConfigEmpresa)`
+- Método `calcularDistanciaHaversine(lat1, lon1, lat2, lon2)`
+- Exceção `GeolocalizacaoObrigatoriaException`
+- Exceção `RegistroForaDoRaioException`
+- Handler no `GlobalExceptionHandler`
+
+**Dependências Faltantes**:
+- Injeção de `ConfigEmpresaService` no `RegistroPontoService`
 
 ---
 
-## 🟠 BUGS DE ALTA PRIORIDADE
+### BUG-004: Validação de Dia Útil NÃO Implementada
+**Status**: ❌ PENDENTE
 
-### BUG-004: Typo em Nome de Variável - CORRIGIDO
-**Arquivo:** `RegistroPontoService.java`  
-**Linha:** 32
+**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
 
-**Descrição:**  
-Variável nomeada como "ultimoTipoResgistrp" ao invés de "ultimoTipoRegistro". Este erro de digitação reduz a legibilidade do código e pode causar confusão.
+**Descrição**:
+Sistema permite registro de ponto aos domingos e em feriados, contrariando a regra de negócio que estabelece bloqueio automático destes dias.
 
-**Impacto:**  
-- Severidade: ALTA (manutenibilidade)
-- Dificulta leitura e manutenção do código
-- Pode causar erros ao copiar/colar trechos
-- Reduz profissionalismo do código
+**Impacto**:
+- CRÍTICO para regras trabalhistas
+- Permite horas extras indevidas
+- Gera inconsistências na folha de ponto
+- Viola conformidade legal (CLT)
 
-**Solução Requerida:**  
-Renomear a variável em todas as ocorrências dentro do método validarRegistro() para "ultimoTipoRegistro".
+**Comportamento Atual**:
+Sistema aceita registro em qualquer dia da semana, incluindo domingos e feriados cadastrados.
 
----
+**Comportamento Esperado**:
+1. Bloquear registro aos domingos automaticamente
+2. Bloquear registro em feriados cadastrados no banco
+3. Retornar mensagem clara informando o motivo da rejeição
 
-### BUG-005: Ausência de Índice em Query Frequente
-**Arquivo:** `RegistroPontoRepository.java`  
-**Query:** `findLastTypeRegistration()`  
-**Linha:** 24-27
+**Funcionalidades Faltantes**:
+- Método `validarDiaUtil(LocalDateTime)`
+- Exceção `RegistroEmDomingoException`
+- Exceção `RegistroEmFeriadoException`
+- Handler no `GlobalExceptionHandler`
 
-**Descrição Detalhada:**  
-A query nativa que busca o último tipo de registro usa ORDER BY timestamp DESC LIMIT 1. Esta query será executada em TODA tentativa de registro de ponto (uso muito frequente). O índice existente é composto (user_id, timestamp), mas a query pode não estar otimizada para este caso específico.
-
-**Cenário de Problema:**
-1. Empresa com 50 funcionários
-2. Cada funcionário registra 4 pontos por dia
-3. Total: 200 registros/dia
-4. Após 1 ano: 73.000 registros
-5. Query sem índice adequado pode demorar muito
-
-**Impacto:**  
-- Severidade: ALTA (performance)
-- Degradação de performance ao longo do tempo
-- Cada registro de ponto fica mais lento conforme tabela cresce
-- Máquinas com 4GB RAM podem sofrer mais
-
-**Comportamento Esperado:**  
-Query deve usar índice eficiente e executar em milissegundos mesmo com milhões de registros.
-
-**Solução Requerida:**  
-1. Analisar plano de execução (EXPLAIN ANALYZE) da query
-2. Verificar se o índice idx_registro_user_data está sendo usado
-3. Considerar criar índice específico: CREATE INDEX idx_user_timestamp_desc ON registros_ponto (user_id, timestamp DESC)
-4. Adicionar migration do Flyway para criar índice
-5. Testar performance com dados de volume (inserir 100k registros de teste)
+**Dependências Faltantes**:
+- Injeção de `FeriadoRepository` no `RegistroPontoService`
 
 ---
 
-### BUG-006: Falta Tratamento de Erro em Chamada Externa
-**Arquivo:** `BrasilApiService.java`  
-**Método:** `buscarFeriados()`  
-**Linha:** 13-18
+## 🟡 BUGS ALTA PRIORIDADE
 
-**Descrição Detalhada:**  
-O método buscarFeriados() faz chamada HTTP para API externa usando WebClient.block(). Não há tratamento de erro para:
-- API indisponível (timeout, erro 5xx)
-- Resposta inválida (JSON malformado)
-- Ano inválido retornando 404
-- Limite de requisições excedido (rate limit)
+### BUG-005: Query JPQL com Enum Incorreta
+**Status**: ❌ PENDENTE
 
-**Cenário de Problema:**
-1. Chamar sincronização de feriados
-2. BrasilAPI está fora do ar
-3. Sistema trava esperando resposta
-4. Lança WebClientException não tratada
-5. Usuário vê erro genérico 500
+**Localização**: `src/main/java/com/marcweb/repository/FeriadoRepository.java`
 
-**Impacto:**  
-- Severidade: ALTA (confiabilidade)
-- Sistema depende de serviço externo sem fallback
-- Erros não são informativos
-- Pode causar timeouts longos bloqueando threads
+**Descrição**:
+A query JPQL que busca feriados manuais sem ID está usando a referência do enum de forma incorreta, causando erro em tempo de execução.
 
-**Comportamento Esperado:**  
-- Timeouts configurados (ex: 5 segundos)
-- Retry automático (ex: 3 tentativas)
-- Mensagens de erro claras
-- Fallback: se API falhar, retornar lista vazia e logar erro
-- Não bloquear funcionamento de outras partes do sistema
+**Código Problemático**:
+```
+@Query("Select new Feriado(...) from Feriado f where f.origem = MANUAL ...")
+```
 
-**Solução Requerida:**  
-1. Configurar timeouts no WebClient
-2. Adicionar try-catch específicos para WebClientException
-3. Implementar retry logic com backoff exponencial
-4. Criar custom exception: BrasilApiFalhaException
-5. Logar erros com detalhes para diagnóstico
-6. Retornar Optional ou Result object ao invés de lançar exceção
+**Impacto**:
+- Método `atualizarFeriados()` falha ao executar
+- Feriados manuais não são atualizados para o próximo ano
+- QueryException em runtime
+
+**Comportamento Esperado**:
+Query deve usar string literal 'MANUAL' ou comparação com o enum completo.
+
+**Solução Necessária**:
+Alterar `f.origem = MANUAL` para `f.origem = 'MANUAL'` na query.
 
 ---
 
-### BUG-007: Falta Validação de Sequência Correta Completa
-**Arquivo:** `RegistroPontoService.java`  
-**Método:** `validarRegistro()`  
-**Linha:** 36-48
+### BUG-006: Configuração Padrão Não Criada no Startup
+**Status**: ❌ PENDENTE
 
-**Descrição Detalhada:**  
-A validação de sequência de registros tem problemas lógicos:
-1. Não valida se o usuário já registrou SAÍDA no mesmo dia (permitiria múltiplos ciclos no mesmo dia)
-2. Não valida horário mínimo entre registros (poderia registrar ENTRADA e SAÍDA no mesmo segundo)
-3. Não valida se é o mesmo dia (ENTRADA às 23:59 e SAÍDA às 00:01 do dia seguinte)
-4. Permite apenas 1 período de descanso por dia (CLT permite múltiplos se jornada > 6h)
+**Localização**: `src/main/java/com/marcweb/MarcWebApplication.java`
 
-**Cenário de Problema:**
-1. Funcionário registra: ENTRADA 08:00
-2. Registra INICIO_DESCANSO 08:01
-3. Registra FIM_DESCANSO 08:02
-4. Registra SAÍDA 08:03
-5. Registra ENTRADA 08:04 (começou novo ciclo)
-6. Sistema permite, mas não deveria (múltiplos ciclos no mesmo dia sem justificativa)
+**Descrição**:
+A aplicação cria usuário admin padrão mas não cria configuração padrão da empresa. Quando o endpoint `/api/config-empresa` é acessado pela primeira vez, retorna 404.
 
-**Impacto:**  
-- Severidade: ALTA (regra de negócio)
-- Permite comportamentos inválidos conforme CLT
-- Cálculos de horas podem ficar incorretos
-- Relatórios ficam inconsistentes
-- Possibilita fraudes
+**Impacto**:
+- Aplicação não funciona imediatamente após setup
+- Erro 404 em endpoint essencial
+- Admin precisa criar configuração manualmente antes de usar sistema
 
-**Comportamento Esperado:**  
-- Validar que é o primeiro ciclo do dia (ou exigir justificativa para novo ciclo)
-- Validar intervalo mínimo entre registros (ex: 1 minuto)
-- Validar que todos os registros do ciclo são do mesmo dia
-- Permitir múltiplos períodos de descanso se configurado
+**Comportamento Atual**:
+- Sistema cria apenas usuário admin no startup
+- Tabela `configs_empresa` fica vazia
+- Primeiro acesso a `/api/config-empresa` falha
 
-**Solução Requerida:**  
-1. Buscar todos os registros do dia atual antes de validar
-2. Verificar se já existe ciclo completo (ENTRADA→SAÍDA)
-3. Se sim, exigir campo "justificativa" no DTO
-4. Adicionar validação de intervalo mínimo (configurável em ConfigEmpresa)
-5. Validar que timestamp atual está no mesmo dia do último registro incompleto
-6. Criar lógica para permitir múltiplos descansos (futura melhoria)
+**Comportamento Esperado**:
+Sistema deve criar uma configuração padrão com:
+- Nome: "Empresa Exemplo LTDA"
+- Coordenadas de referência (Feira de Santana)
+- Raio: 100m
+- GeolocAtiva: false
+
+**Correção Necessária**:
+Adicionar bloco no método `run()` para criar `ConfigEmpresa` padrão se não existir.
 
 ---
 
-## 🟡 BUGS DE MÉDIA PRIORIDADE
+### BUG-007: SecurityConfig com RequestMatchers Incorretos
+**Status**: ❌ PENDENTE
 
-### BUG-008: Ausência de Paginação em Endpoints de Listagem
-**Arquivos:** `RegistroPontoController.java`, todos os repositories  
-**Métodos:** `meusPontos()`, futuros endpoints de listagem
+**Localização**: `src/main/java/com/marcweb/security/SecurityConfig.java`
 
-**Descrição:**  
-Nenhum endpoint de listagem implementa paginação. O endpoint /api/ponto/me retorna TODOS os registros do período solicitado. Para um funcionário com 1 ano de trabalho (1000+ registros), isso pode causar:
-- Resposta HTTP muito grande
-- Alto uso de memória
-- Lentidão no frontend
-- Possível timeout
+**Descrição**:
+Configuração de segurança tem mapeamentos para endpoints que não existem e URL incorreta para health check.
 
-**Impacto:**  
-- Severidade: MÉDIA (escalabilidade)
-- Problema não aparece no início, mas piora com tempo
-- Máquinas com 4GB RAM sofrerão primeiro
+**Problemas Identificados**:
+1. `/api/auth/health` deveria ser `/api/health`
+2. `/api/registro-ponto/registrar` não existe (é `/api/ponto`)
+3. `/api/registro-ponto/buscar` não existe (é `/api/ponto/me`)
+4. Configuração desnecessariamente verbosa
 
-**Solução Requerida:**  
-1. Adicionar suporte a Pageable do Spring Data
-2. Retornar Page<> ao invés de List<>
-3. Aceitar parâmetros: page, size, sort
-4. Implementar em TODOS os endpoints de listagem futuros
-5. Documentar nos DTOs de resposta (totalPages, totalElements, etc)
+**Impacto**:
+- Endpoints fictícios configurados
+- Health check pode não funcionar como esperado
+- Confusão na manutenção do código
+- Possível falha de segurança por configuração incorreta
 
----
-
-### BUG-009: Senha do Admin em Texto Plano no Código
-**Arquivo:** `MarcWebApplication.java`  
-**Linha:** 29
-
-**Descrição:**  
-A senha padrão do admin ("admin123") está hardcoded no código-fonte. Isso é uma falha de segurança porque:
-- Qualquer pessoa com acesso ao código conhece a senha
-- Se o código vazar (ex: GitHub público), sistema fica vulnerável
-- Mesmo em repo privado, é má prática
-
-**Impacto:**  
-- Severidade: MÉDIA (segurança)
-- Senha previsível e conhecida
-- Violação de boas práticas de segurança
-- Risco aumenta se código for open-source
-
-**Solução Requerida:**  
-1. Mover senha padrão para variável de ambiente (ADMIN_DEFAULT_PASSWORD)
-2. Ou gerar senha aleatória no primeiro boot e logar no console
-3. Forçar troca de senha no primeiro login do admin
-4. Adicionar no README instruções de segurança
-5. Considerar remover criação automática e exigir setup manual em produção
+**Comportamento Esperado**:
+Configuração simples e clara:
+- `/api/auth/login` → permitAll
+- `/api/health` → permitAll
+- `/error` → permitAll
+- Tudo mais → authenticated
 
 ---
 
-### BUG-010: Falta Logs de Auditoria Automáticos
-**Status:** Funcionalidade Não Implementada (Sprint 8)  
-**Impacto:** Todos os controllers
+### BUG-008: Dependências Faltantes no RegistroPontoService
+**Status**: ❌ PENDENTE
 
-**Descrição:**  
-Segundo o SDD, todas as ações críticas devem ser registradas em logs_auditoria. Atualmente:
-- Login não é auditado
-- Criação/edição/exclusão de usuários não é auditada
-- Registro de ponto não é auditado
-- Alterações em ConfigEmpresa não são auditadas
+**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
 
-**Impacto:**  
-- Severidade: MÉDIA (compliance/segurança)
-- Impossível rastrear ações no sistema
-- Dificulta investigação de problemas
-- Não atende requisitos de auditoria empresarial
-- LGPD exige logs de acesso a dados pessoais
+**Descrição**:
+Service não injeta dependências necessárias para implementar validações de geolocalização e dia útil.
 
-**Solução Requerida (Sprint 8, mas planejar agora):**  
-1. Criar Aspect com @Around em métodos dos services
-2. Capturar usuário do contexto de segurança
-3. Salvar em LogAuditoria com: ação, timestamp, userId, detalhes, status
-4. Categorizar por tipo: PONTO, ADMIN, AUDITORIA, SISTEMA
-5. Implementar de forma não intrusiva (sem poluir código dos services)
+**Dependências Ausentes**:
+1. `ConfigEmpresaService` - necessário para buscar configs de geoloc
+2. `FeriadoRepository` - necessário para validar feriados
+
+**Impacto**:
+- Impossível implementar BUG-003 (validação geoloc)
+- Impossível implementar BUG-004 (validação dia útil)
+- Bloqueia conclusão da Sprint 5
+
+**Comportamento Esperado**:
+Service deve ter injeção via construtor de todas as dependências necessárias.
 
 ---
 
-## 🟢 BUGS DE BAIXA PRIORIDADE
+## 🟢 BUGS MÉDIA PRIORIDADE (MELHORIAS)
 
-### BUG-011: Falta Validação de Formato de IP
-**Arquivo:** `RegistroPontoService.java`  
-**Método:** `getIpUser()`  
-**Linha:** 63-68
+### BUG-002: Sincronização de Feriados Sem Estatísticas
+**Status**: ⚠️ IMPLEMENTAÇÃO INCOMPLETA
 
-**Descrição:**  
-O método extrai o IP do header X-Forwarded-For ou RemoteAddr, mas não valida se o formato é válido (IPv4 ou IPv6). Se o header for manipulado, pode salvar string inválida no banco.
+**Localização**: 
+- `src/main/java/com/marcweb/service/FeriadoService.java`
+- `src/main/java/com/marcweb/service/BrasilApiService.java`
 
-**Impacto:**  
-- Severidade: BAIXA (qualidade de dados)
-- IP pode ser inválido no banco
-- Não afeta funcionamento do sistema
-- Apenas reduz qualidade de auditoria
+**Descrição**:
+O SDD especifica que a sincronização de feriados deve retornar estatísticas (quantos foram adicionados vs já existiam), mas a implementação atual não fornece este feedback.
 
-**Solução Requerida:**  
-1. Adicionar regex para validar formato IPv4/IPv6
-2. Se inválido, salvar como "INVALID" ou NULL
-3. Logar warning quando IP for inválido
-4. Considerar usar biblioteca Apache Commons Validator
+**Impacto**:
+- Admin não sabe resultado da sincronização
+- Falta de transparência na operação
+- Não conforma com SDD
 
----
+**Comportamento Atual**:
+Método `cadastrarFeriado(List<Feriado>)` remove duplicatas mas não retorna informações sobre a operação.
 
-### BUG-012: Falta Validação de Data em Folgas
-**Arquivo:** `FolgaRepository.java` (futuro FolgaService)  
-**Status:** Não implementado ainda
+**Comportamento Esperado**:
+Retornar objeto com estatísticas:
+- Total de feriados buscados da API
+- Quantos foram adicionados
+- Quantos já existiam no banco
 
-**Descrição:**  
-Quando implementar CRUD de folgas (Sprint 6), será necessário validar:
-- dataInicio não pode ser no passado (ou apenas com permissão especial)
-- dataInicio deve ser antes de dataFim
-- Não pode haver sobreposição de folgas para o mesmo usuário
-- Período de folga não pode exceder limite configurado (ex: 30 dias)
-
-**Impacto:**  
-- Severidade: BAIXA (futuro)
-- Não é bug atual pois funcionalidade não existe
-- Mas se não planejar agora, será esquecido
-
-**Solução Requerida (para Sprint 6):**  
-1. Criar validações customizadas no FolgaService
-2. Método validarSobreposicao() que busca folgas existentes no período
-3. Validar datas no DTO com @Future ou validação customizada
-4. Adicionar regra de negócio para limite de dias consecutivos
+**Funcionalidades Faltantes**:
+- Método `sincronizarFeriados(int ano)` retornando Map<String, Integer>
+- Endpoint `POST /api/feriados/sync` conforme SDD
 
 ---
 
-## 📊 PRIORIZAÇÃO DE CORREÇÕES
+### BUG-009: Endpoint de Sincronização Não Existe
+**Status**: ❌ PENDENTE
 
-### Ordem Recomendada de Resolução:
+**Localização**: 
+- `src/main/java/com/marcweb/controller/FeriadoController.java`
+- Documentação: `INFORMAÇÕES.txt`
 
-**URGENTE (Corrigir antes de continuar Sprint 5):**
-1. BUG-001: NullPointerException primeiro registro
-2. BUG-003: Validação de geolocalização
-3. BUG-004: Typo em variável
+**Descrição**:
+O documento `INFORMAÇÕES.txt` especifica endpoint `POST /api/feriado/nacionais` mas o SDD menciona `POST /api/feriados/sync`. Além disso, o endpoint atual não retorna estatísticas.
 
-**SPRINT 5 (Completar antes de ir para Sprint 6):**
-4. BUG-006: Tratamento de erro API externa
-5. BUG-007: Validação de sequência completa
+**Impacto**:
+- Inconsistência entre documentações
+- Falta de feedback ao usuário
+- Não segue padrão REST apropriado
 
-**SPRINT 6 (Ao implementar funcionalidades correspondentes):**
-6. BUG-002: Persistência de feriados
-7. BUG-012: Validação de folgas
+**Comportamento Atual**:
+Endpoint `POST /api/feriado/nacionais` existe mas:
+- Retorna apenas 201 Created (sem corpo)
+- Não informa quantos feriados foram adicionados
+- Nome do endpoint não é intuitivo
 
-**REFATORAÇÃO (Pode ser feito em paralelo):**
-8. BUG-008: Implementar paginação
-9. BUG-005: Otimizar índices e queries
-10. BUG-009: Remover senha hardcoded
-
-**SPRINT 8 (Conforme planejado):**
-11. BUG-010: Sistema de auditoria
-
-**BACKLOG:**
-12. BUG-011: Validação de IP
-
----
-
-## 🔍 PROBLEMAS DE DESIGN E ARQUITETURA
-
-### DESIGN-001: Falta Interface de Service
-**Descrição:** Os services não implementam interfaces, dificultando mock em testes e violando princípio de Inversão de Dependência (SOLID).
-
-**Recomendação:** Criar interfaces IUserService, IRegistroPontoService, etc.
-
-### DESIGN-002: Ausência de DTOs de Response Padronizados
-**Descrição:** Alguns endpoints retornam entidades JPA diretamente, outros retornam DTOs. Falta padronização.
-
-**Recomendação:** Sempre retornar DTOs, nunca entidades. Criar ResponseDTO para cada endpoint.
-
-### DESIGN-003: Falta Tratamento Global de Exceções
-**Descrição:** ControllerException existe mas não trata exceções genéricas (NullPointerException, IllegalArgumentException, etc).
-
-**Recomendação:** Adicionar @ExceptionHandler para Exception.class com log e resposta genérica.
+**Comportamento Esperado**:
+Endpoint deveria:
+- Ter nome mais descritivo (`/sync` ou `/sincronizar`)
+- Retornar JSON com estatísticas
+- Status 200 OK com corpo de resposta
 
 ---
 
-## 🛡️ POTENCIAIS VULNERABILIDADES DE SEGURANÇA
+## ⚠️ RISCOS IDENTIFICADOS
 
-### SEC-001: CORS Aberto em Desenvolvimento
-**Arquivo:** `SecurityConfig.java`  
-**Linha:** 50 - `setAllowedOriginPatterns(List.of("*"))`
+### Risco 1: Sistema em Produção Sem Validações Críticas
+**Probabilidade**: ALTA se não corrigido
+**Impacto**: CRÍTICO
+**Mitigação**: Não fazer deploy até correção de BUG-003 e BUG-004
 
-**Descrição:** Permite requisições de qualquer origem. Em produção, isso deve ser restrito.
+### Risco 2: Falta de Testes Automatizados
+**Probabilidade**: ALTA (sem testes, bugs podem reaparecer)
+**Impacto**: ALTO
+**Mitigação**: Implementar testes na Sprint 5 antes de avançar
 
-**Recomendação:** Criar perfil prod com origens específicas.
-
-### SEC-002: Ausência de Rate Limiting
-**Descrição:** Endpoint /api/auth/login não tem proteção contra brute force.
-
-**Recomendação:** Implementar rate limiting (ex: 5 tentativas por minuto por IP).
-
-### SEC-003: Token JWT Sem Refresh Token
-**Descrição:** Token expira em 8h mas não há mecanismo de refresh, usuário precisa fazer login novamente.
-
-**Recomendação:** Implementar refresh token para melhor UX e segurança.
+### Risco 3: Inconsistências Documentais
+**Probabilidade**: MÉDIA
+**Impacto**: MÉDIO
+**Mitigação**: Consolidar documentação após Sprint 5
 
 ---
 
-## 📈 MÉTRICAS DE QUALIDADE
+## 📎 ANEXOS
 
-- **Cobertura de Testes:** 0% (crítico)
-- **Bugs por 1000 linhas:** ~8 (aceitável para fase inicial)
-- **Dívida Técnica:** Média (principalmente falta de testes)
-- **Complexidade Ciclomática:** Baixa (código simples)
-- **Duplicação de Código:** Mínima
+### Checklist de Correção Sprint 5
+```
+[ ] BUG-008: Adicionar injeções de dependência
+[ ] BUG-003: Implementar validação geolocalização
+[ ] BUG-004: Implementar validação dia útil
+[ ] Criar 4 novas exceções
+[ ] Atualizar GlobalExceptionHandler
+[ ] Escrever 10+ testes unitários
+[ ] BUG-006: Config padrão no startup
+[ ] BUG-007: Corrigir SecurityConfig
+[ ] Executar testes de regressão
+[ ] Atualizar SCRUM.txt
+[ ] Marcar Sprint 5 como COMPLETA ✅
+```
 
----
-
-## ✅ CRITÉRIOS DE ACEITAÇÃO PARA RESOLUÇÃO
-
-Cada bug só deve ser considerado resolvido quando:
-
-1. **Código corrigido** conforme solução especificada
-2. **Teste unitário** criado que reproduz o bug (antes da correção falha, depois passa)
-3. **Teste manual** executado com sucesso
-4. **Documentação** atualizada se necessário
-5. **Code review** aprovado por outro desenvolvedor ou IA
-6. **Sem regressões** (outros testes continuam passando)
-
----
-
-**Ações Imediatas Necessárias:**
-1. Corrigir BUG-001 (bloqueador crítico)
-2. Implementar BUG-003 (geolocalização)
-3. Completar BUG-002 antes de Sprint 6
-
-**Recomendação Geral:**
-Considere implementar testes unitários ANTES de continuar para Sprint 6. Investir 1-2 dias em testes agora economizará semanas de debugging futuro.
+### Arquivos que Precisam de Modificação
+1. `RegistroPontoService.java` (3 novos métodos + 2 injeções)
+2. `GlobalExceptionHandler.java` (4 novos handlers)
+3. `MarcWebApplication.java` (criação de config padrão)
+4. `SecurityConfig.java` (simplificação)
+5. `FeriadoRepository.java` (correção query)
+6. Criar 4 arquivos de exceção novos
+7. Criar `RegistroPontoServiceTest.java`
 
 ---
 
-**Relatório Gerado Por:** Douglas
-**Revisado Por:** Douglas  
-**Próxima Revisão:** Após correção de bugs críticos  
-**Status:** ABERTO - Aguardando Correções
+**FIM DO RELATÓRIO**

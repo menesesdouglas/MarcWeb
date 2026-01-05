@@ -1,100 +1,148 @@
-# **Plano SCRUM do Projeto Marc Web - 16 Sprints (+2 Opcionais)**
-
-Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 2 sprints opcionais para funcionalidades avançadas.
-
-**Mudanças principais:**
-- ✅ Foco no MVP: Sistema de ponto robusto
-- ✅ Folha de ponto detalhada
-- ✅ Multi-tenant completo
-- 🔄 Contracheque movido para sprints opcionais (não prioritário)
+# **Plano SCRUM Marc Web - MVP First**
+**16 Sprints Focadas em Lógica de Negócio + Multi-tenant Futuro**
 
 ---
 
-## **Fase 1: Fundação Local (Sprints 1–4)** ✅ COMPLETO
-**Objetivo:** Estabelecer infraestrutura local, modelo de dados, segurança básica e configurações iniciais.
+## **Fase 1: Fundação (Sprints 1-4)** ✅ COMPLETO
 
-### **Sprint 1: Setup Geral & Infra Local** ✅ Concluído 30/12/2025
-- ✅ Ambientes funcionais em ambas as máquinas
-- ✅ Banco `marcweb_dev` criado
+### **Sprint 1: Setup Geral & Infra** ✅ 30/12/2025
+- ✅ Ambientes funcionais (PC + Notebook)
+- ✅ PostgreSQL `marcweb_dev`
 - ✅ Projeto Spring Boot inicializado
 - ✅ Endpoint `/api/health` funcional
-- ✅ Primeiro commit realizado
+- ✅ Primeiro commit
 
-### **Sprint 2: Entidades & Segurança Base** ✅ Concluído 31/12/2025
+### **Sprint 2: Entidades & Segurança** ✅ 31/12/2025
 - ✅ 6 entidades JPA criadas
 - ✅ Repositórios JPA
 - ✅ JWT implementado
 - ✅ Endpoint `/api/auth/login`
 - ✅ Usuário admin padrão
 
-### **Sprint 3: Primeiras Funcionalidades CRUD** ✅ Concluído 01/01/2026
+### **Sprint 3: CRUD Básico** ✅ 01/01/2026
 - ✅ Controllers REST (User, ConfigEmpresa)
 - ✅ CRUD de usuários (admin only)
 - ✅ Validações com `@Valid`
-- ✅ Flyway configurado (V1__create_tables)
-- ✅ Testes manuais via Postman/cURL
+- ✅ Flyway configurado
+- ✅ Testes manuais (Postman/cURL)
 
-### **Sprint 4: Validações e Integração Inicial** ✅ Concluído 02/01/2026
+### **Sprint 4: Validações Iniciais** ✅ 02/01/2026
 - ✅ UserService com lógica de negócio
 - ✅ Endpoint `/api/auth/register`
 - ✅ BrasilApiService preparado
 - ✅ Estrutura de pastas ajustada
 
-**Marco Fase 1:** Backend básico funcional, autenticação implementada, CRUD de usuários operacional.
+**Marco Fase 1:** Backend básico funcional, autenticação implementada, CRUD operacional.
 
 ---
 
-## **Fase 2: Core do Negócio (Sprints 5–12)**
-**Objetivo:** Implementar funcionalidades principais do sistema de ponto e arquitetura multi-tenant.
+## **Fase 2: Core do Negócio (Sprints 5-12)**
 
-### **Sprint 5: Registro de Ponto - Backend** 🔄 Em Andamento (90%)
-**Objetivo:** Completar sistema de registro de ponto com validações.
+### **Sprint 5: Registro de Ponto Completo** 🔄 Em Andamento
+**Objetivo:** Sistema de registro de ponto robusto e validado.
 
 **Tarefas:**
-- [x] RegistroPontoService com validação de sequência
-- [x] Controller REST `/api/ponto`
-- [x] Correção BUG-001 (NullPointerException primeiro registro)
-- [ ] Implementar validação de geolocalização (BUG-003)
-- [ ] Validação de dia útil (não permitir domingos/feriados)
-- [ ] Testes unitários básicos
+- [x] ✅ RegistroPontoService com validação de sequência
+- [x] ✅ Controller REST `/api/ponto`
+- [x] ✅ Correção BUG-001 (NullPointerException)
+- [ ] 🔄 **Implementar validação de geolocalização (BUG-003)**
+  - Método `calcularDistanciaHaversine()`
+  - Validar coordenadas obrigatórias se `geolocAtiva=true`
+  - Lançar exceção se fora do raio
+  - Criar `RegistroForaDoRaioException`
+  - Adicionar handler no `GlobalExceptionHandler`
+- [ ] 🔄 **Validação de dia útil**
+  - Bloquear registro aos domingos
+  - Bloquear registro em feriados
+  - Criar `RegistroEmDomingoException`
+  - Criar `RegistroEmFeriadoException`
+- [ ] 🔄 **Testes unitários**
+  - Testar primeiro registro
+  - Testar sequência válida completa
+  - Testar validação de geoloc
+  - Testar bloqueio de domingos/feriados
 
-**Marco:** Registro de ponto funcionando com todas as validações, incluindo restrição de domingos.
+**Entregas:**
+- Sistema de ponto com todas as validações
+- Domingos e feriados bloqueados
+- Geolocalização funcional
+
+**Tempo Estimado:** 6-8 dias (2h/dia)
 
 ---
 
-### **Sprint 6: Calendário e Controle de Ausências**
-**Objetivo:** Gerenciar feriados e folgas individuais.
+### **Sprint 6: Calendário e Folgas**
+**Objetivo:** Gerenciar feriados automaticamente e folgas individuais.
 
 **Tarefas:**
-- Completar FeriadoService (sincronização BrasilAPI + persistência)
-- Criar endpoint `POST /api/feriados/sync`
-- Criar FolgaService com CRUD completo
-- Implementar validação de tipos de folga (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
-- **Lógica de folgas automáticas aos domingos**
-- Controllers REST `/api/feriados` e `/api/folgas`
-- Validar sobreposição de folgas
-- Criar migration para persistir feriados
+- [ ] **Completar FeriadoService (BUG-002)**
+  - Método `sincronizarFeriados(int ano)`
+  - Verificar duplicatas por data
+  - Salvar apenas novos feriados com `origem=API`
+  - Criar endpoint `POST /api/feriados/sync`
+  - Proteger com `@PreAuthorize("hasRole('ADMIN')")`
+  - Retornar estatísticas (quantos adicionados/já existiam)
+- [ ] **CRUD de Folgas**
+  - Criar `FolgaService`
+  - Criar endpoints REST `/api/folgas`
+  - Validar sobreposição de folgas
+  - Adicionar campo `tipo` (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
+  - Validar datas (dataInicio < dataFim)
+- [ ] **Lógica de Domingos**
+  - Todo domingo marcado automaticamente como folga
+  - Sistema não permite registro aos domingos
+  - Folha de ponto marca domingos como `tipo_dia: "DOMINGO"`
+- [ ] **Migration V2**
+  - Adicionar campo `tipo` em `folgas`
+  - Criar índices adicionais se necessário
 
-**Marco:** Feriados sincronizados e persistidos, folgas gerenciáveis, domingos automaticamente marcados como folga.
+**Entregas:**
+- Feriados sincronizados e persistidos
+- CRUD de folgas funcional
+- Domingos automaticamente tratados
+
+**Tempo Estimado:** 5-6 dias
 
 ---
 
-### **Sprint 7: Folha de Ponto Detalhada** ⭐
+### **Sprint 7: Folha de Ponto Detalhada** ⭐ PRIORIDADE ALTA
 **Objetivo:** Implementar geração de folha de ponto em JSON estruturado.
 
 **Tarefas:**
-- Criar entidade `FolhaPonto` com campo JSONB
-- Criar migration V2__add_folhas_ponto
-- Criar FolhaPontoService:
+- [ ] **Criar entidade `FolhaPonto`**
+  - Campos: `user_id`, `mes`, `ano`, `dados` (JSONB)
+  - Campos calculados: `horas_trabalhadas`, `horas_extras`, `dias_trabalhados`
+  - Criar migration `V2__add_folhas_ponto.sql`
+  - Criar índice: `idx_folhas_ponto_user_periodo`
+- [ ] **Criar `FolhaPontoService`**
   - Método `gerarFolhaPonto(userId, mes, ano)`
+  - Buscar todos os registros do mês/ano
   - Agrupar registros por dia
-  - Calcular horas trabalhadas, extras e débitos por dia
+  - Calcular horas trabalhadas por dia
   - Identificar tipo de dia (UTIL, DOMINGO, FERIADO, FOLGA)
   - Gerar JSON conforme estrutura do SDD
-- Criar endpoint `GET /api/folha-ponto/gerar?mes=X&ano=Y` (role admin)
-- Criar endpoint `GET /api/folha-ponto/me?mes=X&ano=Y` (role employee)
+  - Calcular totalizações do mês
+  - Persistir em `folhas_ponto`
+- [ ] **Criar endpoints**
+  - `GET /api/folha-ponto/gerar?mes=X&ano=Y&userId=Z` (admin)
+  - `GET /api/folha-ponto/me?mes=X&ano=Y` (funcionário)
+  - Validar permissões adequadamente
+- [ ] **Implementar cálculos**
+  - Cálculo de horas trabalhadas (SAIDA - ENTRADA - descanso)
+  - Cálculo de horas extras (acima de 8h/dia ou 220h/mês)
+  - Cálculo de débito de horas
+  - Saldo de horas (extras - débito)
+- [ ] **Testes**
+  - Testar geração de folha completa
+  - Testar com diferentes tipos de dia
+  - Testar cálculos de horas
 
-**Marco:** Folha de ponto detalhada em JSON disponível via API, com todas as informações estruturadas.
+**Entregas:**
+- Folha de ponto JSON estruturado
+- API para gerar e consultar folhas
+- Cálculos precisos de horas
+
+**Tempo Estimado:** 8-10 dias
 
 ---
 
@@ -102,94 +150,104 @@ Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 
 **Objetivo:** Implementar logging abrangente em todo o sistema.
 
 **Tarefas:**
-- Criar LogAuditoriaService centralizado
-- Implementar Aspect (@Auditado) para logar ações automaticamente
-- Adicionar logs em:
+- [ ] **Criar `LogAuditoriaService`**
+  - Método centralizado para registrar logs
+  - Categorias: PONTO, ADMIN, AUDITORIA, RELATORIO, SISTEMA
+  - Status: SUCESSO, ERRO
+  - Armazenar detalhes em formato JSON
+- [ ] **Implementar Aspect `@Auditado`**
+  - Criar annotation `@Auditado`
+  - Criar `LogAuditoriaAspect` com `@Around`
+  - Capturar usuário do contexto de segurança
+  - Logar antes e depois da execução
+  - Capturar exceções e logar como ERRO
+- [ ] **Adicionar logs em todas as ações**
   - Login/Logout
   - Registro de ponto
   - Criação/edição/exclusão de usuários
   - Geração de relatórios
   - Alterações em configurações
   - Sincronização de feriados
-- Criar endpoint `GET /api/auditoria/logs` (admin only)
-- Implementar filtros (data, usuário, ação, status)
-- Adicionar paginação nos logs
+- [ ] **Criar endpoints de consulta**
+  - `GET /api/auditoria/logs` (admin only)
+  - Filtros: data, usuário, ação, categoria, status
+  - Implementar paginação (`Pageable`)
+  - Ordenação por timestamp DESC
+- [ ] **Testes**
+  - Testar logging de diferentes ações
+  - Testar filtros e paginação
+  - Testar captura de exceções
 
-**Marco:** Sistema de auditoria completo, todas as ações críticas registradas e rastreáveis.
+**Entregas:**
+- Sistema de auditoria completo
+- Todas as ações críticas rastreáveis
+- Endpoints para consulta de logs
 
----
-
-### **Sprint 9: Arquitetura Multi-tenant - Portal Principal** ⭐
-**Objetivo:** Criar portal de login centralizado e API de gerenciamento de empresas.
-
-**Tarefas:**
-- Criar projeto separado: `marcweb-portal` (frontend + API principal)
-- Criar banco `marcweb_main`
-- Criar migrations para tabelas:
-  - `empresas` (com campos url_api, porta_api, slug)
-  - `empresas_config_visual` (logos, cores)
-  - `logs_sistema`
-- Criar entidades: Empresa, EmpresaConfigVisual, LogSistema
-- Criar EmpresaService com métodos:
-  - `listarEmpresasAtivas()` - para select do login
-  - `obterConfigApi(empresaId)` - retorna URL e porta
-  - `criarEmpresa()` - provisiona nova empresa
-  - `editarEmpresa()`
-  - `desativarEmpresa()`
-- Criar controllers:
-  - `EmpresasPublicController` (endpoints públicos)
-  - `AdminEmpresaController` (gerenciamento)
-- Implementar frontend do portal:
-  - Tela de apresentação do sistema (ex.: página inicial do totvs)
-  - Tela de login com select de empresas
-  - Buscar lista de empresas via API
-  - Enviar login para API específica da empresa
-  - Redirecionar após autenticação bem-sucedida
-- Configurar CORS para permitir comunicação entre domínios
-- Implementar rate limiting no portal
-- Criar script de provisionamento de empresa
-
-**Marco:** Portal centralizado funcional, capaz de listar empresas e rotear login para APIs específicas.
+**Tempo Estimado:** 6-7 dias
 
 ---
 
-### **Sprint 10: Multi-tenant - Redirecionamento e Isolamento** ⭐
-**Objetivo:** Implementar fluxo completo de autenticação multi-tenant e isolamento.
+### **Sprint 9-10: Preparação para Multi-tenant** ⭐ CRÍTICO
+**Objetivo:** Refatorar código para suportar arquitetura multi-tenant futura.
+
+#### **Sprint 9: Refatoração e Interfaces**
 
 **Tarefas:**
-- Adicionar campo `empresaId` no payload do JWT de cada empresa
-- Modificar JwtService para incluir empresaId no token
-- Criar filter de validação que verifica:
-  - Token é válido
-  - EmpresaId no token corresponde à empresa da API
-  - Empresa está ativa
-- Implementar RedirectService:
-  - Determina URL de redirecionamento baseado em role
-  - ADMIN → `/admin-panel.html`
-  - EMPLOYEE → `/dashboard-funcionario.html`
-  - Retorna URL completa com subdomínio
-- Modificar endpoint de login para retornar:
-  ```json
-  {
-    "token": "...",
-    "redirectUrl": "https://empresa-x.marcweb.com.br/dashboard",
-    "empresaSlug": "empresa-x"
-  }
-  ```
-- Implementar logout universal:
-  - Limpa token do localStorage
-  - Redireciona para portal principal
-  - Registra log de logout
-- Configurar DNS para subdomínios (wildcard)
-- Criar script de deploy por empresa
-- Implementar systemd services por empresa
-- Testes de isolamento:
-  - Usuário da Empresa A não acessa dados da Empresa B
-  - Token de uma empresa não funciona em outra
-  - Validação de domínio/subdomínio
-- Documentar fluxo completo de autenticação
+- [ ] **Criar `empresa-common-lib` (módulo Maven)**
+  - Criar novo módulo no projeto
+  - Adicionar dependências básicas
+  - Configurar `pom.xml` para publicação local
+- [ ] **Extrair DTOs para common-lib**
+  - Mover todos os DTOs para `com.marcweb.common.dto`
+  - `LoginRequest`, `LoginResponse`
+  - `CreateUser`, `CreateRegistroPonto`, etc.
+  - Atualizar imports no projeto principal
+- [ ] **Criar interfaces de serviços**
+  - `IUserService` com métodos principais
+  - `IRegistroPontoService`
+  - `IFeriadoService`
+  - `IFolgaService`
+  - `IFolhaPontoService`
+- [ ] **Refatorar serviços para implementar interfaces**
+  - `UserService implements IUserService`
+  - Manter lógica de negócio existente
+  - Garantir compatibilidade total
+- [ ] **Testes de regressão**
+  - Executar todos os testes existentes
+  - Garantir que nada quebrou
+  - Ajustar imports se necessário
 
-**Marco:** Sistema multi-tenant completo, com login centralizado, redirecionamento automático e isolamento total de dados.
+#### **Sprint 10: Entidades Base e Utilidades**
+
+**Tarefas:**
+- [ ] **Criar entidades base na common-lib**
+  - `BaseEntity` com `id`, `createdAt`, `updatedAt`
+  - Usar `@MappedSuperclass`
+  - Entidades do projeto estendem `BaseEntity`
+- [ ] **Extrair enums compartilhados**
+  - `Role`, `TipoRegistro`, `CategoriaLog`, `StatusLog`
+  - Mover para `com.marcweb.common.enums`
+- [ ] **Criar classes utilitárias**
+  - `DateUtils` - manipulação de datas
+  - `GeoUtils` - cálculos de geolocalização
+  - `HoraUtils` - cálculos de horas trabalhadas
+  - Mover lógica existente para essas classes
+- [ ] **Documentar arquitetura**
+  - Criar diagrama de módulos
+  - Documentar interfaces e contratos
+  - Atualizar README do projeto
+- [ ] **Publicar lib no Maven local**
+  - `mvn clean install` na common-lib
+  - Testar importação no projeto principal
+  - Verificar funcionamento completo
+
+**Entregas Sprint 9-10:**
+- Código refatorado e organizado
+- Biblioteca compartilhada funcional
+- Interfaces bem definidas
+- Sistema preparado para multi-tenant
+
+**Tempo Estimado:** 10-12 dias (2 sprints)
 
 ---
 
@@ -197,227 +255,288 @@ Este plano atualizado detalha as 16 sprints principais do projeto Marc Web, com 
 **Objetivo:** Implementar geração de relatórios profissionais em PDF.
 
 **Tarefas:**
-- Integrar iText 7 para geração de PDF
-- Criar RelatorioService
-- Implementar templates de relatório:
-  - Folha de ponto mensal
-  - Relatório de horas por período
-  - Relatório consolidado (admin)
-- Criar endpoints:
-  - `GET /api/relatorios/mensal/pdf?userId=X&mes=Y&ano=Z`
-  - `GET /api/relatorios/periodo/pdf?userId=X&inicio=...&fim=...`
-- Adicionar cabeçalho com logo e dados da empresa
-- Implementar tabelas formatadas com dados de registro
-- Adicionar totalizações e cálculos
-- Implementar assinatura digital (opcional)
-- Permitir download direto do PDF
-- Validar permissões (funcionário só vê próprios relatórios)
+- [ ] **Adicionar dependência iText 7**
+  ```xml
+  <dependency>
+      <groupId>com.itextpdf</groupId>
+      <artifactId>itext7-core</artifactId>
+      <version>7.2.5</version>
+  </dependency>
+  ```
+- [ ] **Criar `RelatorioService`**
+  - Método `gerarRelatorioPDF(userId, mes, ano)`
+  - Buscar `FolhaPonto` correspondente
+  - Gerar PDF formatado
+- [ ] **Implementar templates de relatório**
+  - Cabeçalho com logo e dados da empresa
+  - Tabela com registros do mês
+  - Linha por dia com tipo de dia
+  - Totalizações no rodapé
+  - Formatação profissional
+- [ ] **Criar endpoints**
+  - `GET /api/relatorios/mensal/pdf?userId=X&mes=Y&ano=Z` (admin)
+  - `GET /api/relatorios/me/pdf?mes=X&ano=Y` (funcionário)
+  - Retornar PDF como `application/pdf`
+  - Configurar download automático no header
+- [ ] **Adicionar assinatura digital (opcional)**
+  - Timestamp do relatório
+  - Hash SHA-256 dos dados
+  - QR Code com validação
+- [ ] **Testes**
+  - Testar geração de PDF
+  - Verificar formatação
+  - Testar download no navegador
 
-**Marco:** Relatórios PDF profissionais disponíveis para download.
+**Entregas:**
+- Relatórios PDF profissionais
+- Download direto via API
+- Validação de permissões
+
+**Tempo Estimado:** 5-6 dias
 
 ---
 
-### **Sprint 12: Refinamento e Testes Unitários**
-**Objetivo:** Garantir qualidade e robustez do backend.
+### **Sprint 12: Refinamento e Testes Unitários** ⭐
+**Objetivo:** Garantir qualidade e robustez do MVP.
 
 **Tarefas:**
-- Escrever testes unitários para services principais:
-  - UserService
-  - RegistroPontoService
-  - FeriadoService
-  - FolhaPontoService
-  - EmpresaService
-- Escrever testes de integração para controllers
-- Implementar testes de segurança:
+- [ ] **Escrever testes unitários para services**
+  - `UserServiceTest`
+  - `RegistroPontoServiceTest` (incluindo validações)
+  - `FeriadoServiceTest`
+  - `FolhaPontoServiceTest`
+  - `RelatorioServiceTest`
+  - Cobertura mínima: 70%
+- [ ] **Escrever testes de integração**
+  - `AuthenticationControllerTest`
+  - `RegistroPontoControllerTest`
+  - `FeriadoControllerTest`
+  - Usar `@SpringBootTest` e `MockMvc`
+- [ ] **Testes de segurança**
   - Validação de JWT
-  - Isolamento multi-tenant
-  - CORS
-- Realizar testes manuais de fluxos completos
-- Testes de carga básicos (JMeter ou similar)
-- Revisar e otimizar queries JPA
-- Adicionar índices faltantes no banco
-- Code review e refatoração
-- Documentar decisões técnicas
+  - Teste de permissões (ADMIN vs EMPLOYEE)
+  - Teste de CORS
+  - Tentativas de acesso não autorizado
+- [ ] **Testes de casos extremos**
+  - Primeiro registro do usuário
+  - Múltiplos ciclos no mesmo dia
+  - Registro em horários inválidos
+  - Registro fora do raio (geoloc)
+  - Feriados duplicados
+- [ ] **Otimização de queries**
+  - Revisar queries JPA com EXPLAIN ANALYZE
+  - Adicionar índices faltantes
+  - Testar performance com dados de volume (10k+ registros)
+  - Implementar paginação onde necessário
+- [ ] **Code review e refatoração**
+  - Revisar todos os controllers
+  - Revisar todos os services
+  - Aplicar princípios SOLID
+  - Remover código duplicado
+  - Melhorar nomes de variáveis/métodos
+- [ ] **Documentação técnica**
+  - Documentar decisões arquiteturais
+  - Atualizar README com instruções de setup
+  - Documentar endpoints da API (OpenAPI/Swagger opcional)
+  - Criar guia de desenvolvimento
 
-**Marco:** Cobertura de testes significativa, funcionalidades backend estáveis e otimizadas.
+**Entregas:**
+- Cobertura de testes significativa (>70%)
+- Performance otimizada
+- Código limpo e documentado
+- Sistema estável e robusto
 
----
+**Tempo Estimado:** 8-10 dias
 
-## **Fase 3: Frontend Completo (Sprints 13–16)**
-**Objetivo:** Desenvolver interface completa e integrar com backend.
-
-### **Sprint 13: Frontend - Portal e Autenticação**
-**Objetivo:** Criar portal de login e estrutura JavaScript.
-
-**Tarefas:**
-- Criar estrutura frontend do portal:
-  - `login.html` com select de empresas
-  - `js/auth-portal.js`
-  - `js/api-portal.js`
-  - `css/custom-styles.css`
-- Implementar carregamento de empresas via API
-- Implementar envio de login para API da empresa
-- Armazenar/recuperar JWT do localStorage
-- Implementar validação de formulários
-- Tratamento de erros de autenticação
-- Implementar feedback visual (loading, sucesso, erro)
-- Implementar redirecionamento automático
-- Testes em múltiplos navegadores
-
-**Marco:** Login centralizado funcional, comunicação com APIs estabelecida.
-
----
-
-### **Sprint 14: Frontend - Dashboard Funcionário**
-**Objetivo:** Criar interface completa para funcionário.
-
-**Tarefas:**
-- Implementar `dashboard-funcionario.js`
-- Conectar botões de registro de ponto ao backend
-- Implementar requisição de geolocalização (se ativa)
-- Exibir registros recentes do usuário
-- Implementar visualização de folhas de ponto
-- Criar interface para listagem de folgas
-- Implementar download de relatório PDF
-- Adicionar feedback visual em todas ações
-- Validar campos antes de enviar
-- Implementar atualização automática de dados
-- Adicionar confirmações para ações críticas
-- Testes de usabilidade
-
-**Marco:** Funcionário pode registrar ponto, visualizar folhas e relatórios pela interface.
+**Marco Fase 2:** MVP single-tenant completo, testado e documentado.
 
 ---
 
-### **Sprint 15: Frontend - Painel Admin**
-**Objetivo:** Criar funcionalidades administrativas completas.
+## **Fase 3: Multi-tenant (Sprints 13-16)**
+
+### **Sprint 13: Infraestrutura Eureka + Gateway**
+**Objetivo:** Implementar Service Discovery e API Gateway.
 
 **Tarefas:**
-- Implementar `admin-panel.js`
-- CRUD de usuários via interface:
-  - Listar usuários com filtros
-  - Criar novo usuário
-  - Editar usuário existente
-  - Desativar/ativar usuário
-- Gerenciar folgas:
-  - Visualizar solicitações
-  - Aprovar/reprovar folgas
-  - Criar folga manualmente
-- Sincronizar feriados da BrasilAPI
-- Visualizar logs de auditoria com filtros
-- Editar configurações da empresa:
-  - Dados básicos
-  - Configuração de geolocalização
-  - Carga horária mensal
-- Implementar filtros e paginação em listagens
-- Adicionar gráficos/estatísticas básicas (opcional)
-- Validações e confirmações
+- [ ] **Criar módulo `marcweb-eureka-server`**
+  - Adicionar dependência `spring-cloud-starter-netflix-eureka-server`
+  - Anotar com `@EnableEurekaServer`
+  - Configurar `application.yml` (porta 8761)
+  - Testar acesso ao dashboard
+- [ ] **Criar módulo `marcweb-gateway`**
+  - Adicionar dependência `spring-cloud-starter-gateway`
+  - Configurar rotas dinâmicas
+  - Implementar filtros customizados
+  - Configurar CORS
+- [ ] **Configurar projeto principal como Eureka Client**
+  - Adicionar dependência `spring-cloud-starter-netflix-eureka-client`
+  - Configurar `spring.application.name`
+  - Registrar no Eureka Server
+  - Testar descoberta de serviços
+- [ ] **Implementar roteamento**
+  - Rotear requisições baseado em `X-Empresa-Id` header
+  - Load balancing com Ribbon
+  - Fallback para circuit breaker
+- [ ] **Testes**
+  - Testar registro no Eureka
+  - Testar roteamento via Gateway
+  - Testar failover
 
-**Marco:** Admin pode gerenciar todo o sistema pela interface.
+**Entregas:**
+- Eureka Server funcional
+- API Gateway roteando requisições
+- Service Discovery operacional
+
+**Tempo Estimado:** 6-8 dias
 
 ---
 
-### **Sprint 16: Deploy Multi-tenant e Testes Finais**
-**Objetivo:** Preparar sistema para produção e validar completamente.
+### **Sprint 14: Biblioteca Compartilhada e Feign**
+**Objetivo:** Consolidar common-lib e implementar comunicação entre serviços.
 
 **Tarefas:**
-- Configurar servidor VPS (Hetzner, DigitalOcean ou similar)
-- Instalar e configurar PostgreSQL:
-  - Banco principal (`marcweb_main`)
-  - Template para empresas
-- Configurar DNS:
-  - Domínio principal
-  - Wildcard para subdomínios
-- Configurar SSL/HTTPS com Let's Encrypt
-- Criar scripts de deploy:
-  - `deploy-portal.sh`
-  - `deploy-nova-empresa.sh`
-  - `backup-empresas.sh`
-- Configurar firewall (UFW)
-- Implementar backup automático (cron)
-- Configurar monitoramento básico (logs, uptime)
-- Criar empresa de teste em produção
-- Testar fluxo completo end-to-end:
-  - Criação de empresa
-  - Cadastro de funcionários
-  - Registro de ponto mês completo
-  - Geração de folha de ponto
-  - Download de relatórios
-  - Logs de auditoria
-- Pentests básicos (OWASP ZAP)
-- Revisar logs de segurança
-- Criar documentação:
-  - Manual do funcionário
-  - Manual do administrador
+- [ ] **Publicar `empresa-common-lib` no Maven Central/Nexus**
+  - Configurar deploy no `pom.xml`
+  - Publicar versão 1.0.0
+  - Documentar uso da biblioteca
+- [ ] **Implementar Feign Clients**
+  - Adicionar dependência `spring-cloud-starter-openfeign`
+  - Criar interfaces Feign para comunicação
+  - Anotar com `@FeignClient`
+  - Configurar timeout e retry
+- [ ] **Criar template de empresa**
+  - Módulo `marcweb-empresa-template`
+  - Importar `empresa-common-lib`
+  - Implementar interfaces dos services
+  - Configuração padrão do `application.yml`
+- [ ] **Documentar arquitetura multi-tenant**
+  - Diagrama de componentes
+  - Fluxo de comunicação
+  - Guia de criação de nova empresa
+- [ ] **Testes de integração**
+  - Testar comunicação via Feign
+  - Testar fallback de circuit breaker
+  - Testar isolamento de dados
+
+**Entregas:**
+- Biblioteca compartilhada publicada
+- Template de empresa reutilizável
+- Comunicação entre serviços funcional
+
+**Tempo Estimado:** 6-7 dias
+
+---
+
+### **Sprint 15: Implementação Multi-empresa**
+**Objetivo:** Criar 2-3 empresas exemplo e testar isolamento.
+
+**Tarefas:**
+- [ ] **Criar Empresa A (Tech Solutions)**
+  - Copiar template
+  - Configurar `application-tech-solutions.yml`
+  - Banco de dados: `marcweb_empresa_tech_solutions`
+  - Porta: 8081
+  - Customizações específicas (opcional)
+- [ ] **Criar Empresa B (Comércio ABC)**
+  - Copiar template
+  - Configurar `application-comercio-abc.yml`
+  - Banco de dados: `marcweb_empresa_comercio_abc`
+  - Porta: 8082
+- [ ] **Criar Empresa C (Opcional)**
+  - Para testes de escalabilidade
+  - Porta: 8083
+- [ ] **Testar isolamento de dados**
+  - Criar usuários em cada empresa
+  - Registrar pontos em cada empresa
+  - Verificar que dados não vazam entre empresas
+- [ ] **Implementar frontend básico de seleção**
+  - Tela de login com dropdown de empresas
+  - Consumir lista de empresas de um serviço central
+  - Redirecionar para Gateway com header de empresa
+- [ ] **Testes de carga**
+  - Simular múltiplas empresas simultâneas
+  - Verificar performance do Gateway
+  - Identificar gargalos
+
+**Entregas:**
+- 2-3 empresas funcionando isoladamente
+- Isolamento de dados comprovado
+- Frontend básico de seleção
+
+**Tempo Estimado:** 7-9 dias
+
+---
+
+### **Sprint 16: Deploy, Monitoramento e Documentação Final**
+**Objetivo:** Preparar sistema para produção.
+
+**Tarefas:**
+- [ ] **Criar Docker Compose completo**
+  - Serviço Eureka
+  - Serviço Gateway
+  - Serviços das empresas (3)
+  - PostgreSQL (container separado ou externo)
+  - Configurar redes Docker
+- [ ] **Implementar health checks**
+  - Endpoint `/actuator/health` em todos os serviços
+  - Configurar no Docker Compose
+  - Dashboard de monitoramento (Spring Boot Admin opcional)
+- [ ] **Configurar logs centralizados**
+  - ELK Stack (opcional) ou Loki
+  - Aggregar logs de todos os serviços
+  - Dashboard de visualização
+- [ ] **Implementar métricas**
+  - Prometheus + Grafana (opcional)
+  - Métricas de performance
+  - Alertas básicos
+- [ ] **Criar scripts de deploy**
+  - `deploy-all.sh` - sobe toda a infra
+  - `deploy-empresa.sh <nome>` - adiciona nova empresa
+  - `backup-all.sh` - backup de todos os bancos
+  - `restore-empresa.sh <nome>` - restore de empresa
+- [ ] **Documentação completa**
   - Manual de instalação
+  - Manual de configuração
+  - Manual de adição de nova empresa
   - Guia de troubleshooting
-- Preparar materiais de demonstração
+  - Diagramas arquiteturais
+  - API Reference (OpenAPI/Swagger)
+- [ ] **Testes finais end-to-end**
+  - Fluxo completo: login → registro → relatório
+  - Testar em todas as empresas
+  - Simular falhas e verificar recuperação
+- [ ] **Preparar materiais de demonstração**
+  - Dados de exemplo em todas as empresas
+  - Apresentação do sistema
+  - Vídeo demonstrativo (opcional)
 
-**Marco:** Sistema completo em produção, testado e documentado.
+**Entregas:**
+- Sistema containerizado e pronto para deploy
+- Documentação completa
+- Scripts de automação
+- Monitoramento básico
+- Sistema validado end-to-end
 
----
+**Tempo Estimado:** 8-10 dias
 
-## **Fase 4: Funcionalidades Avançadas (Sprints 17-18)** 🔄 OPCIONAL
-**Objetivo:** Implementar funcionalidades secundárias conforme demanda.
-
-### **Sprint 17: Contracheque Básico** 🔄 Opcional
-**Objetivo:** Implementar geração básica de contracheque (se houver demanda).
-
-**Pré-condição:** MVP estável e em uso por pelo menos 2-3 empresas.
-
-**Tarefas:**
-- Adicionar campos em User:
-  - `tipoContrato` (HORISTA / SALARIO_BASE)
-  - `salarioBase`
-  - `valorHora`
-- Criar entidade `Contracheque`
-- Criar migration para tabela `contracheques`
-- Implementar ContrachequeService:
-  - Cálculo de salário bruto
-  - Cálculo de horas extras (50% adicional)
-  - Cálculos básicos de INSS e FGTS
-- Criar endpoints básicos
-- Gerar PDF simples de contracheque
-- **Nota:** Cálculos completos e conformidade legal requerem consultoria jurídica
-
-**Status:** Não prioritário - Implementar apenas se houver demanda real
+**Marco Final:** Sistema multi-tenant completo, em produção e documentado.
 
 ---
 
-### **Sprint 18: Refinamentos e Integrações Extras** 🔄 Opcional
-**Objetivo:** Melhorias e funcionalidades extra conforme necessidade.
+## **📈 Métricas de Sucesso**
 
-**Possíveis tarefas:**
-- Dashboard com gráficos avançados
-- Exportação de dados para Excel
-- Integração com sistemas de RH
-- Notificações por email
-- Relatórios customizáveis
-- Melhorias de performance
-- Funcionalidades solicitadas por clientes
+**MVP (Sprint 12):**
+- [ ] Cobertura de testes > 70%
+- [ ] Todos os bugs críticos corrigidos
+- [ ] Sistema funcional para 1 empresa
+- [ ] Documentação completa
+- [ ] Performance: < 200ms por requisição
 
-**Status:** A definir conforme feedback de usuários
-
----
-
-## **📊 Resumo de Mudanças vs Versão Anterior**
-
-### **Removido/Reduzido:**
-- ❌ 5 sprints dedicadas ao contracheque (8-11)
-- ❌ Contracheque como funcionalidade principal
-- ❌ Cálculos trabalhistas complexos do MVP
-
-### **Mantido/Priorizado:**
-- ✅ Sistema de ponto robusto e confiável
-- ✅ Folha de ponto detalhada (JSON)
-- ✅ Multi-tenant completo
-- ✅ Relatórios PDF profissionais
-- ✅ Sistema de logs abrangente
-- ✅ Frontend completo e intuitivo
-
-### **Adicionado:**
-- ⭐ Foco reforçado em testes (Sprint 12)
-- ⭐ Deploy e documentação reforçados (Sprint 16)
-- 🔄 Contracheque como opcional (Sprint 17)
+**Multi-tenant (Sprint 16):**
+- [ ] 3+ empresas rodando simultaneamente
+- [ ] Isolamento de dados comprovado
+- [ ] Gateway roteando corretamente
+- [ ] Deploy automatizado
+- [ ] Monitoramento funcional
 
 ---

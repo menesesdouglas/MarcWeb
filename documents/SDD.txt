@@ -1,170 +1,173 @@
-# **Software Design Document (SDD) Detalhado – Marc Web**  
-**Sistema de Ponto Eletrônico Web Multi-tenant**  
-**Versão 2.0 – Janeiro 2026**  
-**(Atualizado: Nova Arquitetura Multi-empresa + Folha de Pagamento Completa)**
+# **Software Design Document (SDD) - Marc Web v3.0**  
+**Sistema de Ponto Eletrônico Web**  
+**Janeiro 2026 - Foco em MVP + Arquitetura Multi-tenant Futura**
 
 ---
 
 ## **1. Introdução**
 
 ### **1.1 Propósito**
-Este documento fornece o design completo e atualizado do **Marc Web**, uma migração web do sistema de ponto eletrônico offline **Marc** (original em Python). O sistema agora suporta **múltiplas empresas** com arquitetura multi-tenant, incluindo **cálculos completos de folha de pagamento** conforme legislação trabalhista brasileira (CLT, INSS, FGTS).
+Este documento define o design do **Marc Web**, priorizando o **MVP funcional** com arquitetura single-tenant inicialmente, preparando a base para evolução multi-tenant com **Spring Cloud (Eureka + Gateway)** posteriormente.
 
-### **1.2 Escopo**
+### **1.2 Estratégia de Desenvolvimento**
 
-#### **Funcionalidades Core (Prioridade Alta):**
+#### **Fase MVP (Sprints 1-12):**
+- ✅ Desenvolvimento single-tenant completo
+- ✅ Foco na lógica de negócio robusta
+- ✅ Sistema totalmente funcional para uma empresa
+- ✅ Preparação da arquitetura para microserviços
+
+#### **Fase Multi-tenant (Sprints 13-16):**
+- 🔄 Refatoração para microserviços
+- 🔄 Implementação Eureka + Gateway
+- 🔄 Biblioteca compartilhada (common-lib)
+- 🔄 Deploy escalável
+
+### **1.3 Funcionalidades Core do MVP**
+
+#### **Prioridade Alta (Sprints 1-12):**
 - ✅ Registro de ponto (entrada/saída/descansos)
-- ✅ Gestão de funcionários por empresa
-- ✅ Calendário (feriados nacionais + folgas individuais + domingos automáticos)
+- ✅ Gestão de funcionários
+- ✅ Calendário (feriados + folgas + domingos automáticos)
 - ✅ Folha de ponto detalhada (JSON estruturado)
 - ✅ Sistema de logs unificado
 - ✅ Relatórios mensais com cálculo de horas
 - ✅ Exportação PDF
 - ✅ Auditoria de ações
-- ✅ Backups automáticos
-- ✅ Arquitetura Multi-tenant
 
-#### **Funcionalidades Secundárias (Implementação Futura):**
-- 🔄 **Contracheque completo** - Funcionalidade em amadurecimento, não é foco principal
-  - Será implementada após MVP estável
-  - Requer análise aprofundada de legislação trabalhista
-  - Desenvolvimento nas últimas sprints
-
-#### **Arquitetura Multi-tenant:**
-- **Banco de dados por empresa** (isolamento completo)
-- **Banco de dados principal** (gerenciamento de empresas)
-- **Login centralizado** via portal principal
-- **APIs independentes** por empresa (porta dedicada)
-- Configurações independentes por empresa
-
-#### **Removido:**
-- ❌ Solicitação de folga usando banco de horas
-
-### **1.3 Restrições e Requisitos Iniciais**
-- **Hardware:** Notebook Dell Latitude E6400 (Linux Mint, 4GB RAM) e PC Windows 10 (4GB RAM)
-- **Tempo:** 2h/dia; estimativa total 8-12 meses (reduzível com IA)
-- **Conformidade:** CLT, LGPD, cálculos trabalhistas brasileiros
-- **Escalabilidade:** Suportar até 100 empresas por servidor
+#### **Funcionalidades Futuras:**
+- 🔄 Contracheque completo (após MVP estável)
+- 🔄 Arquitetura multi-tenant com Eureka
+- 🔄 Dashboard analytics avançado
 
 ---
 
 ## **2. Arquitetura do Sistema**
 
-### **2.1 Visão Geral - Arquitetura Multi-tenant com Login Centralizado**
+### **2.1 Arquitetura MVP (Single-tenant)**
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                   marcweb.com.br (Portal Principal)                  │
-│         Frontend: Tela de Login + Seleção de Empresa                │
-└────────────┬─────────────────────────────────────────────────────────┘
-             │
-             ├─> Consulta Lista de Empresas ──> PostgreSQL: marcweb_main
-             │                                   (nome, url_api, porta, ativo)
-             │
-             ├─> Login Request ──> API Empresa A (http://empresa-a.api:8081)
-             │                     PostgreSQL: marcweb_empresa_a
-             │
-             ├─> Login Request ──> API Empresa B (http://empresa-b.api:8082)
-             │                     PostgreSQL: marcweb_empresa_b
-             │
-             └─> Login Request ──> API Empresa N (http://empresa-n.api:808N)
-                                   PostgreSQL: marcweb_empresa_n
-
-Fluxo de Autenticação:
-1. User acessa marcweb.com.br
-2. Seleciona empresa no dropdown
-3. Digita credenciais
-4. Frontend envia login para API específica (porta da empresa)
-5. Se sucesso → Redireciona para domínio da empresa (empresa-a.marcweb.com.br)
-6. Ao deslogar → Retorna para marcweb.com.br
+┌──────────────────────────────────────────────────────────────┐
+│                     Marc Web - MVP                           │
+│                                                              │
+│  ┌────────────┐     ┌──────────────┐     ┌──────────────┐  │
+│  │  Frontend  │────▶│   Backend    │────▶│  PostgreSQL  │  │
+│  │  (HTML/JS) │     │ Spring Boot  │     │   Database   │  │
+│  └────────────┘     └──────────────┘     └──────────────┘  │
+│                                                              │
+│  Funcionalidades:                                           │
+│  • Registro de ponto                                        │
+│  • Gestão de usuários                                       │
+│  • Feriados e folgas                                        │
+│  • Relatórios PDF                                           │
+│  • Logs de auditoria                                        │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### **2.2 Banco de Dados Multi-tenant**
+### **2.2 Arquitetura Multi-tenant Futura (Sprints 13-16)**
 
-#### **Banco Principal (marcweb_main):**
-```sql
-CREATE TABLE empresas (
-    id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(200) NOT NULL,
-    nome_fantasia VARCHAR(200),                  -- Nome para exibição no select
-    slug VARCHAR(50) UNIQUE NOT NULL,            -- empresa-a, empresa-b (URL-friendly)
-    subdomain VARCHAR(50),                       -- empresa-a.marcweb.com.br (opcional)
-    
-    -- Configuração da API
-    url_api VARCHAR(255) NOT NULL,               -- http://empresa-a.api ou IP
-    porta_api INTEGER NOT NULL,                  -- 8081, 8082, 8083...
-    
-    -- Configuração do Banco
-    database_name VARCHAR(100) NOT NULL,         -- marcweb_empresa_a
-    
-    -- Status e Metadata
-    ativa BOOLEAN DEFAULT TRUE,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Plano e Limites
-    plano VARCHAR(50) DEFAULT 'BASICO',          -- BASICO, PRO, ENTERPRISE
-    max_funcionarios INTEGER DEFAULT 50,
-    features_habilitadas TEXT[],                 -- Array de features
-    
-    -- Informações de Contato (opcional)
-    email_contato VARCHAR(255),
-    telefone VARCHAR(20),
-    
-    -- Índices
-    CONSTRAINT chk_porta_valida CHECK (porta_api BETWEEN 8080 AND 9000)
-);
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Portal Principal                             │
+│              (Frontend de Login Centralizado)                   │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │   API Gateway        │
+              │  (Spring Cloud GW)   │
+              │  Roteamento dinâmico │
+              └──────────┬───────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │  Eureka Server       │
+              │  (Service Discovery) │
+              └──────────┬───────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  Empresa A   │  │  Empresa B   │  │  Empresa N   │
+│  API (8081)  │  │  API (8082)  │  │  API (808N)  │
+│              │  │              │  │              │
+│  PostgreSQL  │  │  PostgreSQL  │  │  PostgreSQL  │
+│  empresa_a   │  │  empresa_b   │  │  empresa_n   │
+└──────────────┘  └──────────────┘  └──────────────┘
 
-CREATE INDEX idx_empresas_ativa ON empresas(ativa);
-CREATE INDEX idx_empresas_slug ON empresas(slug);
-
--- Tabela para armazenar configurações de exibição
-CREATE TABLE empresas_config_visual (
-    empresa_id BIGINT PRIMARY KEY REFERENCES empresas(id),
-    logo_url VARCHAR(500),                       -- URL do logo da empresa
-    cor_primaria VARCHAR(7),                     -- Hex color (#0A58CA)
-    cor_secundaria VARCHAR(7),
-    tema VARCHAR(20) DEFAULT 'light',            -- light, dark, auto
-    customizacoes JSONB                          -- Outras customizações
-);
-
-CREATE TABLE logs_sistema (
-    id BIGSERIAL PRIMARY KEY,
-    empresa_id BIGINT REFERENCES empresas(id),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    nivel VARCHAR(20) NOT NULL,                  -- INFO, WARNING, ERROR, CRITICAL
-    categoria VARCHAR(50) NOT NULL,              -- STARTUP, AUTH, BACKUP, ERROR, LOGIN
-    mensagem TEXT NOT NULL,
-    detalhes JSONB,
-    ip_origem VARCHAR(45),
-    user_agent TEXT
-);
-
-CREATE INDEX idx_logs_sistema_timestamp ON logs_sistema(timestamp DESC);
-CREATE INDEX idx_logs_sistema_empresa ON logs_sistema(empresa_id, timestamp DESC);
+Todas as APIs compartilham:
+┌─────────────────────────────────────┐
+│     empresa-common-lib              │
+│  • DTOs                             │
+│  • Interfaces                       │
+│  • Lógica de domínio reutilizável   │
+│  • Componentes compartilhados       │
+└─────────────────────────────────────┘
 ```
 
-#### **Banco por Empresa (marcweb_empresa_X):**
-Cada empresa tem seu próprio banco com as tabelas principais:
-- `users`
-- `registros_ponto`
-- `feriados`
-- `folgas`
-- `logs_auditoria` (logs específicos da empresa)
-- `configs_empresa`
-- `folhas_ponto` ⭐ (folha de ponto mensal)
+### **2.3 Estrutura de Projeto Multi-tenant (Futuro)**
 
-**Tabelas Futuras (Implementação Posterior):**
-- `contracheques` 🔄 (funcionalidade em amadurecimento)
+```
+marcweb/
+├── empresa-common-lib/          # Biblioteca compartilhada
+│   ├── src/main/java/
+│   │   ├── dto/                 # DTOs compartilhados
+│   │   ├── entity/              # Entidades base
+│   │   ├── service/             # Interfaces de serviços
+│   │   └── util/                # Utilitários comuns
+│   └── pom.xml
+│
+├── marcweb-eureka-server/       # Service Discovery
+│   ├── src/main/java/
+│   │   └── EurekaServerApp.java
+│   └── pom.xml
+│
+├── marcweb-gateway/             # API Gateway
+│   ├── src/main/java/
+│   │   └── GatewayApp.java
+│   └── pom.xml
+│
+├── marcweb-empresa-template/    # Template para novas empresas
+│   ├── src/main/java/
+│   │   ├── controller/
+│   │   ├── service/
+│   │   └── MarcWebApp.java
+│   └── pom.xml
+│
+└── empresas/                    # Instâncias das empresas
+    ├── empresa-a/
+    ├── empresa-b/
+    └── empresa-n/
+```
 
-### **Tabela: folhas_ponto**
+---
+
+## **3. Modelo de Dados**
+
+### **3.1 Banco de Dados MVP (Single-tenant)**
+
+**Banco: `marcweb_dev`**
+
+| Tabela | Descrição | Status |
+|--------|-----------|--------|
+| **users** | Funcionários e admins | ✅ Implementado |
+| **registros_ponto** | Registros diários de ponto | ✅ Implementado |
+| **feriados** | Feriados nacionais/manuais | ✅ Implementado |
+| **folgas** | Ausências individuais | ✅ Implementado |
+| **logs_auditoria** | Auditoria da empresa | ✅ Implementado |
+| **configs_empresa** | Configurações do sistema | ✅ Implementado |
+| **folhas_ponto** ⭐ | Folha mensal detalhada | 🔄 Sprint 7 |
+
+### **3.2 Tabela: folhas_ponto (Nova)**
+
 ```sql
 CREATE TABLE folhas_ponto (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id),
     mes INTEGER NOT NULL,                    -- 1-12
     ano INTEGER NOT NULL,                    -- 2026
-    dados JSONB NOT NULL,                    -- Estrutura detalhada (ver seção 2.3)
+    dados JSONB NOT NULL,                    -- Estrutura detalhada
     horas_trabalhadas DECIMAL(10,2),
     horas_extras DECIMAL(10,2),
     horas_debito DECIMAL(10,2),
@@ -174,10 +177,11 @@ CREATE TABLE folhas_ponto (
     UNIQUE(user_id, mes, ano)
 );
 
-CREATE INDEX idx_folhas_ponto_user_periodo ON folhas_ponto(user_id, ano, mes);
+CREATE INDEX idx_folhas_ponto_user_periodo 
+    ON folhas_ponto(user_id, ano, mes);
 ```
 
-### **2.3 Estrutura JSON da Folha de Ponto**
+### **3.3 Estrutura JSON da Folha de Ponto**
 
 ```json
 {
@@ -198,7 +202,7 @@ CREATE INDEX idx_folhas_ponto_user_periodo ON folhas_ponto(user_id, ano, mes);
     {
       "data": "2026-01-02",
       "dia_semana": "Quinta-feira",
-      "tipo_dia": "UTIL",           // UTIL, DOMINGO, FERIADO, FOLGA
+      "tipo_dia": "UTIL",
       "registros": [
         {
           "tipo": "ENTRADA",
@@ -221,8 +225,7 @@ CREATE INDEX idx_folhas_ponto_user_periodo ON folhas_ponto(user_id, ano, mes);
         }
       ],
       "horas_trabalhadas": "08:30",
-      "horas_extras": "00:30",
-      "observacoes": null
+      "horas_extras": "00:30"
     },
     {
       "data": "2026-01-05",
@@ -231,14 +234,6 @@ CREATE INDEX idx_folhas_ponto_user_periodo ON folhas_ponto(user_id, ano, mes);
       "registros": [],
       "horas_trabalhadas": "00:00",
       "observacoes": "Folga automática (domingo)"
-    },
-    {
-      "data": "2026-01-01",
-      "dia_semana": "Quarta-feira",
-      "tipo_dia": "FERIADO",
-      "registros": [],
-      "horas_trabalhadas": "00:00",
-      "observacoes": "Ano Novo"
     }
   ],
   "totalizacao": {
@@ -250,423 +245,187 @@ CREATE INDEX idx_folhas_ponto_user_periodo ON folhas_ponto(user_id, ano, mes);
 }
 ```
 
-### **2.4 Componentes Principais**
-
-| Camada | Tecnologias | Detalhes |
-|--------|-------------|----------|
-| **Proxy** | NGINX | Roteamento multi-tenant por subdomínio |
-| **Frontend** | HTML5, Pico CSS, JS puro, Alpine.js | Layout responsivo |
-| **Backend** | Java 17+, Spring Boot 3, JPA, Security + JWT | API REST por empresa |
-| **Banco Principal** | PostgreSQL 16+ | Gerenciamento de empresas |
-| **Bancos Tenants** | PostgreSQL 16+ | Um banco por empresa |
-| **PDF** | iText 7 (Community) | Relatórios e contracheques |
-| **Cálculos** | BigDecimal (Java) | Precisão trabalhista |
-| **Outros** | WebClient (BrasilAPI), BCrypt, SLF4J | Integração e logs |
-
 ---
 
-## **3. Modelo de Dados**
+## **4. Funcionalidades Detalhadas do MVP**
 
-### **3.1 Entidades por Empresa (7 tabelas principais)**
+### **4.1 Registro de Ponto com Validações**
 
-| Tabela | Campos Principais | Descrição |
-|--------|-------------------|-----------|
-| **users** | id, nome, username, password, role, ativo, consentGeoloc, createdAt | Funcionários e admins |
-| **registros_ponto** | id, userId, tipo, timestamp, latitude, longitude, ip, precisao, justificativa | Registros diários |
-| **feriados** | id, data, nome, origem | Feriados nacionais/regionais |
-| **folgas** | id, userId, dataInicio, dataFim, justificativa, tipo (FERIAS, ATESTADO, FALTA_JUSTIFICADA) | Ausências individuais |
-| **logs_auditoria** | id, timestamp, userId, acao, categoria, detalhes, status | Auditoria da empresa |
-| **configs_empresa** | id, nomeEmpresa, latCentro, longCentro, raioGeoloc, geolocAtiva, carga_horaria_mensal | Configurações |
-| **folhas_ponto** ⭐ | id, userId, mes, ano, dados (JSONB), horas_trabalhadas, horas_extras, horas_debito | Folha mensal detalhada |
+#### **Regras de Negócio:**
+1. ✅ **Primeiro registro DEVE ser ENTRADA** (BUG-001 corrigido)
+2. ✅ **Sequência obrigatória:** ENTRADA → INICIO_DESCANSO → FIM_DESCANSO → SAIDA
+3. 🔄 **Domingos bloqueados** (nenhum registro permitido)
+4. 🔄 **Feriados bloqueados** (nenhum registro permitido)
+5. 🔄 **Validação de geolocalização** (se ativa)
+6. 🔄 **Validação de múltiplos ciclos** (requer justificativa)
 
-**Tabelas Futuras:**
-| **contracheques** 🔄 | id, userId, mes, ano, salario_bruto, descontos, salario_liquido, dados_completos (JSONB) | Contracheque completo (implementação futura) |
+#### **Validação de Geolocalização (BUG-003 - Sprint 5):**
 
-### **3.2 Campos das Entidades Principais**
-
-**User:**
 ```java
-@Entity
-@Table(name = "users")
-public class User implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Service
+public class RegistroPontoService {
     
-    @Column(nullable = false, unique = true)
-    private String username;
-    
-    @Column(nullable = false)
-    private String nome;
-    
-    @Column(nullable = false)
-    private String password;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role; // ADMIN, EMPLOYEE
-    
-    @Column(nullable = false)
-    private Boolean ativo;
-    
-    @Column(name = "consent_geoloc")
-    private Boolean consentGeoloc;
-    
-    @CreatedDate
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    // Relacionamentos
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<RegistroPonto> registrosPonto;
-    
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Folga> folgas;
-}
-```
-
-**ConfigEmpresa:**
-```java
-@Entity
-@Table(name = "configs_empresa")
-public class ConfigEmpresa {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(name = "nome_empresa", nullable = false)
-    private String nomeEmpresa;
-    
-    @Column(name = "lat_centro", precision = 10)
-    private Double latCentro;
-    
-    @Column(name = "long_centro", precision = 11)
-    private Double longCentro;
-    
-    @Column(name = "raio_geoloc")
-    private Integer raioGeoloc; // em metros
-    
-    @Column(name = "geoloc_ativa")
-    private Boolean geolocAtiva;
-    
-    @Column(name = "carga_horaria_mensal")
-    private Integer cargaHorariaMensal; // Ex: 220 horas/mês
-}
-```
-
----
-
-## **4. Funcionalidades Detalhadas**
-
-### **4.1 Autenticação Centralizada (NOVA ARQUITETURA)** ⭐
-
-#### **Fluxo Completo de Login:**
-
-**Passo 1: Acesso ao Portal Principal**
-- Usuário acessa `marcweb.com.br`
-- Sistema carrega tela de login com dropdown de empresas
-
-**Passo 2: Carregamento da Lista de Empresas**
-```
-GET https://marcweb.com.br/api/public/empresas/ativas
-```
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "nome_fantasia": "Tech Solutions Ltda",
-    "slug": "tech-solutions",
-    "logo_url": "https://cdn.marcweb.com.br/logos/tech-solutions.png"
-  },
-  {
-    "id": 2,
-    "nome_fantasia": "Comércio ABC",
-    "slug": "comercio-abc",
-    "logo_url": "https://cdn.marcweb.com.br/logos/comercio-abc.png"
-  }
-]
-```
-
-**Passo 3: Usuário Seleciona Empresa e Envia Credenciais**
-```javascript
-// Frontend obtém URL da API da empresa selecionada
-const empresaSelecionada = empresas.find(e => e.id === selectedId);
-
-// Consulta configuração da API
-GET https://marcweb.com.br/api/public/empresas/{empresaSelecionada.id}/api-config
-
-Response:
-{
-  "url_api": "http://tech-solutions.api.marcweb.com.br",
-  "porta": 8081,
-  "ssl_habilitado": true
-}
-
-// Envia login para API específica da empresa
-POST https://tech-solutions.api.marcweb.com.br:8081/api/auth/login
-{
-  "username": "joao.silva",
-  "password": "senha123"
-}
-```
-
-**Passo 4: Validação e Resposta**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "tokenType": "Bearer",
-  "userId": 15,
-  "username": "joao.silva",
-  "nome": "João Silva",
-  "role": "EMPLOYEE",
-  "empresaId": 1,
-  "empresaSlug": "tech-solutions",
-  "redirectUrl": "https://tech-solutions.marcweb.com.br/dashboard"
-}
-```
-
-**Passo 5: Redirecionamento Pós-Login**
-```javascript
-// Frontend salva token no localStorage
-localStorage.setItem('marcweb_token', response.token);
-localStorage.setItem('marcweb_empresa', response.empresaSlug);
-localStorage.setItem('marcweb_user', JSON.stringify({
-  id: response.userId,
-  nome: response.nome,
-  role: response.role
-}));
-
-// Redireciona para domínio da empresa
-window.location.href = response.redirectUrl;
-```
-
-**Passo 6: Navegação no Sistema da Empresa**
-- Usuário agora está em `tech-solutions.marcweb.com.br`
-- Todas as requisições vão para API da empresa (porta 8081)
-- Token JWT inclui `empresaId` para validação
-
-**Passo 7: Logout**
-```javascript
-// Usuário clica em "Sair"
-// Frontend limpa dados locais
-localStorage.removeItem('marcweb_token');
-localStorage.removeItem('marcweb_empresa');
-localStorage.removeItem('marcweb_user');
-
-// Redireciona para portal principal
-window.location.href = 'https://marcweb.com.br';
-```
-
-#### **Endpoints da API Principal (Portal):**
-
-**Públicos (sem autenticação):**
-- `GET /api/public/empresas/ativas` - Lista empresas ativas para select
-- `GET /api/public/empresas/{id}/api-config` - Retorna URL e porta da API
-- `GET /api/public/empresas/{slug}/info` - Info básica da empresa (logo, cores)
-
-**Protegidos (admin sistema):**
-- `POST /api/admin/empresas/criar` - Criar nova empresa
-- `GET /api/admin/empresas` - Listar todas empresas
-- `PUT /api/admin/empresas/{id}` - Editar empresa
-- `DELETE /api/admin/empresas/{id}` - Desativar empresa
-- `GET /api/admin/logs/acessos` - Logs de tentativas de login
-
-#### **Segurança:**
-
-**Validação no Backend:**
-```java
-@RestController
-@RequestMapping("/api/public/empresas")
-public class EmpresasPublicController {
-    
-    @GetMapping("/ativas")
-    public ResponseEntity<List<EmpresaPublicDTO>> listarEmpresasAtivas() {
-        // Retorna apenas empresas ativas
-        // Não expõe dados sensíveis (porta, database_name, etc)
-        List<EmpresaPublicDTO> empresas = empresaService.listarPublicas();
-        
-        // Log de acesso
-        logSistemaService.registrar(
-            null, // sem empresa específica
-            "LISTAR_EMPRESAS",
-            CategoriaLog.LOGIN,
-            request.getRemoteAddr()
-        );
-        
-        return ResponseEntity.ok(empresas);
-    }
-    
-    @GetMapping("/{id}/api-config")
-    public ResponseEntity<ApiConfigDTO> obterConfigApi(@PathVariable Long id) {
-        Empresa empresa = empresaService.findById(id);
-        
-        if (!empresa.getAtiva()) {
-            throw new EmpresaInativaException();
+    private void validarGeolocalizacao(
+        CreateRegistroPonto data, 
+        ConfigEmpresa config
+    ) {
+        if (!config.getGeolocAtiva()) {
+            return; // Geoloc desativada, pular validação
         }
         
-        // Retorna apenas URL e porta (não expõe credenciais)
-        return ResponseEntity.ok(new ApiConfigDTO(
-            empresa.getUrlApi(),
-            empresa.getPortaApi(),
-            empresa.getSubdomain()
-        ));
+        if (data.getLatitude() == null || data.getLongitude() == null) {
+            throw new GeolocalizacaoObrigatoriaException();
+        }
+        
+        // Calcular distância usando fórmula de Haversine
+        double distancia = calcularDistanciaHaversine(
+            config.getLatCentro(), 
+            config.getLongCentro(),
+            data.getLatitude(), 
+            data.getLongitude()
+        );
+        
+        if (distancia > config.getRaioGeoloc()) {
+            throw new RegistroForaDoRaioException(
+                distancia, 
+                config.getRaioGeoloc()
+            );
+        }
     }
-}
-```
-
-**Rate Limiting:**
-- Endpoint de listar empresas: 60 requisições/minuto por IP
-- Endpoint de login (nas APIs das empresas): 5 tentativas/minuto por IP
-- Após 5 falhas consecutivas: bloqueio temporário de 15 minutos
-
-**CORS:**
-```java
-@Configuration
-public class CorsConfig {
     
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+    private double calcularDistanciaHaversine(
+        double lat1, double lon1, 
+        double lat2, double lon2
+    ) {
+        final int R = 6371000; // Raio da Terra em metros
         
-        // Portal principal pode fazer requisições para APIs das empresas
-        config.setAllowedOrigins(Arrays.asList(
-            "https://marcweb.com.br",
-            "https://*.marcweb.com.br"  // Subdomínios das empresas
-        ));
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
         
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        config.setAllowedHeaders(Arrays.asList("*"));
-        config.setAllowCredentials(true);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) 
+                * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) 
+                * Math.sin(lonDistance / 2);
         
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        
+        return R * c; // Distância em metros
     }
 }
 ```
 
----
+### **4.2 Validação de Dia Útil (Sprint 5)**
 
-### **4.2 Gerenciamento Multi-tenant**
-
-#### **Endpoints do Sistema Principal:**
-- `POST /api/admin/empresas/criar` - Criar nova empresa (cria banco, usuário admin)
-- `GET /api/admin/empresas` - Listar todas as empresas
-- `PUT /api/admin/empresas/{id}` - Editar empresa
-- `DELETE /api/admin/empresas/{id}` - Desativar empresa
-- `POST /api/admin/empresas/{id}/backup` - Backup de empresa específica
-- `GET /api/admin/logs/sistema` - Logs do sistema central
-
-#### **Processo de Criação de Empresa:**
-1. Admin cria empresa no banco principal
-2. Sistema cria automaticamente:
-   - Banco de dados PostgreSQL: `marcweb_empresa_{id}`
-   - Executa migrations do Flyway
-   - Cria usuário admin padrão da empresa
-   - Configura porta da aplicação (8081, 8082...)
-   - Atualiza configuração do NGINX
-3. Empresa fica disponível em: `empresa1.marcweb.com.br`
-
-### **4.2 Folgas Automáticas (NOVO)**
-
-#### **Regra de Negócio:**
-- **Todo domingo** é automaticamente marcado como folga
-- Sistema **não permite** registro de ponto aos domingos (exceto com permissão especial)
-- Folha de ponto marca domingos como `tipo_dia: "DOMINGO"`
-- Não desconta horas nem gera débito
-
-#### **Implementação:**
 ```java
-// Em RegistroPontoService
 private void validarDiaUtil(LocalDateTime timestamp) {
     DayOfWeek diaSemana = timestamp.getDayOfWeek();
+    LocalDate data = timestamp.toLocalDate();
+    
+    // Bloquear domingos
     if (diaSemana == DayOfWeek.SUNDAY) {
-        throw new RegistroEmDomingoException("Não é permitido registrar ponto aos domingos");
+        throw new RegistroEmDomingoException(
+            "Não é permitido registrar ponto aos domingos"
+        );
     }
     
-    // Verifica se é feriado
-    LocalDate data = timestamp.toLocalDate();
+    // Bloquear feriados
     if (feriadoRepository.existsByData(data)) {
-        throw new RegistroEmFeriadoException("Não é permitido registrar ponto em feriados");
+        Feriado feriado = feriadoRepository.findByData(data).get(0);
+        throw new RegistroEmFeriadoException(
+            "Hoje é feriado: " + feriado.getNome()
+        );
     }
 }
 ```
 
-### **4.3 Folha de Ponto Detalhada**
+### **4.3 Geração de Folha de Ponto (Sprint 7)**
 
 #### **Endpoint:**
-- `GET /api/folha-ponto/gerar?mes=1&ano=2026&userId=1` (admin)
-- `GET /api/folha-ponto/me?mes=1&ano=2026` (funcionário)
+```
+GET /api/folha-ponto/gerar?mes=1&ano=2026&userId=1 (admin)
+GET /api/folha-ponto/me?mes=1&ano=2026 (funcionário)
+```
 
-#### **Processo:**
-1. Busca todos os registros do mês/ano
-2. Agrupa por dia
-3. Calcula horas trabalhadas por dia
-4. Identifica feriados, folgas, domingos
-5. Calcula totalizações
-6. Retorna JSON estruturado conforme modelo acima
-7. Persiste na tabela `folhas_ponto`
+#### **Service:**
 
-### **4.4 Relatórios e Exportação PDF**
+```java
+@Service
+public class FolhaPontoService {
+    
+    public FolhaPonto gerarFolhaPonto(Long userId, int mes, int ano) {
+        User user = userService.findById(userId);
+        
+        // Buscar todos os registros do mês
+        LocalDateTime inicio = LocalDateTime.of(ano, mes, 1, 0, 0);
+        LocalDateTime fim = inicio.plusMonths(1).minusSeconds(1);
+        
+        List<RegistroPonto> registros = 
+            registroPontoRepository.findByUserAndTimestampBetween(
+                user, inicio, fim
+            );
+        
+        // Buscar feriados e folgas do mês
+        LocalDate dataInicio = inicio.toLocalDate();
+        LocalDate dataFim = fim.toLocalDate();
+        
+        List<Feriado> feriados = 
+            feriadoRepository.findByDataBetween(dataInicio, dataFim);
+        
+        List<Folga> folgas = 
+            folgaRepository.findByUserAndPeriodo(user, dataInicio, dataFim);
+        
+        // Gerar JSON estruturado
+        JSONObject folhaJson = construirFolhaJson(
+            user, mes, ano, registros, feriados, folgas
+        );
+        
+        // Calcular totalizações
+        BigDecimal horasTrabalhadas = calcularHorasTrabalhadas(registros);
+        BigDecimal horasExtras = calcularHorasExtras(registros);
+        
+        // Salvar no banco
+        FolhaPonto folha = FolhaPonto.builder()
+            .user(user)
+            .mes(mes)
+            .ano(ano)
+            .dados(folhaJson.toString())
+            .horasTrabalhadas(horasTrabalhadas)
+            .horasExtras(horasExtras)
+            .diasTrabalhados(calcularDiasTrabalhados(registros))
+            .build();
+        
+        return folhaPontoRepository.save(folha);
+    }
+    
+    private JSONObject construirFolhaJson(
+        User user, int mes, int ano,
+        List<RegistroPonto> registros,
+        List<Feriado> feriados,
+        List<Folga> folgas
+    ) {
+        // Implementação da construção do JSON conforme modelo
+        // ...
+    }
+}
+```
 
-#### **Endpoints:**
-- `GET /api/relatorios/mensal?userId=1&mes=1&ano=2026` (JSON)
-- `GET /api/relatorios/mensal/pdf?userId=1&mes=1&ano=2026` (PDF)
-- `GET /api/relatorios/periodo?userId=1&inicio=2026-01-01&fim=2026-12-31`
+### **4.4 Relatórios PDF (Sprint 11)**
 
-#### **Conteúdo do Relatório:**
-- Cabeçalho com dados da empresa e funcionário
-- Listagem de registros diários
-- Cálculo de horas trabalhadas, extras e débitos
-- Identificação de feriados e folgas
-- Totalizações do período
-- Assinatura digital (opcional)
-
-#### **Implementação com iText 7:**
 ```java
 @Service
 public class RelatorioService {
     
     public byte[] gerarRelatorioPDF(Long userId, int mes, int ano) {
         FolhaPonto folha = folhaPontoService.buscarOuGerar(userId, mes, ano);
-        User user = userService.findById(userId);
-        ConfigEmpresa config = configEmpresaService.findFirst();
         
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos);
         PdfDocument pdf = new PdfDocument(writer);
         Document document = new Document(pdf);
         
-        // Cabeçalho
-        document.add(new Paragraph(config.getNomeEmpresa())
-            .setFontSize(18).setBold());
-        document.add(new Paragraph("Folha de Ponto - " + mes + "/" + ano));
-        document.add(new Paragraph("Funcionário: " + user.getNome()));
-        
-        // Tabela de registros
-        Table table = new Table(new float[]{2, 2, 3, 3});
-        table.addHeaderCell("Data");
-        table.addHeaderCell("Dia Semana");
-        table.addHeaderCell("Registros");
-        table.addHeaderCell("Horas");
-        
-        // Processar dados da folha...
-        JSONObject dados = new JSONObject(folha.getDados());
-        JSONArray dias = dados.getJSONArray("dias");
-        
-        for (int i = 0; i < dias.length(); i++) {
-            JSONObject dia = dias.getJSONObject(i);
-            // Adicionar linhas à tabela...
-        }
-        
-        document.add(table);
-        
-        // Totalizações
-        document.add(new Paragraph("\nTotalizações:")
-            .setFontSize(14).setBold());
-        document.add(new Paragraph("Horas Trabalhadas: " + folha.getHorasTrabalhadas()));
-        document.add(new Paragraph("Horas Extras: " + folha.getHorasExtras()));
+        // Adicionar cabeçalho, tabelas e totalizações
+        // ...
         
         document.close();
         return baos.toByteArray();
@@ -676,431 +435,373 @@ public class RelatorioService {
 
 ---
 
-### **4.5 Funcionalidades Futuras (Baixa Prioridade)** 🔄
+## **5. Arquitetura Multi-tenant com Eureka (Sprints 13-16)**
 
-#### **Contracheque Automatizado:**
-Funcionalidade em fase de amadurecimento, será implementada após o MVP estar estável.
+### **5.1 Biblioteca Compartilhada (empresa-common-lib)**
 
-**Escopo planejado:**
-- Cálculos de INSS, FGTS, IRRF
-- Descontos customizáveis (VT, VR, Plano de Saúde)
-- Geração de PDF profissional
-- Suporte a HORISTA e SALÁRIO BASE
+#### **Estrutura:**
 
-**Status:** Não prioritário - Implementação nas últimas sprints
-
-**Justificativa do adiamento:**
-- Requer análise jurídica aprofundada da legislação trabalhista
-- Cálculos complexos que variam anualmente
-- MVP funcional não depende dessa funcionalidade
-- Foco inicial em sistema de ponto robusto e confiável
-
-#### **Estratégia:**
-- **Banco Principal:** Logs de sistema (startups, erros críticos, backups)
-- **Banco da Empresa:** Logs de auditoria (ações dos usuários)
-
-#### **Categorias de Log:**
 ```java
-public enum CategoriaLog {
-    // Sistema
-    STARTUP, SHUTDOWN, BACKUP, ERROR, SECURITY,
-    // Empresa
-    PONTO, ADMIN, AUDITORIA, RELATORIO, CONFIGURACAO
+// DTOs compartilhados
+package com.marcweb.common.dto;
+
+public record LoginRequest(String username, String password) {}
+public record LoginResponse(
+    String token, 
+    String tokenType, 
+    Long userId,
+    String username, 
+    String role
+) {}
+
+// Interfaces de serviços
+package com.marcweb.common.service;
+
+public interface UserService {
+    void createUser(CreateUser data);
+    User findByUsername(String username);
+    void editUser(Long id, CreateUser data);
+    void deleteUser(Long id);
+}
+
+public interface RegistroPontoService {
+    void registrarPonto(CreateRegistroPonto data, HttpServletRequest request);
+    List<RegistroPontoResponse> buscarPontos(LocalDateTime start, LocalDateTime end);
+}
+
+// Entidades base
+package com.marcweb.common.entity;
+
+@MappedSuperclass
+public abstract class BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @CreatedDate
+    private LocalDateTime createdAt;
+    
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }
 ```
 
-#### **Implementação com AOP:**
+### **5.2 Configuração Eureka Server**
+
 ```java
-@Aspect
-@Component
-public class LogAuditoriaAspect {
-    
-    @Around("@annotation(Auditado)")
-    public Object registrarLog(ProceedingJoinPoint joinPoint) throws Throwable {
-        String acao = joinPoint.getSignature().getName();
-        Object[] args = joinPoint.getArgs();
-        UserDetails user = UserService.getUserDetailsBySecurityContext();
-        
-        try {
-            Object result = joinPoint.proceed();
-            logAuditoriaService.registrar(
-                user, acao, CategoriaLog.AUDITORIA, "Sucesso", args
-            );
-            return result;
-        } catch (Exception e) {
-            logAuditoriaService.registrar(
-                user, acao, CategoriaLog.AUDITORIA, "Erro: " + e.getMessage(), args
-            );
-            throw e;
-        }
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(EurekaServerApplication.class, args);
     }
 }
 ```
 
----
-
-## **5. Cibersegurança Integrada**
-
-### **5.1 Multi-tenant Security**
-- **Isolamento de Dados:** Cada empresa em banco separado
-- **Context Switching:** Validação de empresa no token JWT
-- **CORS por Empresa:** Configuração específica por subdomínio
-- **Rate Limiting:** Por empresa (não global)
-
-### **5.2 Medidas Adicionais**
-- Auditoria completa de acessos
-- Logs centralizados
-- Backups automáticos por empresa
-- Criptografia de dados sensíveis (salários)
-
----
-
-## **6. Deployment Multi-tenant com Login Centralizado**
-
-### **6.1 Arquitetura de Servidores**
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Servidor Principal                           │
-│  - Frontend Portal (marcweb.com.br)                            │
-│  - API Principal (porta 8080)                                  │
-│  - PostgreSQL: marcweb_main                                    │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                    Servidor de Aplicações                       │
-│  - API Empresa A (porta 8081) → PostgreSQL: marcweb_empresa_a │
-│  - API Empresa B (porta 8082) → PostgreSQL: marcweb_empresa_b │
-│  - API Empresa N (porta 808N) → PostgreSQL: marcweb_empresa_n │
-│  - Frontend por Empresa (subdomínios)                          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### **6.2 Configuração DNS**
-
-**Domínio Principal:**
-```
-marcweb.com.br → IP_SERVIDOR_PRINCIPAL:8080
-```
-
-**Subdomínios das Empresas:**
-```
-tech-solutions.marcweb.com.br → IP_SERVIDOR_APPS:8081
-comercio-abc.marcweb.com.br → IP_SERVIDOR_APPS:8082
-empresa-xyz.marcweb.com.br → IP_SERVIDOR_APPS:8083
-```
-
-**Configuração A Records:**
-```
-A       @                    3600    IP_SERVIDOR_PRINCIPAL
-A       tech-solutions       3600    IP_SERVIDOR_APPS
-A       comercio-abc         3600    IP_SERVIDOR_APPS
-A       *                    3600    IP_SERVIDOR_APPS  (wildcard)
-```
-
-### **6.3 NGINX (Opcional - Apenas SSL/Proxy)**
-
-Se usar NGINX, seria apenas para SSL termination e proxy reverso simples:
-
-```nginx
-# Servidor Principal
-server {
-    listen 80;
-    server_name marcweb.com.br;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name marcweb.com.br;
-    
-    ssl_certificate /etc/letsencrypt/live/marcweb.com.br/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/marcweb.com.br/privkey.pem;
-    
-    # Frontend estático
-    location / {
-        root /var/www/marcweb/portal;
-        try_files $uri $uri/ /index.html;
-    }
-    
-    # API Principal
-    location /api/ {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-
-# Empresas (wildcard)
-server {
-    listen 443 ssl;
-    server_name ~^(?<empresa>.+)\.marcweb\.com\.br$;
-    
-    ssl_certificate /etc/letsencrypt/live/marcweb.com.br/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/marcweb.com.br/privkey.pem;
-    
-    # Busca porta da empresa no banco (via script Lua ou fallback)
-    # Ou configuração manual por empresa:
-    
-    location / {
-        # Proxy para porta específica da empresa
-        # Pode ser dinâmico ou ter um bloco por empresa
-        proxy_pass http://localhost:$backend_port;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-**Alternativa Sem NGINX:**
-- Spring Boot expõe diretamente nas portas 8080-808N
-- Certificados SSL gerenciados via Spring Boot + Let's Encrypt
-- Mais simples, menos overhead
-
-### **6.4 Spring Boot Multi-instance**
-
-**Estrutura de Arquivos:**
-```
-/opt/marcweb/
-├── portal/
-│   ├── marcweb-portal.jar
-│   ├── application.yml
-│   └── logs/
-│
-├── empresas/
-│   ├── tech-solutions/
-│   │   ├── marcweb-app.jar
-│   │   ├── application-tech-solutions.yml
-│   │   └── logs/
-│   │
-│   ├── comercio-abc/
-│   │   ├── marcweb-app.jar
-│   │   ├── application-comercio-abc.yml
-│   │   └── logs/
-│   │
-│   └── [outras empresas...]
-```
-
-**Systemd Services:**
-
-Portal Principal:
-```ini
-# /etc/systemd/system/marcweb-portal.service
-[Unit]
-Description=Marc Web Portal Principal
-After=network.target
-
-[Service]
-Type=simple
-User=marcweb
-WorkingDirectory=/opt/marcweb/portal
-ExecStart=/usr/bin/java -jar marcweb-portal.jar
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Por Empresa:
-```ini
-# /etc/systemd/system/marcweb-tech-solutions.service
-[Unit]
-Description=Marc Web - Tech Solutions
-After=network.target
-
-[Service]
-Type=simple
-User=marcweb
-WorkingDirectory=/opt/marcweb/empresas/tech-solutions
-ExecStart=/usr/bin/java -jar marcweb-app.jar --spring.profiles.active=tech-solutions
-Restart=always
-Environment="SERVER_PORT=8081"
-
-[Install]
-WantedBy=multi-user.target
-```
-
-**Script de Deploy de Nova Empresa:**
-```bash
-#!/bin/bash
-# deploy-nova-empresa.sh
-
-EMPRESA_SLUG=$1
-PORTA=$2
-DATABASE_NAME=$3
-
-echo "Criando estrutura para empresa: $EMPRESA_SLUG"
-
-# 1. Criar diretório
-mkdir -p /opt/marcweb/empresas/$EMPRESA_SLUG
-
-# 2. Copiar JAR
-cp /opt/marcweb/templates/marcweb-app.jar /opt/marcweb/empresas/$EMPRESA_SLUG/
-
-# 3. Criar configuração
-cat > /opt/marcweb/empresas/$EMPRESA_SLUG/application-$EMPRESA_SLUG.yml <<EOF
+**application.yml:**
+```yaml
 server:
-  port: $PORTA
+  port: 8761
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    enable-self-preservation: false
+```
+
+### **5.3 API Gateway com Roteamento Dinâmico**
+
+```java
+@SpringBootApplication
+public class GatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayApplication.class, args);
+    }
+}
+```
+
+**application.yml:**
+```yaml
 spring:
+  cloud:
+    gateway:
+      routes:
+        - id: empresa-route
+          uri: lb://EMPRESA-API-{empresa_id}
+          predicates:
+            - Path=/api/**
+          filters:
+            - AddRequestHeader=X-Empresa-Id, {empresa_id}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+```
+
+### **5.4 Configuração por Empresa**
+
+**Empresa A (empresa-a/application.yml):**
+```yaml
+spring:
+  application:
+    name: empresa-api-tech-solutions
   datasource:
-    url: jdbc:postgresql://localhost:5432/$DATABASE_NAME
-    username: marcuser
-    password: \${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-EOF
+    url: jdbc:postgresql://localhost:5432/marcweb_empresa_a
+    username: marcuser_a
+    password: ${DB_PASSWORD_A}
 
-# 4. Criar banco de dados
-sudo -u postgres psql -c "CREATE DATABASE $DATABASE_NAME;"
+server:
+  port: 8081
 
-# 5. Executar migrations
-cd /opt/marcweb/empresas/$EMPRESA_SLUG
-java -jar marcweb-app.jar --spring.profiles.active=$EMPRESA_SLUG --flyway.migrate
-
-# 6. Criar service systemd
-cat > /etc/systemd/system/marcweb-$EMPRESA_SLUG.service <<EOF
-[Unit]
-Description=Marc Web - $EMPRESA_SLUG
-After=network.target
-
-[Service]
-Type=simple
-User=marcweb
-WorkingDirectory=/opt/marcweb/empresas/$EMPRESA_SLUG
-ExecStart=/usr/bin/java -jar marcweb-app.jar --spring.profiles.active=$EMPRESA_SLUG
-Restart=always
-Environment="SERVER_PORT=$PORTA"
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 7. Habilitar e iniciar service
-systemctl daemon-reload
-systemctl enable marcweb-$EMPRESA_SLUG
-systemctl start marcweb-$EMPRESA_SLUG
-
-echo "Empresa $EMPRESA_SLUG deployada com sucesso!"
-echo "API disponível em: http://localhost:$PORTA"
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: empresa-tech-solutions
 ```
 
-### **6.5 Banco de Dados PostgreSQL**
+**Empresa B (empresa-b/application.yml):**
+```yaml
+spring:
+  application:
+    name: empresa-api-comercio-abc
+  datasource:
+    url: jdbc:postgresql://localhost:5432/marcweb_empresa_b
+    username: marcuser_b
+    password: ${DB_PASSWORD_B}
 
-**Configuração de Usuários e Permissões:**
-```sql
--- Usuário para banco principal
-CREATE USER marcweb_main_user WITH PASSWORD 'senha_forte_main';
-GRANT ALL PRIVILEGES ON DATABASE marcweb_main TO marcweb_main_user;
+server:
+  port: 8082
 
--- Usuário por empresa
-CREATE USER marcweb_empresa_a_user WITH PASSWORD 'senha_forte_a';
-GRANT ALL PRIVILEGES ON DATABASE marcweb_empresa_a TO marcweb_empresa_a_user;
-
--- Template para novas empresas
-CREATE DATABASE marcweb_template 
-  WITH TEMPLATE = template0
-  ENCODING = 'UTF8'
-  LC_COLLATE = 'pt_BR.UTF-8'
-  LC_CTYPE = 'pt_BR.UTF-8';
-
--- Criar estrutura no template
-\c marcweb_template
--- (executar migrations base)
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: empresa-comercio-abc
 ```
 
-**Backup Automatizado:**
+### **5.5 Implementação nas APIs (Herança/Reutilização)**
+
+```java
+// Na empresa-common-lib
+public interface UserService {
+    void createUser(CreateUser data);
+    User findByUsername(String username);
+}
+
+// Na empresa-api-tech-solutions
+@Service
+public class TechSolutionsUserService implements UserService {
+    
+    private final UserRepository repository;
+    
+    @Override
+    public void createUser(CreateUser data) {
+        // Lógica compartilhada da lib + customizações
+        User user = User.builder()
+            .username(data.getUsername())
+            // ... lógica específica da Tech Solutions
+            .build();
+        repository.save(user);
+    }
+    
+    // Método específico desta empresa
+    public void assignTechRole(Long userId, String techRole) {
+        // Lógica específica
+    }
+}
+```
+
+### **5.6 Comunicação entre Serviços (Feign)**
+
+```java
+@FeignClient(name = "empresa-api-tech-solutions")
+public interface TechSolutionsClient {
+    
+    @GetMapping("/api/user/{id}")
+    User getUser(@PathVariable Long id);
+    
+    @PostMapping("/api/ponto")
+    void registrarPonto(@RequestBody CreateRegistroPonto data);
+}
+
+// Uso no Gateway ou outro serviço
+@RestController
+@RequestMapping("/api/gateway")
+public class GatewayController {
+    
+    @Autowired
+    private TechSolutionsClient techClient;
+    
+    @GetMapping("/user/{id}")
+    public User getUserFromTech(@PathVariable Long id) {
+        return techClient.getUser(id);
+    }
+}
+```
+
+---
+
+## **6. Deployment**
+
+### **6.1 MVP (Single-tenant)**
+
 ```bash
-#!/bin/bash
-# backup-empresas.sh
+# Build
+mvn clean package
 
-BACKUP_DIR=/var/backups/marcweb
-DATE=$(date +%Y%m%d_%H%M%S)
+# Run
+java -jar target/marcweb-0.0.1-SNAPSHOT.jar \
+  --spring.profiles.active=dev
 
-# Backup do banco principal
-pg_dump marcweb_main | gzip > $BACKUP_DIR/main_$DATE.sql.gz
+# Ou com Docker
+docker build -t marcweb:latest .
+docker run -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=dev \
+  -e DB_PASSWORD=senha_segura \
+  marcweb:latest
+```
 
-# Backup de cada empresa
-for db in $(psql -U postgres -t -c "SELECT database_name FROM marcweb_main.empresas WHERE ativa = true"); do
-    pg_dump $db | gzip > $BACKUP_DIR/${db}_$DATE.sql.gz
-done
+### **6.2 Multi-tenant (Futuro)**
 
-# Limpar backups antigos (manter últimos 30 dias)
-find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
+```bash
+# 1. Iniciar Eureka Server
+cd marcweb-eureka-server
+mvn spring-boot:run
+
+# 2. Iniciar Gateway
+cd marcweb-gateway
+mvn spring-boot:run
+
+# 3. Iniciar APIs das empresas
+cd empresas/empresa-a
+mvn spring-boot:run
+
+cd empresas/empresa-b
+mvn spring-boot:run
+```
+
+**Docker Compose (Futuro):**
+```yaml
+version: '3.8'
+services:
+  eureka:
+    image: marcweb-eureka:latest
+    ports:
+      - "8761:8761"
+  
+  gateway:
+    image: marcweb-gateway:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka
+  
+  empresa-a:
+    image: marcweb-empresa:latest
+    environment:
+      - SPRING_APPLICATION_NAME=empresa-api-tech-solutions
+      - SERVER_PORT=8081
+    depends_on:
+      - eureka
+  
+  empresa-b:
+    image: marcweb-empresa:latest
+    environment:
+      - SPRING_APPLICATION_NAME=empresa-api-comercio-abc
+      - SERVER_PORT=8082
+    depends_on:
+      - eureka
 ```
 
 ---
 
 ## **7. Cronograma Atualizado**
 
-### **Fase 1: Fundação (Sprints 1-4)** ✅ COMPLETO
-- Setup e infraestrutura
-- Entidades e segurança base
-- CRUD básico
-- Validações iniciais
+### **Fase 1: MVP Single-tenant (Sprints 1-12)**
 
-### **Fase 2: Core do Negócio (Sprints 5-12)**
-- Sprint 5-6: Registro de ponto completo + feriados/folgas
-- Sprint 7: Folha de ponto detalhada (JSON)
-- Sprint 8: Sistema de logs unificado
-- Sprint 9-10: Arquitetura multi-tenant (portal + roteamento)
-- Sprint 11: Relatórios e exportação PDF
-- Sprint 12: Refinamento e testes
+**Sprints 1-4:** ✅ Fundação (COMPLETO)
+- Setup, entidades, segurança, CRUD básico
 
-### **Fase 3: Frontend + Deploy (Sprints 13-16)**
-- Sprint 13: Frontend - Login centralizado
-- Sprint 14: Frontend - Dashboard funcionário
-- Sprint 15: Frontend - Painel admin
-- Sprint 16: Deploy multi-tenant + testes finais
+**Sprint 5:** 🔄 Registro de Ponto Completo
+- ✅ BUG-001 corrigido
+- 🔄 Validação de geolocalização (BUG-003)
+- 🔄 Validação de dia útil (domingos/feriados)
+- 🔄 Testes unitários
 
-### **Fase 4: Funcionalidades Avançadas (Sprints 17-18)** 🔄 Opcional
-- Sprint 17: Contracheque básico (se houver demanda)
-- Sprint 18: Refinamentos e integrações extras
+**Sprint 6:** Feriados e Folgas
+- Sincronização BrasilAPI completa (BUG-002)
+- CRUD de folgas
+- Folgas automáticas aos domingos
 
-**Total Estimado:** 16-18 sprints (~8-10 meses)
+**Sprint 7:** ⭐ Folha de Ponto Detalhada
+- Geração de JSON estruturado
+- Cálculo de horas trabalhadas
+- Persistência em `folhas_ponto`
+- Endpoints para admin e funcionário
+
+**Sprint 8:** Sistema de Logs Unificado
+- LogAuditoriaService centralizado
+- Aspect para auditoria automática
+- Logs em todas as ações críticas
+
+**Sprint 9-10:** ⭐ Preparação para Multi-tenant
+- Refatoração de código para interfaces
+- Criação de `empresa-common-lib`
+- Separação de concerns
+- Testes de integração
+
+**Sprint 11:** Relatórios PDF
+- Integração iText 7
+- Geração de relatórios profissionais
+- Download direto
+
+**Sprint 12:** Refinamento e Testes
+- Testes unitários completos
+- Otimização de queries
+- Code review
+
+### **Fase 2: Multi-tenant (Sprints 13-16)**
+
+**Sprint 13:** Infraestrutura Multi-tenant
+- Setup Eureka Server
+- Setup API Gateway
+- Configuração de roteamento
+
+**Sprint 14:** Biblioteca Compartilhada
+- Criação de `empresa-common-lib`
+- Migração de DTOs e interfaces
+- Publicação no Maven local
+
+**Sprint 15:** Implementação Multi-empresa
+- Template de empresa
+- Criação de 2-3 empresas exemplo
+- Comunicação via Feign
+
+**Sprint 16:** Deploy e Testes Finais
+- Docker Compose
+- Testes end-to-end
+- Documentação completa
 
 ---
 
-## **8. Considerações Finais**
+## **8. Benefícios da Arquitetura Proposta**
 
-### **8.1 Foco do MVP**
-O sistema prioriza:
-1. ✅ Registro de ponto confiável e preciso
-2. ✅ Folha de ponto detalhada e auditável
-3. ✅ Arquitetura multi-tenant escalável
-4. ✅ Interface intuitiva e responsiva
-5. ✅ Segurança e conformidade LGPD
-
-### **8.2 Funcionalidades Não Prioritárias**
-- Contracheque automatizado (futuro)
-- Integrações com ERPs (futuro)
-- App mobile nativo (futuro)
-- Dashboard analytics avançado (futuro)
-
-### **8.3 Escalabilidade**
-- Suporta até 100 empresas por servidor
-- Cada empresa com até 500 funcionários
-- Performance: < 200ms por requisição
-- Alta disponibilidade: 99.5% uptime
-
-### **8.4 Custos Estimados**
-- **Desenvolvimento:** 8-10 meses (2h/dia)
-- **Infra (Produção):** R$ 150-250/mês (VPS + domínio)
-- **Preço Sugerido:** R$ 50-100/mês por empresa
-
-### **8.5 Diferenciais Competitivos**
-- ✅ Folha de ponto estruturada em JSON
-- ✅ Multi-tenant nativo desde o início
-- ✅ Login centralizado (melhor UX)
-- ✅ Domingos automáticos como folga
-- ✅ Conformidade CLT e LGPD
-- ✅ Código limpo e bem documentado
-- ✅ APIs RESTful bem definidas
+| Benefício | Como Acontece |
+|-----------|---------------|
+| **Reutilização de código** | Via `empresa-common-lib` |
+| **Isolamento de dados** | Cada serviço com seu banco |
+| **Comunicação dinâmica** | Eureka + Feign/WebClient |
+| **Escalabilidade** | Cada serviço escala independentemente |
+| **Manutenção** | Alterações na lib refletem em todos |
+| **Deploy flexível** | Empresas podem ter versões diferentes |
+| **Desenvolvimento focado** | MVP primeiro, multi-tenant depois |
 
 ---
 
-**Documento aprovado para desenvolvimento.**
+**Documento aprovado para desenvolvimento MVP-first.**
