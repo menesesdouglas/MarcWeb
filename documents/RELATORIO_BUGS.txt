@@ -236,7 +236,7 @@ Retornar objeto com estatísticas:
 ---
 
 ### BUG-009: Endpoint de Sincronização Não Existe
-**Status**: ❌ PENDENTE
+**Status**: ✅ CORRIGIDO
 
 **Localização**: 
 - `src/main/java/com/marcweb/controller/FeriadoController.java`

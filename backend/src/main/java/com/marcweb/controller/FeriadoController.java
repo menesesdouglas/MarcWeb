@@ -14,22 +14,33 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map; // Import necessário
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/feriado")
+@RequestMapping("/api/feriado") // Mantém o prefixo base
 public class FeriadoController {
 
     private final BrasilApiService brasilApiService;
-
     private final FeriadoService service;
 
-
+    // Endpoint antigo (mantido, opcionalmente pode ser depreciado)
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/nacionais")
+    @PostMapping("/nacionais") // Antigo endpoint
     public void cadastrarFeriadosViaAPI() {
-        brasilApiService.cadastrarFeriadosNacionais();
+        // Chama o método antigo que agora internamente usa o novo com ano atual
+        brasilApiService.cadastrarFeriadosNacionais(); // Este método agora chama sincronizarFeriados(Year.now().getValue())
+    }
+
+    // NOVO Endpoint conforme SDD e BUG-009
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/sync") // Novo endpoint mais descritivo
+    public ResponseEntity<Map<String, Integer>> sincronizarFeriados(@RequestParam int ano) { // Recebe ano como parâmetro
+        // Chama o método do service que retorna as estatísticas
+        Map<String, Integer> estatisticas = brasilApiService.sincronizarFeriados(ano);
+        // Retorna as estatísticas com status 200 OK
+        return ResponseEntity.ok(estatisticas);
     }
 
 
@@ -40,7 +51,6 @@ public class FeriadoController {
         var feriados = service.findByDataBetween(start, end);
         return !feriados.isEmpty() ? ResponseEntity.ok(feriados) : ResponseEntity.notFound().build();
     }
-
 
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
