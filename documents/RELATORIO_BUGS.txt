@@ -1,313 +1,188 @@
-# RELATÓRIO DE BUGS - MARC WEB
-**Data**: 30/12/2025
-**Sprint Atual**: Sprint 5 - Registro de Ponto Completo
-**Versão**: 0.0.1-dev
+# RELATÓRIO DE ANÁLISE - MARC WEB
+**Data**: 06/01/2026  
+**Versão**: 0.0.1-dev  
+**Status**: Sprint 5 em finalização
 
 ---
 
 ## 📊 RESUMO EXECUTIVO
 
-| Criticidade | Quantidade | Status |
-|-------------|------------|--------|
-| 🔴 CRÍTICA  | 3          | Bloqueia Sprint 5 |
-| 🟡 ALTA     | 4          | Deve ser corrigido |
-| 🟢 MÉDIA    | 2          | Melhoria |
-| **TOTAL**   | **9**      | **7 pendentes** |
+| Métrica | Valor | Status |
+|---------|-------|--------|
+| Sprints Completas | 4/16 | 25% |
+| Bugs Críticos | 1 | 🔴 |
+| Bugs Corrigidos | 9/9 | ✅ |
+| Cobertura Testes | 0% | ❌ |
+| Funcionalidades MVP | 40% | 🟡 |
 
 ---
 
-## 🔴 BUGS CRÍTICOS (PRIORIDADE MÁXIMA)
+## 🔴 BUGS CRÍTICOS ENCONTRADOS
 
-### BUG-001: Primeiro Registro Não Validava Tipo ENTRADA
-**Status**: ✅ CORRIGIDO
-
-**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
-
-**Descrição**: 
-O sistema não validava se o primeiro registro de ponto de um usuário era do tipo ENTRADA. Usuários podiam iniciar com INICIO_DESCANSO, FIM_DESCANSO ou SAIDA, quebrando a lógica de negócio.
-
-**Impacto**:
-- Quebra de regras de negócio
-- Dados inconsistentes no banco
-- Impossibilidade de calcular horas trabalhadas corretamente
-
-**Comportamento Esperado**:
-O primeiro registro de ponto de qualquer usuário DEVE ser obrigatoriamente do tipo ENTRADA.
-
-**Correção Implementada**:
-Adicionada validação específica para verificar se o último registro é null (primeiro registro do usuário) e garantir que o tipo seja ENTRADA.
-
----
-
-### BUG-003: Validação de Geolocalização NÃO Implementada
-**Status**: ✅ CORRIGIDO
-
-**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
-
-**Descrição**:
-O sistema não valida se o registro de ponto está sendo feito dentro do raio permitido da empresa quando a geolocalização está ativa. O código aceita qualquer coordenada GPS sem verificação.
-
-**Impacto**:
-- CRÍTICO para segurança
-- Funcionários podem registrar ponto de qualquer localização
-- Invalida o propósito da funcionalidade de geolocalização
-- Não respeita configurações de `geolocAtiva` e `raioGeoloc`
-
-**Comportamento Atual**:
-Sistema aceita latitude/longitude sem nenhuma validação de distância.
-
-**Comportamento Esperado**:
-1. Se `ConfigEmpresa.geolocAtiva = true`, validar presença de coordenadas
-2. Calcular distância usando fórmula de Haversine
-3. Rejeitar registro se distância > `ConfigEmpresa.raioGeoloc`
-4. Lançar exceção apropriada com distância calculada
-
-**Correção Implementada**:
-Adicionada validação específica para verificar se a localização do usuário está dentro do perímetro exigido pela empresa.
-
----
-
-### BUG-004: Validação de Dia Útil NÃO Implementada
-**Status**: ✅ CORRIGIDO
-
-**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
-
-**Descrição**:
-Sistema permite registro de ponto aos domingos e em feriados, contrariando a regra de negócio que estabelece bloqueio automático destes dias.
-
-**Impacto**:
-- CRÍTICO para regras trabalhistas
-- Permite horas extras indevidas
-- Gera inconsistências na folha de ponto
-- Viola conformidade legal (CLT)
-
-**Comportamento Atual**:
-Sistema aceita registro em qualquer dia da semana, incluindo domingos e feriados cadastrados.
-
-**Comportamento Esperado**:
-1. Bloquear registro aos domingos automaticamente
-2. Bloquear registro em feriados cadastrados no banco
-3. Retornar mensagem clara informando o motivo da rejeição
-
-**Correção Implementada**:
-Adicionada validação para feriados e domingos.
-
----
-
-## 🟡 BUGS ALTA PRIORIDADE
-
-### BUG-005: Query JPQL com Enum Incorreta
-**Status**: ✅ CORRIGIDO
-
-**Localização**: `src/main/java/com/marcweb/repository/FeriadoRepository.java`
-
-**Descrição**:
-A query JPQL que busca feriados manuais sem ID está usando a referência do enum de forma incorreta, causando erro em tempo de execução.
-
-**Código Problemático**:
+### BUG-010: Query JPQL Incorreta em FeriadoRepository
+**Arquivo**: `FeriadoRepository.java:24`  
+**Código Atual**:
+```java
+f.origem = com.marcweb.entity.OrigemFeriado.MANUAL
 ```
-@Query("Select new Feriado(...) from Feriado f where f.origem = MANUAL ...")
-```
-
-**Impacto**:
-- Método `atualizarFeriados()` falha ao executar
-- Feriados manuais não são atualizados para o próximo ano
-- QueryException em runtime
-
-**Comportamento Esperado**:
-Query deve usar string literal 'MANUAL' ou comparação com o enum completo.
-
-**Correção Implementada**:
-Corrigida sintaxe MANUAL para 'MANUAL'.
+**Problema**: Sintaxe inválida. Deve ser `f.origem = 'MANUAL'`  
+**Impacto**: Método `atualizarFeriados()` falha em runtime  
+**Prioridade**: CRÍTICA
 
 ---
 
-### BUG-006: Configuração Padrão Não Criada no Startup
-**Status**: ✅ CORRIGIDO
+## 🟡 ISSUES MÉDIAS
 
-**Localização**: `src/main/java/com/marcweb/MarcWebApplication.java`
+### ISSUE-001: Método Inexistente em FolgaRepository
+`findByUserAndPeriodo()` referenciado em `FolhaPontoService` (Sprint 7) não existe.
 
-**Descrição**:
-A aplicação cria usuário admin padrão mas não cria configuração padrão da empresa. Quando o endpoint `/api/config-empresa` é acessado pela primeira vez, retorna 404.
+### ISSUE-002: Senha Hardcoded
+`application-dev.yml:4` - senha "salfsa" em plaintext.
 
-**Impacto**:
-- Aplicação não funciona imediatamente após setup
-- Erro 404 em endpoint essencial
-- Admin precisa criar configuração manualmente antes de usar sistema
-
-**Comportamento Atual**:
-- Sistema cria apenas usuário admin no startup
-- Tabela `configs_empresa` fica vazia
-- Primeiro acesso a `/api/config-empresa` falha
-
-**Comportamento Esperado**:
-Sistema deve criar uma configuração padrão com:
-- Nome: "Empresa Exemplo LTDA"
-- Coordenadas de referência (Feira de Santana)
-- Raio: 100m
-- GeolocAtiva: false
-
-**Correção Necessária**:
-Adicionar bloco no método `run()` para criar `ConfigEmpresa` padrão se não existir.
+### ISSUE-003: Falta Endpoint GET /api/user
+SDD especifica listagem de usuários, não implementado.
 
 ---
 
-### BUG-007: SecurityConfig com RequestMatchers Incorretos
-**Status**: ✅ CORRIGIDO
+## 🟢 CODE SMELLS
 
-**Localização**: `src/main/java/com/marcweb/security/SecurityConfig.java`
-
-**Descrição**:
-Configuração de segurança tem mapeamentos para endpoints que não existem e URL incorreta para health check.
-
-**Problemas Identificados**:
-1. `/api/auth/health` deveria ser `/api/health`
-2. `/api/registro-ponto/registrar` não existe (é `/api/ponto`)
-3. `/api/registro-ponto/buscar` não existe (é `/api/ponto/me`)
-4. Configuração desnecessariamente verbosa
-
-**Impacto**:
-- Endpoints fictícios configurados
-- Health check pode não funcionar como esperado
-- Confusão na manutenção do código
-- Possível falha de segurança por configuração incorreta
-
-**Comportamento Esperado**:
-Configuração simples e clara:
-- `/api/auth/login` → permitAll
-- `/api/health` → permitAll
-- `/error` → permitAll
-- Tudo mais → authenticated
+- Handler genérico comentado em `GlobalExceptionHandler`
+- Endpoints comentados em `SecurityConfig:36-37`
+- Comentário desatualizado `JwtService:39`
+- Duplicação lógica em `DataConfigEmpresa.toEntity()`
 
 ---
 
-### BUG-008: Dependências Faltantes no RegistroPontoService
-**Status**: ✅ CORRIGIDO
+## ✅ PROGRESSO SPRINTS
 
-**Localização**: `src/main/java/com/marcweb/service/RegistroPontoService.java`
+**Sprint 1-4**: ✅ COMPLETAS  
+- Setup, entidades, JWT, CRUD básico
 
-**Descrição**:
-Service não injeta dependências necessárias para implementar validações de geolocalização e dia útil.
+**Sprint 5**: 🔄 95% COMPLETA  
+✅ Validação primeiro registro  
+✅ Validação geolocalização (Haversine)  
+✅ Validação dia útil (domingos/feriados)  
+✅ Config padrão startup  
+✅ Endpoint sincronização feriados  
+❌ **Testes unitários ausentes** (bloqueante)
 
-**Dependências Ausentes**:
-1. `ConfigEmpresaService` - necessário para buscar configs de geoloc
-2. `FeriadoRepository` - necessário para validar feriados
-
-**Impacto**:
-- Impossível implementar BUG-003 (validação geoloc)
-- Impossível implementar BUG-004 (validação dia útil)
-- Bloqueia conclusão da Sprint 5
-
-**Comportamento Esperado**:
-Service deve ter injeção via construtor de todas as dependências necessárias.
+**Sprint 6-16**: ⏸️ NÃO INICIADAS
 
 ---
 
-## 🟢 BUGS MÉDIA PRIORIDADE (MELHORIAS)
+## 📋 FUNCIONALIDADES OPERACIONAIS
 
-### BUG-002: Sincronização de Feriados Sem Estatísticas
-**Status**: ✅ CORRIGIDO
+### ✅ Funcionando:
+- Autenticação JWT completa
+- CRUD usuários (admin only)
+- Registro ponto sequencial validado
+- Geolocalização com raio configurável
+- Bloqueio automático domingos/feriados
+- Cadastro feriados manual + BrasilAPI
+- Health check
 
-**Localização**: 
-- `src/main/java/com/marcweb/service/FeriadoService.java`
-- `src/main/java/com/marcweb/service/BrasilApiService.java`
-
-**Descrição**:
-O SDD especifica que a sincronização de feriados deve retornar estatísticas (quantos foram adicionados vs já existiam), mas a implementação atual não fornece este feedback.
-
-**Impacto**:
-- Admin não sabe resultado da sincronização
-- Falta de transparência na operação
-- Não conforma com SDD
-
-**Comportamento Atual**:
-Método `cadastrarFeriado(List<Feriado>)` remove duplicatas mas não retorna informações sobre a operação.
-
-**Comportamento Esperado**:
-Retornar objeto com estatísticas:
-- Total de feriados buscados da API
-- Quantos foram adicionados
-- Quantos já existiam no banco
-
-**Funcionalidades Faltantes**:
-- Método `sincronizarFeriados(int ano)` retornando Map<String, Integer>
-- Endpoint `POST /api/feriados/sync` conforme SDD
+### ❌ Não Implementadas (MVP):
+- Sistema de folgas (Sprint 6)
+- Folha de ponto JSON ⭐ (Sprint 7 - PRIORIDADE)
+- Logs auditoria (Sprint 8)
+- Relatórios PDF (Sprint 11)
+- Testes automatizados (Sprint 12)
 
 ---
 
-### BUG-009: Endpoint de Sincronização Não Existe
-**Status**: ✅ CORRIGIDO
+## 🏗️ QUALIDADE ARQUITETURAL
 
-**Localização**: 
-- `src/main/java/com/marcweb/controller/FeriadoController.java`
-- Documentação: `INFORMAÇÕES.txt`
+### Pontos Fortes:
+- Separação camadas clara (MVC)
+- DTOs consistentes
+- Exceções customizadas
+- Lombok reduz boilerplate 60%
+- Flyway para migrations
+- @PreAuthorize para segurança
 
-**Descrição**:
-O documento `INFORMAÇÕES.txt` especifica endpoint `POST /api/feriado/nacionais` mas o SDD menciona `POST /api/feriados/sync`. Além disso, o endpoint atual não retorna estatísticas.
-
-**Impacto**:
-- Inconsistência entre documentações
-- Falta de feedback ao usuário
-- Não segue padrão REST apropriado
-
-**Comportamento Atual**:
-Endpoint `POST /api/feriado/nacionais` existe mas:
-- Retorna apenas 201 Created (sem corpo)
-- Não informa quantos feriados foram adicionados
-- Nome do endpoint não é intuitivo
-
-**Comportamento Esperado**:
-Endpoint deveria:
-- Ter nome mais descritivo (`/sync` ou `/sincronizar`)
-- Retornar JSON com estatísticas
-- Status 200 OK com corpo de resposta
+### Pontos Fracos:
+- **Zero testes automatizados**
+- Log auditoria criado mas não usado
+- Falta validação de sobreposição folgas
+- Sem paginação em listagens
+- Sem cache configurado
 
 ---
 
-## ⚠️ RISCOS IDENTIFICADOS
+## 🎯 CONFORMIDADE COM SDD
 
-### Risco 1: Sistema em Produção Sem Validações Críticas
-**Probabilidade**: ALTA se não corrigido
-**Impacto**: CRÍTICO
-**Mitigação**: Não fazer deploy até correção de BUG-003 e BUG-004
-
-### Risco 2: Falta de Testes Automatizados
-**Probabilidade**: ALTA (sem testes, bugs podem reaparecer)
-**Impacto**: ALTO
-**Mitigação**: Implementar testes na Sprint 5 antes de avançar
-
-### Risco 3: Inconsistências Documentais
-**Probabilidade**: MÉDIA
-**Impacto**: MÉDIO
-**Mitigação**: Consolidar documentação após Sprint 5
+| Item SDD | Status |
+|----------|--------|
+| 6 Entidades JPA | ✅ 100% |
+| Endpoints REST | ✅ 85% |
+| Validações Negócio | ✅ 100% |
+| Geolocalização | ✅ 100% |
+| Feriados Automáticos | ✅ 100% |
+| Folha Ponto JSON | ❌ 0% |
+| Relatórios PDF | ❌ 0% |
+| Multi-tenant | ❌ 0% |
 
 ---
 
-## 📎 ANEXOS
+## 🚨 RISCOS IDENTIFICADOS
 
-### Checklist de Correção Sprint 5
-```
-[ ] BUG-008: Adicionar injeções de dependência
-[ ] BUG-003: Implementar validação geolocalização
-[ ] BUG-004: Implementar validação dia útil
-[ ] Criar 4 novas exceções
-[ ] Atualizar GlobalExceptionHandler
-[ ] Escrever 10+ testes unitários
-[ ] BUG-006: Config padrão no startup
-[ ] BUG-007: Corrigir SecurityConfig
-[ ] Executar testes de regressão
-[ ] Atualizar SCRUM.txt
-[ ] Marcar Sprint 5 como COMPLETA ✅
-```
+### Alto Risco:
+1. **BUG-010 bloqueante**: Atualização feriados quebrada
+2. **Testes ausentes**: Impossível validar regressões
+3. **Sprint 7 crítica**: Sem folha de ponto, sem MVP real
 
-### Arquivos que Precisam de Modificação
-1. `RegistroPontoService.java` (3 novos métodos + 2 injeções)
-2. `GlobalExceptionHandler.java` (4 novos handlers)
-3. `MarcWebApplication.java` (criação de config padrão)
-4. `SecurityConfig.java` (simplificação)
-5. `FeriadoRepository.java` (correção query)
-6. Criar 4 arquivos de exceção novos
-7. Criar `RegistroPontoServiceTest.java`
+### Médio Risco:
+4. Referencias a métodos inexistentes (Sprint 6+)
+5. Senha dev exposta no repo
+6. Sem monitoramento/observabilidade
+
+---
+
+## 📈 ESTIMATIVA CONCLUSÃO MVP
+
+**Sprint 5 atual**: 2 dias (corrigir BUG-010 + testes)  
+**Sprint 6**: 5 dias (folgas)  
+**Sprint 7**: 8 dias (folha ponto - CRÍTICA)  
+**Sprint 8**: 6 dias (logs)  
+**Sprint 9-10**: 10 dias (refatoração)  
+**Sprint 11**: 5 dias (PDF)  
+**Sprint 12**: 8 dias (testes)
+
+**Total MVP**: ~44 dias úteis (2 meses @ 2h/dia)
+
+---
+
+## 🔧 AÇÕES RECOMENDADAS IMEDIATAS
+
+### Prioridade 1 (Esta Semana):
+1. Corrigir BUG-010 em FeriadoRepository
+2. Criar mínimo 5 testes para RegistroPontoService
+3. Testar ciclo completo ponto manual
+4. Remover senha hardcoded
+
+### Prioridade 2 (Próxima Sprint):
+5. Implementar Sprint 6 (folgas)
+6. Criar endpoint GET /api/user
+7. Adicionar paginação
+8. Implementar uso de LogAuditoria
+
+### Prioridade 3 (Médio Prazo):
+9. Sprint 7 - Folha Ponto (CRÍTICA para MVP)
+10. Handler genérico de erros
+11. Documentação OpenAPI/Swagger
+12. CI/CD básico
+
+---
+
+## 💡 OBSERVAÇÕES FINAIS
+
+**Positivo**: Código bem estruturado, validações robustas, documentação clara.
+
+**Negativo**: Falta 60% do MVP funcional. Zero testes = alto risco.
+
+**Crítico**: Sprint 7 (Folha Ponto) é ESSENCIAL. Sem ela, sistema não entrega valor real.
+
+**Recomendação**: Não avançar para multi-tenant (Sprints 13-16) até MVP 100% testado.
 
 ---
 

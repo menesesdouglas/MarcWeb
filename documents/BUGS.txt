@@ -1,0 +1,227 @@
+# BUGS E SOLUÇÕES - MARC WEB
+**Data**: 06/01/2026
+
+---
+
+## 🔴 BUGS CRÍTICOS
+
+### BUG-010: Query JPQL com Enum Incorreta
+**Localização**: `FeriadoRepository.java` linha 24  
+**Problema**: `f.origem = com.marcweb.entity.OrigemFeriado.MANUAL` é sintaxe inválida  
+**Sintoma**: QueryException ao executar `buscarRegistrosManuaisSemId()`  
+**Causa**: JPQL não aceita referência direta ao enum, precisa ser string literal
+
+**Solução**:
+```
+Trocar: f.origem = com.marcweb.entity.OrigemFeriado.MANUAL
+Por: f.origem = 'MANUAL'
+```
+
+**Impacto**: Método `atualizarFeriados()` scheduled funciona após correção
+
+---
+
+## 🟡 ISSUES MÉDIAS
+
+### ISSUE-001: Método Inexistente - FolgaRepository
+**Localização**: `FolhaPontoService` (futuro Sprint 7) referencia método inexistente  
+**Problema**: `findByUserAndPeriodo(user, dataInicio, dataFim)` não existe
+
+**Solução**:
+Criar método em `FolgaRepository`:
+- Nome: `findByUserAndDataInicioLessThanEqualAndDataFimGreaterThanEqual`
+- Parâmetros: `User user, LocalDate dataFim, LocalDate dataInicio`
+- Retorna: `List<Folga>`
+- Lógica: busca folgas que se sobrepõem ao período
+
+**Alternativa Simples**:
+Renomear para usar método já existente com 6 parâmetros (duplica user)
+
+---
+
+### ISSUE-002: Credenciais Expostas
+**Localização**: `application-dev.yml` linha 4  
+**Problema**: Senha "salfsa" em plaintext no repositório
+
+**Solução**:
+1. Trocar por variável de ambiente: `${POSTGRES_PASSWORD:changeme}`
+2. Adicionar `.env` ao `.gitignore`
+3. Criar `.env.example` com placeholder
+4. Documentar no README setup de variáveis
+
+---
+
+### ISSUE-003: Endpoint Faltante
+**Localização**: `UserController`  
+**Problema**: SDD especifica `GET /api/user` para listar usuários, não implementado
+
+**Solução**:
+Criar endpoint:
+- Método: GET /api/user
+- Autorização: @PreAuthorize("hasRole('ADMIN')")
+- Retorno: List<UserResponse> (criar DTO sem senha)
+- Service: `UserService.findAll()` mapeando para DTO
+
+**Opcional**: Adicionar paginação com `Pageable`
+
+---
+
+## 🟢 CODE SMELLS (Melhoria)
+
+### CS-001: Handler Genérico Comentado
+**Localização**: `GlobalExceptionHandler` linha 82  
+**Problema**: Código comentado polui base
+
+**Solução**: Remover ou implementar handler genérico com log apropriado
+
+---
+
+### CS-002: Endpoints Comentados em SecurityConfig
+**Localização**: `SecurityConfig` linhas 36-37  
+**Problema**: Código morto comentado
+
+**Solução**: Remover linhas. URLs já protegidas por `.anyRequest().authenticated()`
+
+---
+
+### CS-003: Comentário Desatualizado
+**Localização**: `JwtService` linha 39  
+**Problema**: Comentário diz "Use parser() em vez de parserBuilder()" mas código já usa parser()
+
+**Solução**: Remover comentário redundante
+
+---
+
+### CS-004: Lógica Duplicada
+**Localização**: `DataConfigEmpresa.toEntity()`  
+**Problema**: Duplica lógica que `BeanUtils.copyProperties()` já faz
+
+**Solução**: Simplificar para:
+```
+BeanUtils.copyProperties(this, entity);
+return entity;
+```
+
+---
+
+## ⚠️ PROBLEMAS ARQUITETURAIS
+
+### PA-001: Zero Testes Automatizados
+**Problema**: Impossível validar correções ou refatorações
+
+**Solução Sprint 5**:
+Criar mínimo 5 testes:
+1. `testPrimeiroRegistroDeveSerEntrada()`
+2. `testSequenciaValidaCompleta()`
+3. `testGeolocalizacaoForaDoRaio()`
+4. `testRegistroEmDomingo()`
+5. `testRegistroEmFeriado()`
+
+**Framework**: JUnit 5 + Mockito (já no pom.xml)
+
+---
+
+### PA-002: LogAuditoria Criado Mas Não Usado
+**Problema**: Entidade e tabela existem mas nenhum serviço grava logs
+
+**Solução Sprint 8**:
+Criar `LogAuditoriaService` e chamar em:
+- `AuthenticationController.login()` → LOG_SUCESSO
+- `RegistroPontoService.registrarPonto()` → LOG_PONTO
+- `UserService.createUser/editUser/deleteUser()` → LOG_ADMIN
+- Todas exceções → LOG_ERRO
+
+---
+
+### PA-003: Sem Validação Sobreposição Folgas
+**Problema**: Sistema pode aceitar folgas conflitantes
+
+**Solução Sprint 6**:
+Em `FolgaService.cadastrar()`:
+1. Buscar folgas existentes do usuário no período
+2. Verificar sobreposição de datas
+3. Lançar `FolgaConflitanteException` se houver overlap
+
+---
+
+### PA-004: Sem Paginação em Listagens
+**Problema**: `GET /api/ponto/me` pode retornar milhares de registros
+
+**Solução**:
+Adicionar parâmetro `Pageable`:
+- Alterar método repository para aceitar `Pageable`
+- Retornar `Page<RegistroPontoResponse>`
+- Default: 20 itens por página
+
+---
+
+### PA-005: Falta FolhaPonto Entity
+**Problema**: Sprint 7 referencia entidade inexistente
+
+**Solução**:
+Criar:
+- Migration `V2__add_folhas_ponto.sql` (schema no SDD)
+- Entity `FolhaPonto` com campo `dados` tipo JSONB
+- Repository `FolhaPontoRepository`
+- Service `FolhaPontoService.gerarFolhaPonto()`
+
+---
+
+## 📋 CHECKLIST CORREÇÕES SPRINT 5
+
+Ordem de execução:
+
+**1. BUG-010** (5min)
+- [ ] Corrigir query JPQL em FeriadoRepository
+
+**2. Testes Básicos** (2h)
+- [ ] Criar `RegistroPontoServiceTest`
+- [ ] Implementar 5 testes unitários
+- [ ] Garantir 100% pass
+
+**3. Limpeza** (30min)
+- [ ] Remover código comentado SecurityConfig
+- [ ] Remover handler comentado GlobalExceptionHandler
+- [ ] Limpar comentários desnecessários JwtService
+
+**4. Segurança** (15min)
+- [ ] Mover senha para variável ambiente
+- [ ] Atualizar `.gitignore`
+- [ ] Criar `.env.example`
+
+**5. Endpoint Faltante** (1h)
+- [ ] Criar `UserResponse` DTO
+- [ ] Implementar `GET /api/user`
+- [ ] Testar com token admin
+
+**6. Documentação** (30min)
+- [ ] Atualizar SCRUM.txt (Sprint 5 → COMPLETA)
+- [ ] Atualizar RELATORIO_BUGS.txt
+- [ ] Git commit com mensagem descritiva
+
+---
+
+## 🎯 PRIORIZAÇÃO
+
+**HOJE** (Sprint 5):
+1. BUG-010
+2. Testes básicos (bloqueante para avançar)
+
+**ESTA SEMANA** (Sprint 6):
+3. ISSUE-001 (FolgaRepository)
+4. PA-003 (validação sobreposição)
+5. ISSUE-003 (GET /api/user)
+
+**PRÓXIMA SPRINT** (Sprint 7):
+6. PA-005 (FolhaPonto entity)
+7. PA-004 (paginação)
+
+**MÉDIO PRAZO** (Sprint 8+):
+8. PA-002 (LogAuditoria)
+9. Code smells
+
+---
+
+**ESTIMATIVA TOTAL CORREÇÕES**: 5-6 horas
+
+**FIM DO DOCUMENTO**
