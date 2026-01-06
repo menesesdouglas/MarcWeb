@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/marcweb_dev
     username: ${POSTGRES_USER:marcuser}
-    password: ${POSTGRES_PASSWORD:salfsa}   # Substitua pela senha real definida nas configurações
+    password: ${POSTGRES_PASSWORD:changeme}   # Substitua pela senha real definida nas configurações
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

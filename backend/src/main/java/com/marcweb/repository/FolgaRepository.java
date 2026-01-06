@@ -10,6 +10,10 @@ import java.util.List;
 
 @Repository
 public interface FolgaRepository extends JpaRepository<Folga, Long> {
+
+    List<Folga> findByUserAndDataInicioLessThanEqualAndDataFimGreaterThanEqual(
+        User user, LocalDate dataFim, LocalDate dataInicio);
+
     List<Folga> findByUserAndDataInicioBetweenOrUserAndDataFimBetween(
             User user, LocalDate start1, LocalDate end1, User user2, LocalDate start2, LocalDate end2);
     // Outros métodos específicos, se necessário

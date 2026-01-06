@@ -31,7 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok) - NÃO USAREMOS PARA jwtAuthenticationFilter
 public class SecurityConfig {
 
-    // private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     private final com.marcweb.repository.UserRepository userRepository;
 
     @Bean
@@ -43,8 +43,6 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                     .requestMatchers("/error").permitAll()
-                    //.requestMatchers(HttpMethod.POST, "/api/ponto").authenticated()
-                    //.requestMatchers(HttpMethod.GET, "/api/registro/me").authenticated()
                     .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider()) // Define o provedor de autenticação

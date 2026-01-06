@@ -15,6 +15,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import com.marcweb.dto.UserResponse; // Import necessário
+import com.marcweb.repository.UserRepository; // Import necessário, se ainda não estiver
+
+import java.util.stream.Collectors;
+import java.util.List;
+
+import org.springframework.data.domain.Page; // Import para paginação (opcional)
+import org.springframework.data.domain.Pageable; // Import para paginação (opcional)
 
 @RequiredArgsConstructor
 @Service
@@ -74,6 +82,17 @@ public class UserService {
                 .getContext()
                 .getAuthentication()
                 .getPrincipal();
+    }
+
+    public List<UserResponse> findAll() {
+        return repository.findAll().stream()
+                .map(UserResponse::new) // Converte cada User em UserResponse
+                .collect(Collectors.toList());
+    }
+
+    public Page<UserResponse> findAll(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(UserResponse::new); // Converte cada User da página em UserResponse
     }
 
 }

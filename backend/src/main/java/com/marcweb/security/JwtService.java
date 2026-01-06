@@ -36,7 +36,7 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         return Jwts
-                .parser() // Use parser() em vez de parserBuilder()
+                .parser()
                 .setSigningKey(getSignInKey()) // Define a chave de assinatura diretamente no parser
                 .build() // Constroi o parser
                 .parseClaimsJws(token) // Faz o parse do token JWS

@@ -1,13 +1,18 @@
 package com.marcweb.controller;
 
 import com.marcweb.dto.CreateUser;
+import com.marcweb.dto.UserResponse; // Import necessário
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Import para paginação (opcional)
+import org.springframework.data.domain.Pageable; // Import para paginação (opcional)
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List; // Import necessário para findAll sem paginação
 
 @RequiredArgsConstructor
 @RestController
@@ -15,6 +20,21 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService service;
+
+    // NOVO Endpoint: Listar todos os usuários
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public List<UserResponse> findAllUsers() { // Retorna List<UserResponse> sem paginação
+        return service.findAll();
+    }
+
+    // (Opcional) Endpoint com paginação
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public Page<UserResponse> findAllUsers(Pageable pageable) { // Retorna Page<UserResponse> com paginação
+        return service.findAll(pageable);
+    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,8 +58,5 @@ public class UserController {
     public void deleteUser(@PathVariable Long id) {
         service.deleteUser(id);
     }
-
-
-
 
 }

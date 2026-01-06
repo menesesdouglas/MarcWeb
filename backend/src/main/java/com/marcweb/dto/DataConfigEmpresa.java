@@ -31,16 +31,10 @@ public class DataConfigEmpresa {
         BeanUtils.copyProperties(configEmpresa, this);
     }
 
-    // Método para converter DTO em Entidade
+    // Método para converter DTO em Entidade - Simplificado
     public ConfigEmpresa toEntity() {
-        ConfigEmpresa entity = new ConfigEmpresa();
-        // Copia as propriedades do DTO para a entidade
-        entity.setId(this.getId());
-        entity.setNomeEmpresa(this.getNomeEmpresa());
-        entity.setLatCentro(this.getLatCentro());
-        entity.setLongCentro(this.getLongCentro());
-        entity.setRaioGeoloc(this.getRaioGeoloc());
-        entity.setGeolocAtiva(this.getGeolocAtiva());
-        return entity;
+        ConfigEmpresa entity = new ConfigEmpresa(); // Cria uma nova instância da entidade
+        BeanUtils.copyProperties(this, entity);     // Copia as propriedades do DTO para a entidade
+        return entity;                              // Retorna a entidade populada
     }
 }
