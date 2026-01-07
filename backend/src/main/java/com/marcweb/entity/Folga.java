@@ -32,4 +32,9 @@ public class Folga {
 
     @Column(nullable = false, length = 500)
     private String justificativa; // Justificativa para a folga
+
+    // Novo campo: tipo de folga
+    @Enumerated(EnumType.STRING) // Armazena o nome do enum como string no banco
+    @Column(nullable = false, length = 30) // Define um tamanho razoável
+    private TipoFolga tipo; // Tipo da folga (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
 }

@@ -38,25 +38,25 @@
 
 ## **Fase 2: Core do Negócio (Sprints 5-12)**
 
-### **Sprint 5: Registro de Ponto Completo** 🔄 Em Andamento
+### **Sprint 5: Registro de Ponto Completo** ✅ 05/01/2026
 **Objetivo:** Sistema de registro de ponto robusto e validado.
 
 **Tarefas:**
 - [x] ✅ RegistroPontoService com validação de sequência
 - [x] ✅ Controller REST `/api/ponto`
 - [x] ✅ Correção BUG-001 (NullPointerException)
-- [ ] 🔄 **Implementar validação de geolocalização (BUG-003)**
+- [x] ✅ **Implementar validação de geolocalização (BUG-003)**
   - Método `calcularDistanciaHaversine()`
   - Validar coordenadas obrigatórias se `geolocAtiva=true`
   - Lançar exceção se fora do raio
   - Criar `RegistroForaDoRaioException`
   - Adicionar handler no `GlobalExceptionHandler`
-- [ ] 🔄 **Validação de dia útil**
+- [x] ✅ **Validação de dia útil**
   - Bloquear registro aos domingos
   - Bloquear registro em feriados
   - Criar `RegistroEmDomingoException`
   - Criar `RegistroEmFeriadoException`
-- [ ] 🔄 **Testes unitários**
+- [x] ✅ **Testes unitários**
   - Testar primeiro registro
   - Testar sequência válida completa
   - Testar validação de geoloc
@@ -71,28 +71,28 @@
 
 ---
 
-### **Sprint 6: Calendário e Folgas**
+### **Sprint 6: Calendário e Folgas** ✅ 07/01/2026
 **Objetivo:** Gerenciar feriados automaticamente e folgas individuais.
 
 **Tarefas:**
-- [ ] **Completar FeriadoService (BUG-002)**
+- [x] **Completar FeriadoService (BUG-002)**
   - Método `sincronizarFeriados(int ano)`
   - Verificar duplicatas por data
   - Salvar apenas novos feriados com `origem=API`
   - Criar endpoint `POST /api/feriados/sync`
   - Proteger com `@PreAuthorize("hasRole('ADMIN')")`
   - Retornar estatísticas (quantos adicionados/já existiam)
-- [ ] **CRUD de Folgas**
+- [x] **CRUD de Folgas**
   - Criar `FolgaService`
   - Criar endpoints REST `/api/folgas`
   - Validar sobreposição de folgas
   - Adicionar campo `tipo` (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
   - Validar datas (dataInicio < dataFim)
-- [ ] **Lógica de Domingos**
+- [x] **Lógica de Domingos**
   - Todo domingo marcado automaticamente como folga
   - Sistema não permite registro aos domingos
   - Folha de ponto marca domingos como `tipo_dia: "DOMINGO"`
-- [ ] **Migration V2**
+- [x] **Migration V2**
   - Adicionar campo `tipo` em `folgas`
   - Criar índices adicionais se necessário
 
