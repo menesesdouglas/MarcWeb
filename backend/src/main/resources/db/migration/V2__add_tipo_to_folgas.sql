@@ -1,5 +1,6 @@
 ALTER TABLE folgas
-    ADD COLUMN tipo VARCHAR(30) NOT NULL;
+<<<<<<< HEAD
+    ADD COLUMN tipo VARCHAR(30) ;
 
 UPDATE folgas SET tipo = 'FALTA_JUSTIFICADA' WHERE tipo IS NULL;
 
@@ -10,5 +11,5 @@ ALTER TABLE folgas
     ALTER TABLE folgas
     ALTER COLUMN tipo SET NOT NULL;
 
-
 COMMENT ON COLUMN folgas.tipo IS 'Tipo da folga: FERIAS, ATESTADO, FALTA_JUSTIFICADA';
+
