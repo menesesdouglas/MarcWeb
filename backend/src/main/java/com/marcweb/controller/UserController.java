@@ -30,9 +30,9 @@ public class UserController {
 
     // (Opcional) Endpoint com paginação
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public Page<UserResponse> findAllUsers(Pageable pageable) { // Retorna Page<UserResponse> com paginação
-        return service.findAll(pageable);
+    @GetMapping(params = "pageNumber")
+    public Page<UserResponse> findAllUsers(@RequestParam int pageNumber) { // Retorna Page<UserResponse> com paginação
+        return service.findAll(pageNumber);
     }
 
 
@@ -40,7 +40,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public void createUser(@RequestBody @Valid CreateUser data) {
-       service.createUser(data);
+        service.createUser(data);
     }
 
 

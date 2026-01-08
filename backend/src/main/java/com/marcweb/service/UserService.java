@@ -7,6 +7,7 @@ import com.marcweb.repository.UserRepository;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -90,8 +91,9 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public Page<UserResponse> findAll(Pageable pageable) {
-        return repository.findAll(pageable)
+    public Page<UserResponse> findAll(int pageNumber) {
+        Pageable page = PageRequest.of(pageNumber, 20);
+        return repository.findAll(page)
                 .map(UserResponse::new); // Converte cada User da página em UserResponse
     }
 

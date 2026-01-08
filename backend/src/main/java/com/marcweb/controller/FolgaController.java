@@ -33,7 +33,7 @@ public class FolgaController {
     }
 
     // GET /api/folgas/{id} - Obter folga específica por ID
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')") // Admin e o próprio usuário podem ver
+    //@PreAuthorize("hasAnyRole('ADMIN', 'USER')") // Admin e o próprio usuário podem ver (Não é necessário, já que inclui as duas Roles)
     // A lógica de verificação de permissão (se o usuário é o dono) pode ser implementada no service
     // ou via @PostAuthorize, mas para simplicidade inicial, deixamos ADMIN com acesso total.
     // Para acesso mais refinado, o service pode verificar o usuário logado.
@@ -44,7 +44,7 @@ public class FolgaController {
     }
 
     // GET /api/folgas/user/{userId} - Listar folgas de um usuário específico
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')") // Admin pode ver qualquer um, USER pode ver as próprias
+    @PreAuthorize("hasAnyRole('ADMIN')") // Admin pode ver qualquer um, USER pode ver as próprias (Não é necessário, já que inclui as duas Roles)
     // Novamente, a verificação de se o USER pode ver *as próprias* deve ser feita no service ou via Spring Security
     // Exemplo: if (user logado != userId && !hasRole('ADMIN')) then throw 403
     @GetMapping("/user/{userId}")
