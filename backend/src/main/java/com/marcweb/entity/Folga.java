@@ -1,10 +1,13 @@
 package com.marcweb.entity;
 
+import com.marcweb.dto.CreateFolga;
+import com.marcweb.dto.UpdateFolga;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDate;
 
@@ -37,4 +40,14 @@ public class Folga {
     @Enumerated(EnumType.STRING) // Armazena o nome do enum como string no banco
     @Column(nullable = false, length = 30) // Define um tamanho razoável
     private TipoFolga tipo; // Tipo da folga (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
+
+
+    public Folga(User user, CreateFolga dados) {
+        this.user = user;
+        BeanUtils.copyProperties(dados, this);
+    }
+
+    public void updateFolga(UpdateFolga novosDados) {
+        BeanUtils.copyProperties(novosDados, this);
+    }
 }

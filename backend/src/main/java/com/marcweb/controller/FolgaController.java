@@ -44,7 +44,6 @@ public class FolgaController {
     }
 
     // GET /api/folgas/user/{userId} - Listar folgas de um usuário específico
-    @PreAuthorize("hasAnyRole('ADMIN')") // Admin pode ver qualquer um, USER pode ver as próprias (Não é necessário, já que inclui as duas Roles)
     // Novamente, a verificação de se o USER pode ver *as próprias* deve ser feita no service ou via Spring Security
     // Exemplo: if (user logado != userId && !hasRole('ADMIN')) then throw 403
     @GetMapping("/user/{userId}")

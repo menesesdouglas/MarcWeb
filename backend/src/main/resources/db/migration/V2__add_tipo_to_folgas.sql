@@ -1,5 +1,4 @@
 ALTER TABLE folgas
-<<<<<<< HEAD
     ADD COLUMN tipo VARCHAR(30) ;
 
 UPDATE folgas SET tipo = 'FALTA_JUSTIFICADA' WHERE tipo IS NULL;

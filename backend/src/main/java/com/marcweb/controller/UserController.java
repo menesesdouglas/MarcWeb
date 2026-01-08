@@ -45,7 +45,6 @@ public class UserController {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}")
     public void editUser(@PathVariable Long id, @RequestBody CreateUser data) {
