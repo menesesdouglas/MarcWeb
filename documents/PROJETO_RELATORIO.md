@@ -11,7 +11,7 @@
 | Métrica | Valor | Status |
 |---------|-------|--------|
 | Sprints Completas | 6/16 | 37.5% |
-| Bugs Críticos | 1 | 🔴 |
+| Bugs Críticos | 0 | 🔴 |
 | Bugs Corrigidos | 9/9 | ✅ |
 | Cobertura Testes | ~40% | 🟡 |
 | Funcionalidades MVP | 50% | 🟡 |
@@ -30,54 +30,6 @@
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript
 - **Build Tool:** Maven
 - **Testes:** JUnit 5, Mockito
-
----
-
-## 🔴 Bugs Críticos Encontrados
-
-### BUG-010: Query JPQL com Enum Incorreta
-**Arquivo:** `FeriadoRepository.java:24`  
-**Status:** ⚠️ PENDENTE DE CORREÇÃO  
-**Problema:**
-```java
-// Código atual (INCORRETO)
-f.origem = com.marcweb.entity.OrigemFeriado.MANUAL
-```
-**Solução:**
-```java
-// Correção necessária
-f.origem = 'MANUAL'
-```
-**Impacto:** Método `buscarRegistrosManuaisSemId()` e `atualizarFeriados()` scheduled falham
-
----
-
-## 🟡 Issues Médias
-
-### ISSUE-001: Método Inexistente em FolgaRepository
-**Referência:** Sprint 7 (FolhaPontoService)  
-**Problema:** `findByUserAndPeriodo(user, dataInicio, dataFim)` não existe  
-**Solução:** Criar método em `FolgaRepository`
-
-### ISSUE-002: Credenciais Expostas
-**Arquivo:** `application-dev.yml:4`  
-**Problema:** Senha "salfsa" em plaintext no repositório  
-**Solução:** Trocar por variável de ambiente `${POSTGRES_PASSWORD:changeme}`
-
-### ISSUE-003: Endpoint Faltante
-**Problema:** SDD especifica `GET /api/user` para listar usuários, não implementado  
-**Solução:** Criar endpoint com `@PreAuthorize("hasRole('ADMIN')")`
-
----
-
-## 🟢 Code Smells Identificados
-
-| ID | Localização | Problema | Ação |
-|----|-------------|----------|------|
-| CS-001 | GlobalExceptionHandler:82 | Handler genérico comentado | Remover |
-| CS-002 | SecurityConfig:36-37 | Endpoints comentados | Remover |
-| CS-003 | JwtService:39 | Comentário desatualizado | Remover |
-| CS-004 | DataConfigEmpresa.toEntity() | Duplicação lógica | Simplificar |
 
 ---
 
