@@ -105,18 +105,18 @@
 
 ---
 
-### **Sprint 7: Folha de Ponto Detalhada** ⭐ PRIORIDADE ALTA
+### **Sprint 7: Folha de Ponto Detalhada** 🔄 EM PROGRESSO (09/01/2026)
 **Objetivo:** Implementar geração de folha de ponto em JSON estruturado.
 
 **Tarefas:**
-- [ ] **Criar entidade `FolhaPonto`**
-  - Campos: `user_id`, `mes`, `ano`, `dados` (JSONB)
+- [x] **Criar entidade `FolhaPonto`** ✅ IMPLEMENTADO
+  - Campos: `user_id`, `mes`, `ano`, `dados` (TEXT para JSON)
   - Campos calculados: `horas_trabalhadas`, `horas_extras`, `dias_trabalhados`
-  - Criar migration `V2__add_folhas_ponto.sql`
-  - Criar índice: `idx_folhas_ponto_user_periodo`
+  - Criar migration `V3__add_folhas_ponto.sql`
+  - Criar índices: `idx_folhas_ponto_user_periodo`, `idx_folhas_ponto_periodo`
 - [ ] **Criar `FolhaPontoService`**
   - Método `gerarFolhaPonto(userId, mes, ano)`
-  - Buscar todos os registros do mês/ano
+  - Buscar todos os registros do mês
   - Agrupar registros por dia
   - Calcular horas trabalhadas por dia
   - Identificar tipo de dia (UTIL, DOMINGO, FERIADO, FOLGA)

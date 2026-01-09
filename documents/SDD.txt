@@ -157,7 +157,7 @@ marcweb/
 | **folgas** | Ausências individuais | ✅ Implementado |
 | **logs_auditoria** | Auditoria da empresa | ✅ Implementado |
 | **configs_empresa** | Configurações do sistema | ✅ Implementado |
-| **folhas_ponto** ⭐ | Folha mensal detalhada | 🔄 Sprint 7 |
+| **folhas_ponto** ⭐ | Folha mensal detalhada | ✅ Sprint 7 (Entity + Migration) |
 
 ### **3.2 Tabela: folhas_ponto (Nova)**
 
@@ -177,8 +177,11 @@ CREATE TABLE folhas_ponto (
     UNIQUE(user_id, mes, ano)
 );
 
-CREATE INDEX idx_folhas_ponto_user_periodo 
+CREATE INDEX idx_folhas_ponto_user_periodo
     ON folhas_ponto(user_id, ano, mes);
+
+CREATE INDEX idx_folhas_ponto_periodo
+    ON folhas_ponto(ano, mes);
 ```
 
 ### **3.3 Estrutura JSON da Folha de Ponto**
