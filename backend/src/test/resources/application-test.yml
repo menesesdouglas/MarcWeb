@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/marcweb_test
-    username: postgres
-    password: salfsa
+    username: marcuser_test
+    password: test123
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -17,8 +17,8 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     url: jdbc:postgresql://localhost:5432/marcweb_test
-    user: postgres
-    password: salfsa
+    user: marcuser_test
+    password: test123
 
 logging:
   level:
