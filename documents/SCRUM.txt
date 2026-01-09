@@ -523,6 +523,142 @@
 
 ---
 
+## **Fase 4: Conformidade Portaria 671/2021 (Sprints 17-18)**
+
+### **Sprint 17: Implementação de AEJ e Comprovantes**
+**Objetivo:** Implementar requisitos da Portaria 671/2021 para REP-P.
+
+**Tarefas:**
+- [ ] **Estudar Portaria 671/2021 e requisitos**
+  - Analisar requisitos para REP-P (Registro Eletrônico de Ponto via Programa)
+  - Documentar requisitos obrigatórios
+  - Criar checklist de conformidade
+- [ ] **Implementar Arquivo Eletrônico de Jornada (AEJ)**
+  - Estudar layout do AEJ conforme portaria
+  - Criar `AejService` para geração
+  - Implementar exportação conforme modelo oficial
+  - Adicionar assinatura eletrônica (ICP-Brasil)
+- [ ] **Implementar Comprovantes de Ponto**
+  - Gerar PDF para cada registro de ponto
+  - Utilizar assinatura PAdES conforme exigido
+  - Armazenar comprovantes no ARP
+  - Criar endpoint para download
+- [ ] **Integração com ICP-Brasil**
+  - Configurar certificado digital
+  - Implementar assinatura digital
+  - Testar validação de assinaturas
+- [ ] **Testes de conformidade**
+  - Verificar conformidade com requisitos da portaria
+  - Testar geração de AEJ
+  - Testar comprovantes de ponto
+
+**Entregas:**
+- Sistema em conformidade com Portaria 671/2021
+- Geração de AEJ funcional
+- Comprovantes de ponto com assinatura PAdES
+
+**Tempo Estimado:** 7-9 dias
+
+---
+
+### **Sprint 18: Armazenamento de Registro de Ponto (ARP)**
+**Objetivo:** Implementar Armazenamento de Registro de Ponto com redundância.
+
+**Tarefas:**
+- [ ] **Implementar ARP (Armazenamento de Registro de Ponto)**
+  - Criar tabela específica para ARP
+  - Implementar mecanismo de redundância
+  - Garantir imutabilidade dos registros
+  - Criar `ArpService` para gerenciamento
+- [ ] **Implementar auditoria completa**
+  - Registrar todas as operações (inclusão, exclusão, alteração)
+  - Registrar ajustes de relógio
+  - Registrar eventos sensíveis
+  - Registrar marcações de ponto
+- [ ] **Implementar backup e recuperação**
+  - Criar rotinas de backup automático
+  - Testar recuperação de dados
+  - Documentar procedimentos
+- [ ] **Testes de conformidade**
+  - Verificar imutabilidade dos dados
+  - Testar redundância
+  - Testar recuperação de dados
+
+**Entregas:**
+- ARP funcional com redundância
+- Auditoria completa de operações
+- Backup e recuperação de dados
+
+**Tempo Estimado:** 6-8 dias
+
+**Marco Fase 4:** Sistema em conformidade com Portaria 671/2021.
+
+---
+
+## **Fase 5: Preparação para Produção (Sprints 19-20)**
+
+### **Sprint 19: Configuração de Servidor Cloud**
+**Objetivo:** Configurar servidor Hetzner Cloud para produção.
+
+**Tarefas:**
+- [ ] **Configurar servidor Hetzner Cloud**
+  - Criar conta e configurar servidor
+  - Configurar firewall e segurança
+  - Instalar dependências (Docker, Java, etc.)
+- [ ] **Configurar ambiente de produção**
+  - Configurar domínios e SSL
+  - Configurar banco de dados PostgreSQL
+  - Configurar monitoramento básico
+- [ ] **Implementar CI/CD**
+  - Configurar pipeline de deploy
+  - Configurar testes automáticos
+  - Configurar notificações
+- [ ] **Testes de ambiente**
+  - Testar deploy no servidor
+  - Testar performance
+  - Testar segurança
+
+**Entregas:**
+- Servidor Hetzner Cloud configurado
+- Ambiente de produção funcional
+- CI/CD implementado
+
+**Tempo Estimado:** 5-7 dias
+
+---
+
+### **Sprint 20: Deploy em Produção**
+**Objetivo:** Deploy final do sistema em produção.
+
+**Tarefas:**
+- [ ] **Deploy final do sistema**
+  - Deploy de todos os serviços
+  - Configurar balanceamento de carga
+  - Configurar backup automático
+- [ ] **Testes finais**
+  - Testar fluxo completo em produção
+  - Testar performance com carga real
+  - Testar recuperação de desastres
+- [ ] **Documentação final**
+  - Manual de operação
+  - Manual de manutenção
+  - Documentação de API
+- [ ] **Lançamento oficial**
+  - Preparar materiais de lançamento
+  - Configurar monitoramento contínuo
+  - Configurar suporte
+
+**Entregas:**
+- Sistema em produção
+- Documentação completa
+- Monitoramento contínuo
+
+**Tempo Estimado:** 5-7 dias
+
+**Marco Final:** Sistema em produção e operacional.
+
+---
+
 ## **📈 Métricas de Sucesso**
 
 **MVP (Sprint 12):**
@@ -539,4 +675,15 @@
 - [ ] Deploy automatizado
 - [ ] Monitoramento funcional
 
+**Conformidade (Sprint 18):**
+- [ ] Sistema em conformidade com Portaria 671/2021
+- [ ] AEJ gerado conforme modelo
+- [ ] Comprovantes de ponto com assinatura PAdES
+- [ ] ARP funcional com redundância
+
+**Produção (Sprint 20):**
+- [ ] Sistema em produção estável
+- [ ] Monitoramento contínuo
+- [ ] Backup e recuperação funcionais
+- [ ] Documentação completa
 ---
