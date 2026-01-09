@@ -36,9 +36,9 @@ Este documento define o design do **Marc Web**, priorizando o **MVP funcional** 
 - ✅ Auditoria de ações
 
 #### **Funcionalidades Futuras:**
-- 🔄 Contracheque completo (após MVP estável)
 - 🔄 Arquitetura multi-tenant com Eureka
 - 🔄 Dashboard analytics avançado
+- 🔄 Conformidade completa com Portaria 671/2021 (AEJ, ARP, assinaturas digitais)
 
 ---
 
@@ -769,27 +769,51 @@ services:
 - Otimização de queries
 - Code review
 
-### **Fase 2: Multi-tenant (Sprints 13-16)**
-
-**Sprint 13:** Infraestrutura Multi-tenant
-- Setup Eureka Server
-- Setup API Gateway
-- Configuração de roteamento
-
-**Sprint 14:** Biblioteca Compartilhada
-- Criação de `empresa-common-lib`
-- Migração de DTOs e interfaces
-- Publicação no Maven local
-
-**Sprint 15:** Implementação Multi-empresa
-- Template de empresa
-- Criação de 2-3 empresas exemplo
-- Comunicação via Feign
-
-**Sprint 16:** Deploy e Testes Finais
-- Docker Compose
-- Testes end-to-end
-- Documentação completa
+### **Fase 2: Multi-tenant (Sprints 13-16)**  
+  
+**Sprint 13:** Infraestrutura Multi-tenant  
+- Setup Eureka Server  
+- Setup API Gateway  
+- Configuração de roteamento  
+  
+**Sprint 14:** Biblioteca Compartilhada  
+- Criação de `empresa-common-lib`  
+- Migração de DTOs e interfaces  
+- Publicação no Maven local  
+  
+**Sprint 15:** Implementação Multi-empresa  
+- Template de empresa  
+- Criação de 2-3 empresas exemplo  
+- Comunicação via Feign  
+  
+**Sprint 16:** Deploy e Testes Finais  
+- Docker Compose  
+- Testes end-to-end  
+- Documentação completa  
+  
+### **Fase 3: Conformidade Portaria 671/2021 (Sprints 17-18)**  
+  
+**Sprint 17:** Implementação de AEJ e Comprovantes  
+- Geração de Arquivo Eletrônico de Jornada (AEJ)  
+- Comprovantes de ponto em PDF com assinatura PAdES  
+- Integração com ICP-Brasil para assinaturas digitais  
+  
+**Sprint 18:** Armazenamento de Registro de Ponto (ARP)  
+- Implementação de ARP com redundância  
+- Mecanismo de imutabilidade de registros  
+- Auditoria completa de todas as operações  
+  
+### **Fase 4: Preparação para Produção (Sprints 19-20)**  
+  
+**Sprint 19:** Configuração de Servidor Cloud  
+- Setup de servidor Hetzner Cloud  
+- Configuração de firewall e segurança  
+- Monitoramento e alertas  
+  
+**Sprint 20:** Deploy em Produção  
+- Dockerização completa  
+- Backup e recuperação de desastres  
+- Documentação de produção  
 
 ---
 

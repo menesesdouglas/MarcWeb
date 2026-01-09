@@ -39,9 +39,11 @@
 - [x] Migration V2 para novos campos de auditoria e tipos de folga.
 
 #### **Sprint 7: Folha de Ponto Detalhada ⭐ PRIORIDADE ALTA**
-- [ ] Criar entidade `FolhaPonto` com dados em JSONB.
-- [ ] Implementar motor de cálculo: Horas Trabalhadas vs. Horas Extras vs. Débitos.
-- [ ] Criar endpoints de consulta para colaborador (`/me`) e gestor.
+- [x] Criar entidade `FolhaPonto` com dados em JSONB.
+- [x] Migration V3 para tabela folhas_ponto.
+- [ ] Implementar FolhaPontoRepository.
+- [ ] Implementar FolhaPontoService com motor de cálculo.
+- [ ] Criar FolhaPontoController com endpoints REST.
 - [ ] Implementar lógica de fechamento mensal.
 
 #### **Sprint 8: Sistema de Logs Unificado**
@@ -64,6 +66,34 @@
 * **Sprint 14:** Comunicação entre micro-módulos via Feign Clients.
 * **Sprint 15:** Implementação de isolamento físico de bancos por empresa.
 * **Sprint 16:** Dockerização completa, Monitoramento e Deploy.
+
+---
+
+### **Fase 4: Conformidade Portaria 671/2021 (Sprints 17-18)**
+
+* **Sprint 17:** Implementação de AEJ e Comprovantes
+  - Geração de Arquivo Eletrônico de Jornada (AEJ)
+  - Comprovantes de ponto em PDF com assinatura PAdES
+  - Integração com ICP-Brasil para assinaturas digitais
+
+* **Sprint 18:** Armazenamento de Registro de Ponto (ARP)
+  - Implementação de ARP com redundância
+  - Mecanismo de imutabilidade de registros
+  - Auditoria completa de todas as operações
+
+---
+
+### **Fase 5: Preparação para Produção (Sprints 19-20)**
+
+* **Sprint 19:** Configuração de Servidor Cloud
+  - Setup de servidor Hetzner Cloud
+  - Configuração de firewall e segurança
+  - Monitoramento e alertas
+
+* **Sprint 20:** Deploy em Produção
+  - Dockerização completa
+  - Backup e recuperação de desastres
+  - Documentação de produção
 
 ---
 
