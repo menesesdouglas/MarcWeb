@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/marcweb_test
-    username: marcuser_test
-    password: test123
+    username: ${POSTGRE_USER_TEST}
+    password: ${POSTGRE_PASSWORD_TEST}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

@@ -20,6 +20,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -30,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RegistroPontoServiceValidationTest {
@@ -62,11 +67,29 @@ class RegistroPontoServiceValidationTest {
         testUser.setRole(Role.EMPLOYEE);
 
         when(userService.findByUsername(anyString())).thenReturn(testUser);
+
+        // Configurar o SecurityContext para os testes
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username("test.user")
+                .password("password")
+                .roles("EMPLOYEE")
+                .build();
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+        SecurityContextHolder.setContext(securityContext);
+
+        // Configurar mock padrão para ConfigEmpresaService (geolocalização desativada)
+        ConfigEmpresa defaultConfig = ConfigEmpresa.builder()
+                .geolocAtiva(false)
+                .build();
+        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(defaultConfig));
     }
 
     @Test
     void validarRegistro_PrimeiroRegistroDeveSerEntrada() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.ENTRADA);
@@ -77,6 +100,7 @@ class RegistroPontoServiceValidationTest {
     @Test
     void validarRegistro_PrimeiroRegistroNaoEntradaDeveFalhar() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.INICIO_DESCANSO);
@@ -89,6 +113,7 @@ class RegistroPontoServiceValidationTest {
     void validarRegistro_SequenciaInvalidaDeveFalhar() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong()))
             .thenReturn(TipoRegistro.ENTRADA);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.SAIDA);
@@ -101,6 +126,7 @@ class RegistroPontoServiceValidationTest {
     void validarRegistro_SequenciaValidaEntradaParaInicioDescanso() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong()))
             .thenReturn(TipoRegistro.ENTRADA);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.INICIO_DESCANSO);
@@ -112,6 +138,7 @@ class RegistroPontoServiceValidationTest {
     void validarRegistro_SequenciaValidaInicioParaFimDescanso() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong()))
             .thenReturn(TipoRegistro.INICIO_DESCANSO);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.FIM_DESCANSO);
@@ -123,6 +150,7 @@ class RegistroPontoServiceValidationTest {
     void validarRegistro_SequenciaValidaFimDescansoParaSaida() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong()))
             .thenReturn(TipoRegistro.FIM_DESCANSO);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.SAIDA);
@@ -134,6 +162,7 @@ class RegistroPontoServiceValidationTest {
     void validarRegistro_SequenciaValidaSaidaParaEntrada() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong()))
             .thenReturn(TipoRegistro.SAIDA);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.ENTRADA);
@@ -144,6 +173,7 @@ class RegistroPontoServiceValidationTest {
     @Test
     void validarDiaUtil_DomingoDeveFalhar() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         // Simular domingo
         LocalDateTime domingo = LocalDateTime.of(2026, 1, 4, 10, 0); // 04/01/2026 é domingo
@@ -162,6 +192,7 @@ class RegistroPontoServiceValidationTest {
     @Test
     void validarDiaUtil_SabadoDevePermitir() {
         when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         // Simular sábado
         LocalDateTime sabado = LocalDateTime.of(2026, 1, 3, 10, 0); // 03/01/2026 é sábado

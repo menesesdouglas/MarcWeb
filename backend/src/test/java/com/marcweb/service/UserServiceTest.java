@@ -57,7 +57,7 @@ class UserServiceTest {
 
     @Test
     void createUser_Success() {
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded_password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
@@ -67,19 +67,19 @@ class UserServiceTest {
 
         assertDoesNotThrow(() -> userService.createUser(validUserRequest));
 
-        verify(userRepository, times(1)).findByUsername("new.user");
+        verify(userRepository, times(1)).existsByUsername("new.user");
         verify(passwordEncoder, times(1)).encode("password123");
         verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
     void createUser_DuplicateUsername() {
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(existingUser));
+        when(userRepository.existsByUsername(anyString())).thenReturn(true);
 
         assertThrows(UsernameDuplicatedException.class,
             () -> userService.createUser(validUserRequest));
 
-        verify(userRepository, times(1)).findByUsername("new.user");
+        verify(userRepository, times(1)).existsByUsername("new.user");
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any(User.class));
     }
@@ -116,7 +116,7 @@ class UserServiceTest {
         adminRequest.setRole(Role.ADMIN);
         adminRequest.setConsentGeoloc(false);
 
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded_admin_password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
@@ -126,7 +126,7 @@ class UserServiceTest {
 
         assertDoesNotThrow(() -> userService.createUser(adminRequest));
 
-        verify(userRepository, times(1)).findByUsername("admin.user");
+        verify(userRepository, times(1)).existsByUsername("admin.user");
         verify(passwordEncoder, times(1)).encode("admin123");
         verify(userRepository, times(1)).save(any(User.class));
     }
@@ -140,7 +140,7 @@ class UserServiceTest {
         consentRequest.setRole(Role.EMPLOYEE);
         consentRequest.setConsentGeoloc(true);
 
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded_password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
@@ -150,7 +150,7 @@ class UserServiceTest {
 
         assertDoesNotThrow(() -> userService.createUser(consentRequest));
 
-        verify(userRepository, times(1)).findByUsername("consent.user");
+        verify(userRepository, times(1)).existsByUsername("consent.user");
         verify(passwordEncoder, times(1)).encode("password123");
         verify(userRepository, times(1)).save(any(User.class));
     }
