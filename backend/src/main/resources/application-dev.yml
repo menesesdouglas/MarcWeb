@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/marcweb_dev
+    url: ${DB_URL_DEV}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}   # Configure via variável de ambiente
     driver-class-name: org.postgresql.Driver

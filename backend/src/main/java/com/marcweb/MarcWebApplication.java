@@ -24,7 +24,7 @@ import java.util.List; // Import necessário
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().directory("backend").load();
+        Dotenv dotenv = Dotenv.configure().load();
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
         SpringApplication.run(MarcWebApplication.class, args);
     }
