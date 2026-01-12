@@ -97,4 +97,10 @@ public class UserService {
                 .map(UserResponse::new); // Converte cada User da página em UserResponse
     }
 
+
+    public User findById(Long id) {
+        return repository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+    }
+
+
 }

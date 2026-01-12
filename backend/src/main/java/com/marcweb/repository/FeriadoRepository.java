@@ -24,4 +24,6 @@ public interface FeriadoRepository extends JpaRepository<Feriado, Long> {
     // Corrigido: Usando o nome completo do enum e da constante
     @Query("Select new Feriado(f.data, f.nome, f.origem) from Feriado f where f.origem = 'MANUAL' and f.data between :start and :end")
     List<Feriado> buscarRegistrosManuaisSemId(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+
 }

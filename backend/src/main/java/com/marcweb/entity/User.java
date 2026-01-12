@@ -52,15 +52,15 @@ public class User implements UserDetails {
     @Column(name = "created_at")
     private LocalDateTime createdAt; // Data de criação
 
-    // Relacionamentos
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    /* Relacionamentos
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<RegistroPonto> registrosPonto;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Folga> folgas;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<LogAuditoria> logsAuditoria;
+    private List<LogAuditoria> logsAuditoria;*/
 
     // Implementação de UserDetails
     @Override

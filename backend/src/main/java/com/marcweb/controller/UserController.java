@@ -2,14 +2,14 @@ package com.marcweb.controller;
 
 import com.marcweb.dto.CreateUser;
 import com.marcweb.dto.UserResponse; // Import necessário
+import com.marcweb.entity.User;
+import com.marcweb.repository.UserRepository;
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page; // Import para paginação (opcional)
-import org.springframework.data.domain.Pageable; // Import para paginação (opcional)
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List; // Import necessário para findAll sem paginação
@@ -20,6 +20,7 @@ import java.util.List; // Import necessário para findAll sem paginação
 public class UserController {
 
     private final UserService service;
+    private final UserRepository repository;
 
     // NOVO Endpoint: Listar todos os usuários
     @PreAuthorize("hasRole('ADMIN')")
@@ -28,7 +29,7 @@ public class UserController {
         return service.findAll();
     }
 
-    // (Opcional) Endpoint com paginação
+    // Endpoint com paginação
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(params = "pageNumber")
     public Page<UserResponse> findAllUsers(@RequestParam int pageNumber) { // Retorna Page<UserResponse> com paginação
@@ -56,6 +57,13 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         service.deleteUser(id);
+    }
+
+
+    // VISUALIZANDO O ENTIDADE DE USUÁRIO
+    @GetMapping("/teste")
+    public User get(){
+        return repository.findById(2L).orElse(null);
     }
 
 }

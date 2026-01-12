@@ -5,7 +5,6 @@ import com.marcweb.dto.FolgaResponse;
 import com.marcweb.dto.UpdateFolga;
 import com.marcweb.entity.Folga;
 import com.marcweb.entity.Role;
-import com.marcweb.entity.TipoFolga;
 import com.marcweb.entity.User;
 import com.marcweb.repository.FolgaRepository;
 import com.marcweb.repository.UserRepository;
@@ -13,14 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,6 +112,18 @@ public class FolgaService {
         } catch (EmptyResultDataAccessException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id);
         }
+    }
+
+    public boolean existsByUserAndDate(Long idUser, LocalDate data){
+        return folgaRepository.existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual
+                (idUser, data, data);
+    }
+
+    // BUSCANDO FOLGAS EM UM DETERMINADO PERIODO
+    public List<Folga> findByPeriodo(Long userId, LocalDate start, LocalDate end){
+        return folgaRepository.findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqual(
+                userId, start, end
+        );
     }
 
     // --- Validation Helper ---

@@ -24,18 +24,25 @@ public interface FolgaRepository extends JpaRepository<Folga, Long> {
            ":dataFim >= f.dataInicio AND :dataInicio <= f.dataFim " +
            "AND (:folgaId IS NULL OR f.id != :folgaId)")
     List<Folga> findByUserAndPeriodoSobrepostoExcluindoId(
-        @Param("userId") Long userId,
-        @Param("dataInicio") LocalDate dataInicio,
-        @Param("dataFim") LocalDate dataFim,
-        @Param("folgaId") Long folgaId); // Pode ser null para novos registros
+            @Param("userId") Long userId,
+            @Param("dataInicio") LocalDate dataInicio,
+            @Param("dataFim") LocalDate dataFim,
+            @Param("folgaId") Long folgaId); // Pode ser null para novos registros
 
 
-    // Métodos existentes mantidos
-    List<Folga> findByUserAndDataInicioLessThanEqualAndDataFimGreaterThanEqual(
-        User user, LocalDate dataFim, LocalDate dataInicio);
+    // UTILIZADO PARA SABER SE EXISTE UMA FOLGA EM UM CERTO INTERVALO
+    // USADO PARA VALIDAR SE EXISTE FOLGA NO DIA EM QUE UM PONTO TENTA SER BATIDO
+    boolean existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual(
+            Long idUser, LocalDate dataInicio, LocalDate dataFim);
+
+
+    // BUSCANDO POR PERIODO ESPECIFICO
+    List<Folga> findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqual(
+            Long idUser, LocalDate dataInicio, LocalDate dataFim);
 
     List<Folga> findByUserAndDataInicioBetweenOrUserAndDataFimBetween(
             User user, LocalDate start1, LocalDate end1, User user2, LocalDate start2, LocalDate end2);
+
 
     // Outros métodos específicos, se necessário
 }

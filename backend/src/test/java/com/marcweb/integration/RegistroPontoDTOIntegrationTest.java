@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class RegistroPontoIntegrationTest {
+class RegistroPontoDTOIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

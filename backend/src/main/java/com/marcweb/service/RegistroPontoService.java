@@ -7,11 +7,7 @@ import com.marcweb.entity.Feriado; // Import necessário
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
-import com.marcweb.exceptions.GeolocalizacaoObrigatoriaException;
-import com.marcweb.exceptions.RegistroEmDomingoException;
-import com.marcweb.exceptions.RegistroEmFeriadoException;
-import com.marcweb.exceptions.RegistroForaDoRaioException;
-import com.marcweb.exceptions.RegistroPontoSequenciaInvalidaException;
+import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário
 import com.marcweb.repository.RegistroPontoRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +29,7 @@ public class RegistroPontoService {
     private final RegistroPontoRepository repository;
     private final ConfigEmpresaService configEmpresaService; // Injetando o serviço de configuração
     private final FeriadoRepository feriadoRepository; // Injetando o repositório de feriados
+    private final FolgaService folgaService;
 
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
@@ -40,9 +37,15 @@ public class RegistroPontoService {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
 
+        var dataAtual = LocalDate.now();
+
+        // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
+        // **** TROCAR A EXCEPTION DEPOIS *****
+        if(folgaService.existsByUserAndDate(user.getId(), dataAtual)) throw new RegistroEmFolgaException();
+
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
-        validarDiaUtil(LocalDateTime.now()); // <-- Usando LocalDateTime.now()
+        validarDiaUtil(dataAtual); // <-- Usando LocalDateTime.now()
 
         // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
         ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
@@ -57,17 +60,16 @@ public class RegistroPontoService {
     }
 
     // VALIDANDO DIA ÚTIL
-    private void validarDiaUtil(LocalDateTime momentoRegistro) { // Recebe LocalDateTime
-        LocalDate dataRegistro = momentoRegistro.toLocalDate(); // Converte para LocalDate para verificar o dia da semana e feriados
+    private void validarDiaUtil(LocalDate momentoRegistro) { // Recebe LocalDateTime
 
         // Verifica se é domingo (DayOfWeek.SUNDAY)
-        if (dataRegistro.getDayOfWeek() == DayOfWeek.SUNDAY) {
+        if (momentoRegistro.getDayOfWeek() == DayOfWeek.SUNDAY) {
             throw new RegistroEmDomingoException("Não é permitido registrar ponto no domingo.");
         }
 
         // Verifica se é feriado cadastrado
         // findByData retorna List<Feriado>. Se a lista não estiver vazia, é feriado.
-        List<Feriado> feriadosNaData = feriadoRepository.findByData(dataRegistro);
+        List<Feriado> feriadosNaData = feriadoRepository.findByData(momentoRegistro);
         if (!feriadosNaData.isEmpty()) { // Se a lista NÃO está vazia, encontrou-se um feriado
             // Pode usar o primeiro feriado encontrado para a mensagem
             Feriado feriado = feriadosNaData.get(0);
@@ -94,9 +96,9 @@ public class RegistroPontoService {
             Double latEmpresa = config.getLatCentro();
             Double lonEmpresa = config.getLongCentro();
             if (latEmpresa == null || lonEmpresa == null) {
-                 // Poderia lançar uma exceção específica de configuração inválida ou retornar um erro amigável
-                 // Para este caso, lançamos uma exceção informando que a configuração está incompleta.
-                 throw new IllegalStateException("Coordenadas da empresa não configuradas. Contate o administrador.");
+                // Poderia lançar uma exceção específica de configuração inválida ou retornar um erro amigável
+                // Para este caso, lançamos uma exceção informando que a configuração está incompleta.
+                throw new IllegalStateException("Coordenadas da empresa não configuradas. Contate o administrador.");
             }
 
             // Calcula a distância
@@ -105,8 +107,8 @@ public class RegistroPontoService {
             // Verifica se a distância está dentro do raio permitido
             if (distancia > config.getRaioGeoloc()) {
                 throw new RegistroForaDoRaioException(
-                    String.format("Registro fora do raio permitido. Distância calculada: %.2f metros. Raio permitido: %d metros.",
-                        distancia, config.getRaioGeoloc())
+                        String.format("Registro fora do raio permitido. Distância calculada: %.2f metros. Raio permitido: %d metros.",
+                                distancia, config.getRaioGeoloc())
                 );
             }
         }
@@ -120,8 +122,8 @@ public class RegistroPontoService {
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+                   + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                     * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distanceInKm = R * c; // Distância em quilômetros
         return distanceInKm * 1000; // Converte para metros
@@ -164,10 +166,26 @@ public class RegistroPontoService {
         return repository.findByUserAndTimestampBetweenOrderByTimestampAsc(user, start, end);
     }
 
+    // COLETANDO IP DO USUÁRIO ATRAVÉZ DA REQUISIÇÃO
     private String getIpUser(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
         else ip = ip.split(",")[0];
         return ip;
+    }
+
+
+    // BSCANDO PONTOS DE UM USUÁRIO BATIDOS EM UM MES DE UM ANO ESPECIFICO
+    public List<RegistroPonto> findByMesAno(Long userId, int mes, int ano) {
+        // PRIMEIRO DIA DO MÊS                      ANO - MES - DIA DO MES - HORA - MINUTO
+        LocalDateTime inicioMes = LocalDateTime.of(ano, mes, 1, 0, 0);
+
+        // ULTIMO DIA DO MES VERIFICANDO SE O ANO É BISSEXTO OU NÃO
+        LocalDateTime finalMes = inicioMes.plusDays(inicioMes.getMonth().length(inicioMes.toLocalDate().isLeapYear()));
+        // USANDO O ID PARA REFERENCIAR A CHAVE ESTRANGEIRA
+        var user = User.builder().id(userId).build();
+        return repository.buscarRegistrosEmIntervaloDeData(
+                user, inicioMes, finalMes
+        );
     }
 }

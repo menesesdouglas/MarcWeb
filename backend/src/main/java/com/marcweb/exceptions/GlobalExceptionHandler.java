@@ -59,6 +59,29 @@ public class GlobalExceptionHandler {
         return e.getMessage();
     }
 
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(FolhaPontoDuplicadaException.class)
+    public String handlerFolhaPontoDuplicadaException(FolhaPontoDuplicadaException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(SemRegistrosException.class)
+    public String handlerSemRegistrosException(SemRegistrosException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(RegistroEmFolgaException.class)
+    public String handlerRegistroEmFolgaException(RegistroEmFolgaException e) {
+        log.warn(e.getMessage());
+        return e.getMessage();
+    }
+
     // --- NOVAS EXCEÇÕES PARA DIA ÚTIL ---
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroEmDomingoException.class)
