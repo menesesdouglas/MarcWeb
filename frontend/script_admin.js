@@ -17,7 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Formulário de Ajuste
     document.getElementById('adjustmentForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        alert('Ajuste de ponto realizado com sucesso para o banco de dados!');
+        const employee = document.getElementById('adjEmployee').value;
+        const date = document.getElementById('adjDate').value;
+        const status = document.getElementById('adjStatus').value;
+        const time = document.getElementById('adjTime').value;
+        const justification = document.getElementById('adjJustification').value;
+
+        alert(`Ajuste de ponto realizado com sucesso!\n\nFuncionário: ${employee}\nData: ${date}\nStatus: ${status}\nHorário: ${time}\nJustificativa: ${justification}`);
         e.target.reset();
     });
 
@@ -94,6 +100,7 @@ function populateSelects() {
 // Modal Logic
 function openModal(type) {
     document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalOverlay').style.animation = 'fadeIn 0.3s ease';
     if(type === 'add') {
         document.getElementById('modalTitle').textContent = 'Cadastrar Funcionário';
         document.getElementById('employeeForm').reset();
@@ -102,8 +109,23 @@ function openModal(type) {
 }
 
 function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
+    const overlay = document.getElementById('modalOverlay');
+    overlay.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        overlay.style.animation = '';
+    }, 300);
 }
+
+// Add fadeOut animation to CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
 
 function editEmployee(index) {
     const emp = employees[index];

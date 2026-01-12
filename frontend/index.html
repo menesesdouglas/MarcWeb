@@ -3,78 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarcWeb | Controle de Ponto Inteligente</title>
+    <title>MarcWeb | Sistema de Ponto Eletrônico</title>
     <link rel="stylesheet" href="custom-styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <header class="navbar">
-        <div class="container">
+    <div class="welcome-container">
+        <header class="welcome-header">
             <div class="logo">Marc<span>Web</span></div>
-            <nav>
+            <nav class="main-nav">
                 <a href="#features">Funcionalidades</a>
-                <a href="#about">Sobre</a>
-                <a href="#" class="btn-login">Login</a>
+                <a href="#benefits">Benefícios</a>
+                <a href="login.html" class="btn-login">Login</a>
             </nav>
-        </div>
-    </header>
+        </header>
 
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Gestão de ponto online, <span class="text-gradient">segura e em tempo real.</span></h1>
-                <p>O MarcWeb simplifica o controle de jornada da sua empresa com tecnologia de ponta, conformidade jurídica e relatórios inteligentes.</p>
-                <div class="hero-btns">
-                    <a href="#contact" class="btn-primary">Solicitar Orçamento</a>
-                    <a href="#features" class="btn-secondary">Conhecer Planos</a>
+        <main class="welcome-content">
+            <section class="hero-section">
+                <div class="hero-text">
+                    <h1>Sistema de Ponto Eletrônico Web</h1>
+                    <p>Gestão de jornada de trabalho segura, conforme e em tempo real</p>
                 </div>
-            </div>
-            <div class="hero-visual">
-                <div class="dashboard-mockup">
-                    <div class="circle-effect"></div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Por que escolher o MarcWeb?</h2>
-                <p>A solução completa para RHs que buscam eficiência e transparência.</p>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card reveal">
-                    <div class="icon"⚖️</div>
-                    <h3>Segurança Jurídica</h3>
-                    <p>Totalmente adequado às portarias do Ministério do Trabalho e LGPD.</p>
+                <div class="hero-actions">
+                    <a href="login.html" class="btn-primary">Acessar Sistema</a>
+                    <a href="#learn-more" class="btn-secondary">Saiba Mais</a>
                 </div>
-                <div class="feature-card reveal">
-                    <div class="icon">📱</div>
-                    <h3>Multiplataforma</h3>
-                    <p>Registre o ponto via Web, App Mobile ou Reconhecimento Facial.</p>
-                </div>
-                <div class="feature-card reveal">
-                    <div class="icon">📊</div>
-                    <h3>Dashboards</h3>
-                    <p>Visão completa de horas extras, faltas e banco de horas em segundos.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <footer id="contact">
-        <div class="container">
-            <h2>Pronto para modernizar seu RH?</h2>
-            <p>Fale com um de nossos especialistas e receba uma proposta personalizada.</p>
-            <a href="https://wa.me/seunumeroaqui" class="btn-primary">Falar com Consultor</a>
+            <section id="features" class="system-features">
+                <h2>Funcionalidades Principais</h2>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📅</div>
+                        <h3>Registro de Ponto Completo</h3>
+                        <p>Registre entradas, saídas e intervalos com validação automática de sequência e horários</p>
+                        <ul>
+                            <li>Validação de sequência obrigatória</li>
+                            <li>Bloqueio automático de domingos e feriados</li>
+                            <li>Geolocalização opcional com raio configurável</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Folha de Ponto Detalhada</h3>
+                        <p>Geração automática de folhas de ponto mensais com todos os detalhes necessários</p>
+                        <ul>
+                            <li>Cálculo automático de horas trabalhadas</li>
+                            <li>Identificação de horas extras e débitos</li>
+                            <li>Exportação em PDF profissional</li>
+                            <li>JSON estruturado para integrações</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Conformidade Legal</h3>
+                        <p>Totalmente adequado às portarias do Ministério do Trabalho</p>
+                        <ul>
+                            <li>Conformidade com Portaria 671/2021</li>
+                            <li>Registro de ponto com validações jurídicas</li>
+                            <li>Auditoria completa de todas as ações</li>
+                            <li>Logs imutáveis para segurança jurídica</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="benefits" class="system-benefits">
+                <h2>Benefícios para sua Empresa</h2>
+
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">✅</div>
+                        <h3>Segurança Jurídica</h3>
+                        <p>Proteção contra ações trabalhistas com registros auditáveis e imutáveis</p>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">✅</div>
+                        <h3>Eficiência Operacional</h3>
+                        <p>Redução de tempo na gestão de ponto e cálculo de horas</p>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">✅</div>
+                        <h3>Acesso Multiplataforma</h3>
+                        <p>Registre ponto via web, mobile ou reconhecimento facial</p>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">✅</div>
+                        <h3>Relatórios Inteligentes</h3>
+                        <p>Dashboards completos com análise de horas extras, faltas e produtividade</p>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">✅</div>
+                        <h3>Integração Fácil</h3>
+                        <p>API REST para integração com outros sistemas de RH</p>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">✅</div>
+                        <h3>Escalabilidade</h3>
+                        <p>Arquitetura preparada para crescimento e múltiplas empresas</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="system-info">
+                <h2>Como Funciona o MarcWeb</h2>
+
+                <div class="info-content">
+                    <p>O MarcWeb é um sistema de ponto eletrônico web que simplifica o controle de jornada da sua empresa com tecnologia de ponta, conformidade jurídica e relatórios inteligentes.</p>
+
+                    <div class="info-steps">
+                        <div class="info-step">
+                            <div class="step-number">1</div>
+                            <h3>Registro de Ponto</h3>
+                            <p>Funcionários registram entradas, saídas e intervalos através de interface web ou mobile</p>
+                        </div>
+
+                        <div class="info-step">
+                            <div class="step-number">2</div>
+                            <h3>Validação Automática</h3>
+                            <p>O sistema valida sequências, horários, geolocalização e bloqueia registros em dias não permitidos</p>
+                        </div>
+
+                        <div class="info-step">
+                            <div class="step-number">3</div>
+                            <h3>Geração de Relatórios</h3>
+                            <p>Folhas de ponto detalhadas são geradas automaticamente com cálculos precisos</p>
+                        </div>
+
+                        <div class="info-step">
+                            <div class="step-number">4</div>
+                            <h3>Acesso e Exportação</h3>
+                            <p>Administradores acessam relatórios completos e podem exportar em PDF para conformidade</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">Marc<span>Web</span></div>
+                    <p>Sistema de Ponto Eletrônico Web</p>
+                </div>
+
+<div class="footer-cta">
+    <h2>Pronto para modernizar seu controle de ponto?</h2>
+    <p>Experimente o MarcWeb e tenha gestão de jornada segura, conforme e eficiente</p>
+    <a href="contato-financeiro.html" class="btn-cta">Solicitar Demonstração</a>
+</div>
+            </div>
+
             <div class="footer-bottom">
-                <p>&copy; 2026 MarcWeb - Todos os direitos reservados.</p>
+                <p>&copy; 2026 MarcWeb. Todos os direitos reservados.</p>
+                <div class="footer-links">
+                    <a href="#">Política de Privacidade</a>
+                    <a href="#">Termos de Uso</a>
+                    <a href="#">Suporte</a>
+                </div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
     <script src="script.js"></script>
 </body>

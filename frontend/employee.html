@@ -7,6 +7,25 @@
     <link rel="stylesheet" href="custom-styles_employee.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos adicionais para ícones modernos */
+        .punch-btn[data-type="Entrada"] .icon::before { content: "🚀"; }
+        .punch-btn[data-type="Início Descanso"] .icon::before { content: "☕"; }
+        .punch-btn[data-type="Fim Descanso"] .icon::before { content: "⏳"; }
+        .punch-btn[data-type="Saída"] .icon::before { content: "🏁"; }
+
+        /* Animação de loading para o corpo */
+        body.loading {
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Efeito de fade para transições */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
 </head>
 <body>
 
