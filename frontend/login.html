@@ -20,12 +20,15 @@
             <form id="loginForm">
                 <div class="input-group">
                     <label for="company">Empresa</label>
-                    <select id="company" required>
-                        <option value="" disabled selected>Selecione sua empresa</option>
-                        <option value="matriz">MarcWeb Matriz</option>
-                        <option value="filial_sp">Filial São Paulo</option>
-                        <option value="cliente_demo">Cliente Demonstração</option>
-                    </select>
+                    <div class="select-wrapper">
+                        <select id="company" required>
+                            <option value="" disabled selected>Selecione sua empresa</option>
+                            <option value="matriz">MarcWeb Matriz</option>
+                            <option value="filial_sp">Filial São Paulo</option>
+                            <option value="cliente_demo">Cliente Demonstração</option>
+                        </select>
+                        <div class="select-icon">▼</div>
+                    </div>
                 </div>
 
                 <div class="input-group">
