@@ -5,6 +5,7 @@ import com.marcweb.dto.LoginRequest;
 import com.marcweb.dto.LoginResponse;
 import com.marcweb.entity.User;
 import com.marcweb.security.JwtService;
+import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager; // Injeta o gerenciador de autenticação
     private final JwtService jwtService; // Injeta o serviço JWT
     private final UserService userService;
+    private final LogAuditoriaService logAuditoriaService;
 
     @PostMapping("/login") // Mapeia requisições POST para /api/auth/login
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) { // Recebe LoginRequest no body

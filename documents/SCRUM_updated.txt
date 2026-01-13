@@ -1,0 +1,627 @@
+# **Plano SCRUM Marc Web - MVP First**
+**16 Sprints Focadas em Lógica de Negócio + Multi-tenant Futuro + Frontend Completo**
+
+---
+
+## **Fase 1: Fundação (Sprints 1-4)** ✅ COMPLETO
+
+### **Sprint 1: Setup Geral & Infra** ✅ 30/12/2025
+- ✅ Ambientes funcionais (PC + Notebook)
+- ✅ PostgreSQL `marcweb_dev`
+- ✅ Projeto Spring Boot inicializado
+- ✅ Endpoint `/api/health` funcional
+- ✅ Primeiro commit
+
+### **Sprint 2: Entidades & Segurança** ✅ 31/12/2025
+- ✅ 6 entidades JPA criadas
+- ✅ Repositórios JPA
+- ✅ JWT implementado
+- ✅ Endpoint `/api/auth/login`
+- ✅ Usuário admin padrão
+
+### **Sprint 3: CRUD Básico** ✅ 01/01/2026
+- ✅ Controllers REST (User, ConfigEmpresa)
+- ✅ CRUD de usuários (admin only)
+- ✅ Validações com `@Valid`
+- ✅ Flyway configurado
+- ✅ Testes manuais (Postman/cURL)
+
+### **Sprint 4: Validações Iniciais** ✅ 02/01/2026
+- ✅ UserService com lógica de negócio
+- ✅ Endpoint `/api/auth/register`
+- ✅ BrasilApiService preparado
+- ✅ Estrutura de pastas ajustada
+
+**Marco Fase 1:** Backend básico funcional, autenticação implementada, CRUD operacional.
+
+---
+
+## **Fase 2: Core do Negócio (Sprints 5-12)**
+
+### **Sprint 5: Registro de Ponto Completo** ✅ 05/01/2026
+**Objetivo:** Sistema de registro de ponto robusto e validado.
+
+**Tarefas:**
+- [x] ✅ RegistroPontoService com validação de sequência
+- [x] ✅ Controller REST `/api/ponto`
+- [x] ✅ Correção BUG-001 (NullPointerException)
+- [x] ✅ **Implementar validação de geolocalização (BUG-003)**
+  - Método `calcularDistanciaHaversine()`
+  - Validar coordenadas obrigatórias se `geolocAtiva=true`
+  - Lançar exceção se fora do raio
+  - Criar `RegistroForaDoRaioException`
+  - Adicionar handler no `GlobalExceptionHandler`
+- [x] ✅ **Validação de dia útil**
+  - Bloquear registro aos domingos
+  - Bloquear registro em feriados
+  - Criar `RegistroEmDomingoException`
+  - Criar `RegistroEmFeriadoException`
+- [x] ✅ **Testes unitários**
+  - Testar primeiro registro
+  - Testar sequência válida completa
+  - Testar validação de geoloc
+  - Testar bloqueio de domingos/feriados
+
+**Entregas:**
+- Sistema de ponto com todas as validações
+- Domingos e feriados bloqueados
+- Geolocalização funcional
+
+**Tempo Estimado:** 6-8 dias (2h/dia)
+
+---
+
+### **Sprint 6: Calendário e Folgas** ✅ 07/01/2026
+**Objetivo:** Gerenciar feriados automaticamente e folgas individuais.
+
+**Tarefas:**
+- [x] **Completar FeriadoService (BUG-002)**
+  - Método `sincronizarFeriados(int ano)`
+  - Verificar duplicatas por data
+  - Salvar apenas novos feriados com `origem=API`
+  - Criar endpoint `POST /api/feriados/sync`
+  - Proteger com `@PreAuthorize("hasRole('ADMIN')")`
+  - Retornar estatísticas (quantos adicionados/já existiam)
+- [x] **CRUD de Folgas**
+  - Criar `FolgaService`
+  - Criar endpoints REST `/api/folgas`
+  - Validar sobreposição de folgas
+  - Adicionar campo `tipo` (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
+  - Validar datas (dataInicio < dataFim)
+- [x] **Lógica de Domingos**
+  - Todo domingo marcado automaticamente como folga
+  - Sistema não permite registro aos domingos
+  - Folha de ponto marca domingos como `tipo_dia: "DOMINGO"`
+- [x] **Migration V2**
+  - Adicionar campo `tipo` em `folgas`
+  - Criar índices adicionais se necessário
+
+**Entregas:**
+- Feriados sincronizados e persistidos
+- CRUD de folgas funcional
+- Domingos automaticamente tratados
+
+**Tempo Estimado:** 5-6 dias
+
+---
+
+### **Sprint 7: Folha de Ponto Detalhada** 🔄 EM PROGRESSO (12/01/2026)
+**Objetivo:** Implementar geração de folha de ponto em JSON estruturado.
+
+**Tarefas:**
+- [x] **Criar entidade `FolhaPonto`** ✅ IMPLEMENTADO
+  - Campos: `user_id`, `mes`, `ano`, `dados` (TEXT para JSON)
+  - Campos calculados: `horas_trabalhadas`, `horas_extras`, `dias_trabalhados`
+  - Criar migration `V3__add_folhas_ponto.sql`
+  - Criar índices: `idx_folhas_ponto_user_periodo`, `idx_folhas_ponto_periodo`
+- [X] **Criar `FolhaPontoService`** ✅ IMPLEMENTADO
+  - Método `gerarFolhaPonto(userId, mes, ano)`
+  - Buscar todos os registros do mês
+  - Agrupar registros por dia
+  - Calcular horas trabalhadas por dia
+  - Identificar tipo de dia (UTIL, DOMINGO, FERIADO, FOLGA)
+  - Gerar JSON conforme estrutura do SDD
+  - Calcular totalizações do mês
+  - Persistir em `folhas_ponto`
+- [ ] **Criar endpoints**
+  - `GET /api/folha-ponto/gerar?mes=X&ano=Y&userId=Z` (admin)
+  - `GET /api/folha-ponto/me?mes=X&ano=Y` (funcionário)
+  - Validar permissões adequadamente
+- [ ] **Implementar cálculos**
+  - Cálculo de horas trabalhadas (SAIDA - ENTRADA - descanso)
+  - Cálculo de horas extras (acima de 8h/dia ou 220h/mês)
+  - Cálculo de débito de horas
+  - Saldo de horas (extras - débito)
+- [ ] **Testes**
+  - Testar geração de folha completa
+  - Testar com diferentes tipos de dia
+  - Testar cálculos de horas
+
+**Entregas:**
+- Folha de ponto JSON estruturado
+- API para gerar e consultar folhas
+- Cálculos precisos de horas
+
+**Tempo Estimado:** 8-10 dias
+
+---
+
+### **Sprint 8: Sistema de Logs Unificado + Frontend Básico** ⭐
+**Objetivo:** Implementar logging abrangente e iniciar desenvolvimento frontend.
+
+**Tarefas:**
+- [ ] **Criar `LogAuditoriaService`**
+  - Método centralizado para registrar logs
+  - Categorias: PONTO, ADMIN, AUDITORIA, RELATORIO, SISTEMA
+  - Status: SUCESSO, ERRO
+  - Armazenar detalhes em formato JSON
+- [ ] **Implementar Aspect `@Auditado`**
+  - Criar annotation `@Auditado`
+  - Criar `LogAuditoriaAspect` com `@Around`
+  - Capturar usuário do contexto de segurança
+  - Logar antes e depois da execução
+  - Capturar exceções e logar como ERRO
+- [ ] **Adicionar logs em todas as ações**
+  - Login/Logout
+  - Registro de ponto
+  - Criação/edição/exclusão de usuários
+  - Geração de relatórios
+  - Alterações em configurações
+  - Sincronização de feriados
+- [ ] **Criar endpoints de consulta**
+  - `GET /api/auditoria/logs` (admin only)
+  - Filtros: data, usuário, ação, categoria, status
+  - Implementar paginação (`Pageable`)
+  - Ordenação por timestamp DESC
+- [ ] **Testes**
+  - Testar logging de diferentes ações
+  - Testar filtros e paginação
+  - Testar captura de exceções
+
+**Frontend Básico:**
+- [ ] **Estrutura inicial do frontend**
+  - Criar estrutura de pastas `frontend/`
+  - Configurar arquivos base: `index.html`, `login.html`, `admin.html`, `employee.html`
+  - Configurar estilos base: `custom-styles.css`, `custom-styles_login.css`
+  - Configurar scripts base: `script.js`, `script_login.js`
+- [ ] **Página de login funcional**
+  - Formulário de login com usuário/senha
+  - Integração com `/api/auth/login`
+  - Armazenamento de JWT no localStorage
+  - Redirecionamento baseado em role (admin/employee)
+- [ ] **Página de dashboard básica**
+  - Estrutura de layout comum
+  - Menu de navegação
+  - Área de conteúdo dinâmico
+  - Logout funcional
+- [ ] **Integração inicial front-back**
+  - Configurar fetch API para requisições
+  - Tratamento de erros HTTP
+  - Feedback visual para o usuário
+  - Loading indicators
+
+**Entregas:**
+- Sistema de auditoria completo
+- Frontend básico funcional
+- Integração inicial front-back
+- Navegação entre páginas
+
+**Tempo Estimado:** 8-10 dias
+
+---
+
+### **Sprint 9: Frontend Completo - Funcionalidades de Usuário** ⭐
+**Objetivo:** Implementar todas as funcionalidades de usuário no frontend.
+
+**Tarefas:**
+
+**Backend (APIs necessárias):**
+- [ ] **Endpoints para frontend de usuário**
+  - `GET /api/ponto/me` - meus registros de ponto
+  - `GET /api/folgas/me` - minhas folgas
+  - `POST /api/folgas/solicitar` - solicitar folga
+  - `GET /api/user/me` - meus dados
+
+**Frontend de Usuário:**
+- [ ] **Página de perfil de usuário**
+  - Visualização de dados do usuário
+  - Edição de informações básicas
+  - Configurações de conta
+  - Histórico de atividades
+- [ ] **Interface de registro de ponto**
+  - Botões para ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
+  - Visualização do status atual
+  - Histórico do dia atual
+  - Validação de sequência visual
+- [ ] **Visualização de registros históricos**
+  - Filtro por período (data inicial/final)
+  - Tabela com registros
+  - Cálculo de horas trabalhadas por dia
+  - Exportação para CSV
+- [ ] **Interface de solicitação de folgas**
+  - Formulário de solicitação de folga
+  - Calendário para seleção de datas
+  - Seleção de tipo de folga
+  - Justificativa (opcional)
+  - Visualização de folgas existentes
+
+**Integração Front-Back:**
+- [ ] **Conexão com endpoints de usuário**
+  - Integração com `/api/ponto/me`
+  - Integração com `/api/folgas/me`
+  - Integração com `/api/folgas/solicitar`
+  - Integração com `/api/user/me`
+- [ ] **Tratamento de erros e feedback**
+  - Mensagens de erro amigáveis
+  - Feedback visual para ações
+  - Loading states
+  - Confirmação de ações
+- [ ] **Testes de integração**
+  - Testar fluxo completo de registro de ponto
+  - Testar fluxo de solicitação de folga
+  - Testar fluxo de visualização de registros
+  - Testar responsividade
+
+**Entregas:**
+- Frontend de usuário completo
+- Integração front-back funcional
+- Testes de integração validados
+
+**Tempo Estimado:** 8-10 dias
+
+---
+
+### **Sprint 10: Frontend Admin + Relatórios** ⭐
+**Objetivo:** Implementar funcionalidades administrativas e relatórios no frontend.
+
+**Tarefas:**
+
+**Backend (APIs necessárias):**
+- [ ] **Endpoints para frontend admin**
+  - `GET /api/user/all` - listar todos usuários
+  - `GET /api/folha-ponto/gerar` - gerar folha de ponto
+  - `GET /api/relatorios/pdf` - gerar relatório PDF
+  - `GET /api/feriados/all` - listar feriados
+
+**Frontend Administrativo:**
+- [ ] **Dashboard admin**
+  - Visão geral do sistema
+  - Estatísticas rápidas
+  - Gráficos de horas trabalhadas
+  - Alertas e notificações
+- [ ] **Gestão de usuários**
+  - Lista de usuários com filtros
+  - CRUD completo de usuários
+  - Ativação/desativação de usuários
+  - Reset de senha
+- [ ] **Gestão de feriados**
+  - Lista de feriados
+  - Sincronização com BrasilAPI
+  - Adição manual de feriados
+  - Edição/exclusão de feriados
+- [ ] **Gestão de configurações**
+  - Configurações da empresa
+  - Configurações de geolocalização
+  - Configurações de horários
+- [ ] **Relatórios e exportação**
+  - Interface de geração de folha de ponto
+  - Visualização de relatórios PDF
+  - Exportação de dados
+  - Filtros avançados
+
+**Integração Front-Back Admin:**
+- [ ] **Conexão com endpoints admin**
+  - Integração com `/api/user/all`
+  - Integração com `/api/folha-ponto/gerar`
+  - Integração com `/api/relatorios/pdf`
+  - Integração com `/api/feriados/all`
+- [ ] **Visualização de relatórios PDF**
+  - Embed de PDF no navegador
+  - Download de PDF
+  - Impressão direta
+- [ ] **Controles de permissão**
+  - Verificação de role ADMIN
+  - Restrição de acesso
+  - Mensagens de permissão negada
+- [ ] **Testes de integração admin**
+  - Testar fluxos administrativos completos
+  - Testar geração e visualização de relatórios
+  - Testar permissões e restrições
+
+**Entregas:**
+- Frontend administrativo completo
+- Integração front-back admin funcional
+- Relatórios PDF integrados
+- Testes de integração validados
+
+**Tempo Estimado:** 8-10 dias
+
+---
+
+### **Sprint 11: Relatórios PDF + Ajustes Finais Frontend** ⭐
+**Objetivo:** Finalizar geração de PDF e ajustes no frontend.
+
+**Tarefas:**
+
+**Backend:**
+- [ ] **Implementar geração de PDF**
+  - Adicionar dependência iText 7
+  - Criar `RelatorioService`
+  - Implementar templates de relatório
+  - Criar endpoints de PDF
+- [ ] **Testes de geração de PDF**
+  - Testar formatação
+  - Testar cálculos
+  - Testar download
+
+**Frontend - Ajustes Finais:**
+- [ ] **Melhorias de UX/UI**
+  - Revisão de layout e cores
+  - Melhoria de navegação
+  - Consistência visual
+  - Acessibilidade
+- [ ] **Correção de bugs visuais**
+  - Testar em diferentes navegadores
+  - Testar em diferentes resoluções
+  - Corrigir problemas de layout
+- [ ] **Otimização de performance**
+  - Minificação de CSS/JS
+  - Carregamento lazy
+  - Cache de recursos
+- [ ] **Responsividade completa**
+  - Testar em dispositivos móveis
+  - Ajustar layouts para mobile
+  - Testar touch events
+
+**Testes Finais:**
+- [ ] **Testes completos de integração**
+  - Testar todos os fluxos completos
+  - Testar em diferentes cenários
+  - Testar casos de erro
+- [ ] **Testes em navegadores**
+  - Chrome, Firefox, Edge, Safari
+  - Versões antigas (se necessário)
+- [ ] **Testes em dispositivos móveis**
+  - iOS e Android
+  - Diferentes tamanhos de tela
+  - Orientação portrait/landscape
+
+**Entregas:**
+- Geração de PDF funcional
+- Frontend polido e otimizado
+- Testes completos validados
+
+**Tempo Estimado:** 7-9 dias
+
+---
+
+### **Sprint 12: Refinamento e Testes Completo** ⭐
+**Objetivo:** Garantir qualidade e robustez do MVP completo.
+
+**Tarefas:**
+
+**Testes:**
+- [ ] **Testes unitários para services**
+  - UserService, RegistroPontoService, FolhaPontoService
+  - Cobertura mínima: 70%
+- [ ] **Testes de integração**
+  - AuthenticationController, RegistroPontoController
+  - Usar `@SpringBootTest` e `MockMvc`
+- [ ] **Testes de segurança**
+  - Validação de JWT
+  - Teste de permissões (ADMIN vs EMPLOYEE)
+  - Teste de CORS
+- [ ] **Testes de casos extremos**
+  - Primeiro registro do usuário
+  - Múltiplos ciclos no mesmo dia
+  - Registro em horários inválidos
+
+**Otimização:**
+- [ ] **Otimização de queries**
+  - Revisar queries JPA com EXPLAIN ANALYZE
+  - Adicionar índices faltantes
+  - Testar performance com dados de volume
+- [ ] **Code review e refatoração**
+  - Revisar controllers e services
+  - Aplicar princípios SOLID
+  - Remover código duplicado
+  - Melhorar nomes de variáveis/métodos
+
+**Documentação:**
+- [ ] **Documentação técnica**
+  - Documentar decisões arquiteturais
+  - Atualizar README com instruções de setup
+  - Documentar endpoints da API
+  - Criar guia de desenvolvimento
+- [ ] **Documentação de frontend**
+  - Estrutura do frontend
+  - Como adicionar novas páginas
+  - Como integrar com backend
+  - Guia de estilos
+
+**Testes de Usuário:**
+- [ ] **Testes de usabilidade**
+  - Testar com usuários reais
+  - Coletar feedback
+  - Ajustar interface
+  - Validar fluxos
+- [ ] **Testes de aceitação**
+  - Validar requisitos
+  - Testar cenários reais
+  - Aprovação final
+
+**Entregas:**
+- Cobertura de testes significativa (>70%)
+- Performance otimizada
+- Código limpo e documentado
+- Sistema estável e robusto
+- Frontend validado por usuários
+
+**Tempo Estimado:** 8-10 dias
+
+**Marco Fase 2:** MVP single-tenant completo com frontend funcional, integração front-back testada, sistema estável e documentado.
+
+---
+
+## **Fase 3: Multi-tenant (Sprints 13-16)**
+
+### **Sprint 13: Infraestrutura Eureka + Gateway** ⭐
+**Objetivo:** Implementar Service Discovery e API Gateway.
+
+**Tarefas:**
+- [ ] **Criar módulo `marcweb-eureka-server`**
+  - Adicionar dependência `spring-cloud-starter-netflix-eureka-server`
+  - Anotar com `@EnableEurekaServer`
+  - Configurar `application.yml` (porta 8761)
+- [ ] **Criar módulo `marcweb-gateway`**
+  - Adicionar dependência `spring-cloud-starter-gateway`
+  - Configurar rotas dinâmicas
+  - Implementar filtros customizados
+- [ ] **Configurar projeto principal como Eureka Client**
+  - Adicionar dependência `spring-cloud-starter-netflix-eureka-client`
+  - Configurar `spring.application.name`
+  - Registrar no Eureka Server
+- [ ] **Implementar roteamento**
+  - Rotear requisições baseado em `X-Empresa-Id` header
+  - Load balancing com Ribbon
+  - Fallback para circuit breaker
+- [ ] **Testes**
+  - Testar registro no Eureka
+  - Testar roteamento via Gateway
+  - Testar failover
+
+**Entregas:**
+- Eureka Server funcional
+- API Gateway roteando requisições
+- Service Discovery operacional
+
+**Tempo Estimado:** 6-8 dias
+
+---
+
+### **Sprint 14: Biblioteca Compartilhada e Feign** ⭐
+**Objetivo:** Consolidar common-lib e implementar comunicação entre serviços.
+
+**Tarefas:**
+- [ ] **Publicar `empresa-common-lib`**
+  - Configurar deploy no `pom.xml`
+  - Publicar versão 1.0.0
+  - Documentar uso da biblioteca
+- [ ] **Implementar Feign Clients**
+  - Adicionar dependência `spring-cloud-starter-openfeign`
+  - Criar interfaces Feign para comunicação
+  - Anotar com `@FeignClient`
+- [ ] **Criar template de empresa**
+  - Módulo `marcweb-empresa-template`
+  - Importar `empresa-common-lib`
+  - Implementar interfaces dos services
+- [ ] **Testes de integração**
+  - Testar comunicação via Feign
+  - Testar fallback de circuit breaker
+
+**Entregas:**
+- Biblioteca compartilhada publicada
+- Template de empresa reutilizável
+- Comunicação entre serviços funcional
+
+**Tempo Estimado:** 6-7 dias
+
+---
+
+### **Sprint 15: Implementação Multi-empresa** ⭐
+**Objetivo:** Criar 2-3 empresas exemplo e testar isolamento.
+
+**Tarefas:**
+- [ ] **Criar Empresa A (Tech Solutions)**
+  - Copiar template
+  - Configurar `application-tech-solutions.yml`
+  - Banco de dados: `marcweb_empresa_tech_solutions`
+- [ ] **Criar Empresa B (Comércio ABC)**
+  - Copiar template
+  - Configurar `application-comercio-abc.yml`
+  - Banco de dados: `marcweb_empresa_comercio_abc`
+- [ ] **Testar isolamento de dados**
+  - Criar usuários em cada empresa
+  - Registrar pontos em cada empresa
+  - Verificar que dados não vazam
+- [ ] **Testes de carga**
+  - Simular múltiplas empresas simultâneas
+  - Verificar performance do Gateway
+
+**Entregas:**
+- 2-3 empresas funcionando isoladamente
+- Isolamento de dados comprovado
+- Testes de carga validados
+
+**Tempo Estimado:** 7-9 dias
+
+---
+
+### **Sprint 16: Deploy, Monitoramento e Documentação Final** ⭐
+**Objetivo:** Preparar sistema para produção.
+
+**Tarefas:**
+- [ ] **Criar Docker Compose completo**
+  - Serviço Eureka
+  - Serviço Gateway
+  - Serviços das empresas (3)
+  - Configurar redes Docker
+- [ ] **Implementar health checks**
+  - Endpoint `/actuator/health` em todos os serviços
+  - Configurar no Docker Compose
+- [ ] **Configurar logs centralizados**
+  - Aggregar logs de todos os serviços
+  - Dashboard de visualização
+- [ ] **Criar scripts de deploy**
+  - `deploy-all.sh` - sobe toda a infra
+  - `deploy-empresa.sh <nome>` - adiciona nova empresa
+- [ ] **Documentação completa**
+  - Manual de instalação
+  - Manual de configuração
+  - Manual de adição de nova empresa
+  - API Reference
+
+**Entregas:**
+- Sistema containerizado e pronto para deploy
+- Documentação completa
+- Scripts de automação
+- Monitoramento básico
+
+**Tempo Estimado:** 8-10 dias
+
+**Marco Final:** Sistema multi-tenant completo, em produção e documentado.
+
+---
+
+## **📈 Métricas de Sucesso Atualizadas**
+
+**MVP (Sprint 12):**
+- [ ] Cobertura de testes > 70%
+- [ ] Todos os bugs críticos corrigidos
+- [ ] Sistema funcional para 1 empresa
+- [ ] Frontend completo e integrado
+- [ ] Documentação completa
+- [ ] Performance: < 200ms por requisição
+- [ ] Testes de usuário validados
+
+**Multi-tenant (Sprint 16):**
+- [ ] 3+ empresas rodando simultaneamente
+- [ ] Isolamento de dados comprovado
+- [ ] Gateway roteando corretamente
+- [ ] Deploy automatizado
+- [ ] Monitoramento funcional
+
+**Conformidade (Sprint 18):**
+- [ ] Sistema em conformidade com Portaria 671/2021
+- [ ] AEJ gerado conforme modelo
+- [ ] Comprovantes de ponto com assinatura PAdES
+
+**Produção (Sprint 20):**
+- [ ] Sistema em produção estável
+- [ ] Monitoramento contínuo
+- [ ] Backup e recuperação funcionais
+- [ ] Documentação completa
+
+---
+
+**Plano SCRUM atualizado com desenvolvimento frontend e integração front-back em todos os sprints relevantes.**

@@ -33,10 +33,34 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // BUSCANDO ULTIMO TIPO DE REGISTRO DE UM USUÁRIO
     @Query(nativeQuery = true, value = """
-            Select r.tipo from registros_ponto r where r.user_id = :idUsuario 
+            Select r.tipo from registros_ponto r where r.user_id = :idUsuario
             order by r.timestamp Desc limit 1
             """)
     TipoRegistro findLastTypeRegistration(@Param("idUsuario") Long idUsuario);
+
+    // CONSULTA OTIMIZADA: REGISTROS DE PONTO COM PAGINAÇÃO
+    @Query("""
+            Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            from RegistroPonto r where r.user = :user
+            order by r.timestamp Desc
+            """)
+    List<RegistroPontoResponse> findByUserWithPagination(User user, org.springframework.data.domain.Pageable pageable);
+
+    // CONSULTA OTIMIZADA: REGISTROS DE PONTO POR PERÍODO COM PAGINAÇÃO
+    @Query("""
+            Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
+            order by r.timestamp Desc
+            """)
+    List<RegistroPontoResponse> findByUserAndPeriodWithPagination(User user, LocalDateTime start, LocalDateTime end, org.springframework.data.domain.Pageable pageable);
+
+    // CONSULTA OTIMIZADA: CONTAGEM DE REGISTROS POR USUÁRIO
+    @Query("Select count(r) from RegistroPonto r where r.user = :user")
+    long countByUser(@Param("user") User user);
+
+    // CONSULTA OTIMIZADA: CONTAGEM DE REGISTROS POR USUÁRIO E PERÍODO
+    @Query("Select count(r) from RegistroPonto r where r.user = :user and r.timestamp between :start and :end")
+    long countByUserAndPeriod(@Param("user") User user, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
 
 }

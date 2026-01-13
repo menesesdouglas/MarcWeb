@@ -30,6 +30,7 @@ public class RegistroPontoService {
     private final ConfigEmpresaService configEmpresaService; // Injetando o serviço de configuração
     private final FeriadoRepository feriadoRepository; // Injetando o repositório de feriados
     private final FolgaService folgaService;
+    private final LogAuditoriaService logAuditoriaService;
 
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {

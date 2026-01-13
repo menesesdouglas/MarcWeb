@@ -3,6 +3,7 @@ package com.marcweb.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.marcweb.dto.folha_ponto.DadosFolhaPonto;
 import com.marcweb.service.FolhaPontoService;
+import com.marcweb.service.LogAuditoriaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class FolhaPontoController {
 
     private final FolhaPontoService service;
+    private final LogAuditoriaService logAuditoriaService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping

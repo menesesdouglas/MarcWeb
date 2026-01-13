@@ -1,0 +1,320 @@
+# **Software Design Document (SDD) - Marc Web v3.0**
+**Sistema de Ponto Eletrônico Web**
+**Janeiro 2026 - Foco em MVP + Arquitetura Multi-tenant Futura**
+
+---
+
+## **1. Introdução**
+
+### **1.1 Propósito**
+Este documento define o design do **Marc Web**, priorizando o **MVP funcional** com arquitetura single-tenant inicialmente, preparando a base para evolução multi-tenant com **Spring Cloud (Eureka + Gateway)** posteriormente.
+
+### **1.2 Estratégia de Desenvolvimento**
+
+#### **Fase MVP (Sprints 1-12):**
+- ✅ Desenvolvimento single-tenant completo
+- ✅ Foco na lógica de negócio robusta
+- ✅ Sistema totalmente funcional para uma empresa
+- ✅ Preparação da arquitetura para microserviços
+
+#### **Fase Multi-tenant (Sprints 13-16):**
+- 🔄 Refatoração para microserviços
+- 🔄 Implementação Eureka + Gateway
+- 🔄 Biblioteca compartilhada (common-lib)
+- 🔄 Deploy escalável
+
+### **1.3 Funcionalidades Core do MVP**
+
+#### **Prioridade Alta (Sprints 1-12):**
+- ✅ Registro de ponto (entrada/saída/descansos)
+- ✅ Gestão de funcionários
+- ✅ Calendário (feriados + folgas + domingos automáticos)
+- ✅ Folha de ponto detalhada (JSON estruturado)
+- ✅ Sistema de logs unificado
+- ✅ Relatórios mensais com cálculo de horas
+- ✅ Exportação PDF
+- ✅ Auditoria de ações
+- ✅ Frontend completo (HTML/CSS/JS)
+- ✅ Integração front-back funcional
+
+#### **Funcionalidades Futuras:**
+- 🔄 Arquitetura multi-tenant com Eureka
+- 🔄 Dashboard analytics avançado
+- 🔄 Conformidade completa com Portaria 671/2021 (AEJ, ARP, assinaturas digitais)
+
+---
+
+## **2. Arquitetura do Sistema**
+
+### **2.1 Arquitetura MVP (Single-tenant)**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     Marc Web - MVP                           │
+│                                                              │
+│  ┌────────────┐     ┌──────────────┐     ┌──────────────┐  │
+│  │  Frontend  │────▶│   Backend    │────▶│  PostgreSQL  │  │
+│  │  (HTML/JS) │     │ Spring Boot  │     │   Database   │  │
+│  └────────────┘     └──────────────┘     └──────────────┘  │
+│                                                              │
+│  Funcionalidades:                                           │
+│  • Registro de ponto                                        │
+│  • Gestão de usuários                                       │
+│  • Feriados e folgas                                        │
+│  • Relatórios PDF                                           │
+│  • Logs de auditoria                                        │
+│  • Interface web completa                                  │
+│  • Integração front-back                                    │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### **2.2 Arquitetura Multi-tenant Futura (Sprints 13-16)**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Portal Principal                             │
+│              (Frontend de Login Centralizado)                   │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │   API Gateway        │
+              │  (Spring Cloud GW)   │
+              │  Roteamento dinâmico │
+              └──────────┬───────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │  Eureka Server       │
+              │  (Service Discovery) │
+              └──────────┬───────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  Empresa A   │  │  Empresa B   │  │  Empresa N   │
+│  API (8081)  │  │  API (8082)  │  │  API (808N)  │
+│              │  │              │  │              │
+│  PostgreSQL  │  │  PostgreSQL  │  │  PostgreSQL  │
+│  empresa_a   │  │  empresa_b   │  │  empresa_n   │
+└──────────────┘  └──────────────┘  └──────────────┘
+
+Todas as APIs compartilham:
+┌─────────────────────────────────────┐
+│     empresa-common-lib              │
+│  • DTOs                             │
+│  • Interfaces                       │
+│  • Lógica de domínio reutilizável   │
+│  • Componentes compartilhados       │
+└─────────────────────────────────────┘
+```
+
+---
+
+## **3. Modelo de Dados**
+
+### **3.1 Banco de Dados MVP (Single-tenant)**
+
+**Banco: `marcweb_dev`**
+
+| Tabela | Descrição | Status |
+|--------|-----------|--------|
+| **users** | Funcionários e admins | ✅ Implementado |
+| **registros_ponto** | Registros diários de ponto | ✅ Implementado |
+| **feriados** | Feriados nacionais/manuais | ✅ Implementado |
+| **folgas** | Ausências individuais | ✅ Implementado |
+| **logs_auditoria** | Auditoria da empresa | ✅ Implementado |
+| **configs_empresa** | Configurações do sistema | ✅ Implementado |
+| **folhas_ponto** ⭐ | Folha mensal detalhada | ✅ Sprint 7 (Entity + Migration) |
+
+---
+
+## **4. Cronograma Atualizado (com Frontend e Integração)**
+
+### **Fase 1: Fundação (Sprints 1-4)** ✅ COMPLETO
+
+**Sprints 1-4:** ✅ Fundação (COMPLETO)
+- Setup, entidades, segurança, CRUD básico
+- ✅ Backend básico funcional
+- ✅ Autenticação JWT implementada
+- ✅ CRUD operacional
+
+### **Fase 2: Core do Negócio (Sprints 5-12)**
+
+**Sprint 5:** ✅ Registro de Ponto Completo (05/01/2026)
+- ✅ Validação de sequência e geolocalização
+- ✅ Bloqueio de domingos e feriados
+- ✅ Testes unitários completos
+
+**Sprint 6:** ✅ Calendário e Folgas (07/01/2026)
+- ✅ Sincronização BrasilAPI completa
+- ✅ CRUD de folgas funcional
+- ✅ Domingos automaticamente tratados
+
+**Sprint 7:** 🔄 Folha de Ponto Detalhada (EM PROGRESSO - 12/01/2026)
+- ✅ Entidade `FolhaPonto` implementada
+- ✅ `FolhaPontoService` implementado
+- 🔄 Endpoints de geração e consulta
+- 🔄 Cálculos de horas trabalhadas
+- 🔄 Testes de integração
+
+**Sprint 8:** ⭐ Sistema de Logs Unificado + Frontend Básico
+- ✅ `LogAuditoriaService` centralizado
+- ✅ Aspect `@Auditado` para auditoria automática
+- ✅ Logs em todas as ações críticas
+- ✅ **Desenvolvimento frontend básico**
+  - Estrutura HTML/CSS inicial
+  - Páginas de login e dashboard
+  - Integração com API de autenticação
+- ✅ **Integração front-back inicial**
+  - Conexão com endpoints de autenticação
+  - Tratamento de JWT no frontend
+  - Navegação básica entre páginas
+
+**Sprint 9:** ⭐ Frontend Completo - Funcionalidades de Usuário
+- ✅ **Desenvolvimento frontend de usuário**
+  - Página de perfil de usuário
+  - Interface de registro de ponto
+  - Visualização de registros históricos
+  - Interface de solicitação de folgas
+- ✅ **Integração front-back completa**
+  - Conexão com endpoints de registro de ponto
+  - Conexão com endpoints de folgas
+  - Conexão com endpoints de usuário
+  - Tratamento de erros e feedback visual
+- ✅ **Testes de integração front-back**
+  - Testar fluxo completo de registro de ponto
+  - Testar fluxo de solicitação de folga
+  - Testar fluxo de visualização de registros
+
+**Sprint 10:** ⭐ Frontend Admin + Relatórios
+- ✅ **Desenvolvimento frontend administrativo**
+  - Dashboard admin com visões gerais
+  - Gestão de usuários (CRUD)
+  - Gestão de feriados e configurações
+  - Interface de geração de relatórios
+- ✅ **Integração front-back admin**
+  - Conexão com endpoints admin
+  - Visualização de relatórios PDF
+  - Exportação de dados
+  - Controles de permissão
+- ✅ **Testes de integração admin**
+  - Testar fluxos administrativos completos
+  - Testar geração e visualização de relatórios
+  - Testar permissões e restrições
+
+**Sprint 11:** ⭐ Relatórios PDF + Ajustes Finais Frontend
+- ✅ Integração iText 7 para geração de PDF
+- ✅ Geração de relatórios profissionais
+- ✅ Download direto via API
+- ✅ **Ajustes finais no frontend**
+  - Melhorias de UX/UI
+  - Correção de bugs visuais
+  - Otimização de performance
+  - Responsividade completa
+- ✅ **Testes finais de integração**
+  - Testar todos os fluxos completos
+  - Testar em diferentes navegadores
+  - Testar em dispositivos móveis
+
+**Sprint 12:** ⭐ Refinamento e Testes Completo
+- ✅ Testes unitários completos (>70% cobertura)
+- ✅ Testes de integração front-back
+- ✅ Otimização de queries e performance
+- ✅ Code review completo
+- ✅ Documentação técnica final
+- ✅ **Testes de usuário final**
+  - Testes de usabilidade
+  - Feedback e ajustes
+  - Validação completa
+
+**Marco Fase 2:** MVP completo com frontend funcional, integração front-back testada e sistema estável.
+
+---
+
+## **5. Arquitetura Multi-tenant com Eureka (Sprints 13-16)**
+
+### **5.1 Biblioteca Compartilhada (empresa-common-lib)**
+
+#### **Estrutura:**
+
+```java
+// DTOs compartilhados
+package com.marcweb.common.dto;
+
+public record LoginRequest(String username, String password) {}
+public record LoginResponse(
+    String token,
+    String tokenType,
+    Long userId,
+    String username,
+    String role
+) {}
+
+// Interfaces de serviços
+package com.marcweb.common.service;
+
+public interface UserService {
+    void createUser(CreateUser data);
+    User findByUsername(String username);
+    void editUser(Long id, CreateUser data);
+    void deleteUser(Long id);
+}
+
+public interface RegistroPontoService {
+    void registrarPonto(CreateRegistroPonto data, HttpServletRequest request);
+    List<RegistroPontoResponse> buscarPontos(LocalDateTime start, LocalDateTime end);
+}
+```
+
+---
+
+## **6. Benefícios da Arquitetura Proposta**
+
+| Benefício | Como Acontece |
+|-----------|---------------|
+| **Reutilização de código** | Via `empresa-common-lib` |
+| **Isolamento de dados** | Cada serviço com seu banco |
+| **Comunicação dinâmica** | Eureka + Feign/WebClient |
+| **Escalabilidade** | Cada serviço escala independentemente |
+| **Manutenção** | Alterações na lib refletem em todos |
+| **Deploy flexível** | Empresas podem ter versões diferentes |
+| **Desenvolvimento focado** | MVP primeiro, multi-tenant depois |
+| **Interface completa** | Frontend funcional e integrado |
+| **Experiência de usuário** | Interface amigável e responsiva |
+
+---
+
+## **7. Métricas de Sucesso Atualizadas**
+
+**MVP (Sprint 12):**
+- [ ] Cobertura de testes > 70%
+- [ ] Todos os bugs críticos corrigidos
+- [ ] Sistema funcional para 1 empresa
+- [ ] Frontend completo e integrado
+- [ ] Documentação completa
+- [ ] Performance: < 200ms por requisição
+- [ ] Testes de usuário validados
+
+**Multi-tenant (Sprint 16):**
+- [ ] 3+ empresas rodando simultaneamente
+- [ ] Isolamento de dados comprovado
+- [ ] Gateway roteando corretamente
+- [ ] Deploy automatizado
+- [ ] Monitoramento funcional
+
+**Conformidade (Sprint 18):**
+- [ ] Sistema em conformidade com Portaria 671/2021
+- [ ] AEJ gerado conforme modelo
+- [ ] Comprovantes de ponto com assinatura PAdES
+
+**Produção (Sprint 20):**
+- [ ] Sistema em produção estável
+- [ ] Monitoramento contínuo
+- [ ] Backup e recuperação funcionais
+- [ ] Documentação completa
+
+---
+
+**Documento atualizado para desenvolvimento MVP-first com frontend integrado.**
