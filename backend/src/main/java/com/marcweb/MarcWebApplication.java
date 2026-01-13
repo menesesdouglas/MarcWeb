@@ -21,13 +21,14 @@ import java.util.List; // Import necessário
 @EnableCaching
 @EnableScheduling
 @EnableJpaAuditing
+@EnableCaching
 @SpringBootApplication
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok)
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
 
     public static void main(String[] args) {
-       /* Dotenv dotenv = Dotenv.configure().load();
-        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));*/
+        Dotenv dotenv = Dotenv.configure().load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
         SpringApplication.run(MarcWebApplication.class, args);
     }
 
