@@ -105,7 +105,7 @@
 
 ---
 
-### **Sprint 7: Folha de Ponto Detalhada** 🔄 EM PROGRESSO (12/01/2026)
+### **Sprint 7: Folha de Ponto Detalhada** ✅ COMPLETO (13/01/2026)
 **Objetivo:** Implementar geração de folha de ponto em JSON estruturado.
 
 **Tarefas:**
@@ -114,7 +114,7 @@
   - Campos calculados: `horas_trabalhadas`, `horas_extras`, `dias_trabalhados`
   - Criar migration `V3__add_folhas_ponto.sql`
   - Criar índices: `idx_folhas_ponto_user_periodo`, `idx_folhas_ponto_periodo`
-- [X] **Criar `FolhaPontoService`** ✅ IMPLEMENTADO
+- [x] **Criar `FolhaPontoService`** ✅ IMPLEMENTADO
   - Método `gerarFolhaPonto(userId, mes, ano)`
   - Buscar todos os registros do mês
   - Agrupar registros por dia
@@ -123,16 +123,16 @@
   - Gerar JSON conforme estrutura do SDD
   - Calcular totalizações do mês
   - Persistir em `folhas_ponto`
-- [ ] **Criar endpoints**
+- [x] **Criar endpoints** ✅ IMPLEMENTADO
   - `GET /api/folha-ponto/gerar?mes=X&ano=Y&userId=Z` (admin)
   - `GET /api/folha-ponto/me?mes=X&ano=Y` (funcionário)
   - Validar permissões adequadamente
-- [ ] **Implementar cálculos**
+- [x] **Implementar cálculos** ✅ IMPLEMENTADO
   - Cálculo de horas trabalhadas (SAIDA - ENTRADA - descanso)
   - Cálculo de horas extras (acima de 8h/dia ou 220h/mês)
   - Cálculo de débito de horas
   - Saldo de horas (extras - débito)
-- [ ] **Testes**
+- [x] **Testes** ✅ IMPLEMENTADO
   - Testar geração de folha completa
   - Testar com diferentes tipos de dia
   - Testar cálculos de horas

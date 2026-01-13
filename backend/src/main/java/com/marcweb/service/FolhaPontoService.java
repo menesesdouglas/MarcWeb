@@ -45,7 +45,7 @@ public class FolhaPontoService {
         /// --->>> TODAS OS PONTOS BATIDOS NO MES <<< --- ☻☻☻☻☻☻☻☻☻
         var pontosBatidosNoMes = registroPontoService.findByMesAno(userId, mes, ano);
 
-        var inicioDoMes = LocalDate.parse(ano + "-" + mes + "-01");
+        var inicioDoMes = LocalDate.of(ano, mes, 1);
         var finalMes = inicioDoMes.withDayOfMonth(inicioDoMes.lengthOfMonth());
 
         /// --->>> TODAS AS FOLGAS DO MES <<< --- ♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥
