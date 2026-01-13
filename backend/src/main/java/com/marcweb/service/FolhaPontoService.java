@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.marcweb.dto.folha_ponto.*;
 import com.marcweb.entity.*;
-import com.marcweb.exceptions.FolhaPontoDuplicadaException;
 import com.marcweb.exceptions.SemRegistrosException;
 import com.marcweb.repository.FolhaPontoRepository;
 import lombok.RequiredArgsConstructor;
@@ -74,7 +73,6 @@ public class FolhaPontoService {
         /// GERAR OBJETO QUE SERÁ CONVERTIDO EM JSON
         DadosFolhaPonto dadosFolha = new DadosFolhaPonto();
         dadosFolha.setUsuario(new UsuarioDTO(userId, userEntity.getNome(), userEntity.getUsername()));
-        /// ACIONANDO O 'getDiasUteis' PARA QUE O OBJETO 'periodo' CONSIGA PEGAR OS DIAS ÚTEIS DO MES
         periodo.setDias_uteis(getDiasUteis(inicioDoMes));
         periodo.setDias_falta(diasFalta);
         dadosFolha.setPeriodo(periodo);
@@ -244,7 +242,6 @@ public class FolhaPontoService {
             for (int i = 1; i < diasCorridos; i++) {
                 datasDeFolga.add(inicioFolga.plusDays(i));
             }
-
         }
         return datasDeFolga;
     }

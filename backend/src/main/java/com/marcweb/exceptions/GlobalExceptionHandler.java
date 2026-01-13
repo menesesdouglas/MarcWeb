@@ -60,13 +60,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(FolhaPontoDuplicadaException.class)
-    public String handlerFolhaPontoDuplicadaException(FolhaPontoDuplicadaException e) {
-        log.warn(e.getMessage());
-        return e.getMessage();
-    }
-
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(SemRegistrosException.class)
