@@ -3,10 +3,7 @@ package com.marcweb.service;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.entity.User;
-import com.marcweb.exceptions.AEJException;
 import com.marcweb.exceptions.ConformidadeException;
-import com.marcweb.exceptions.FolhaPontoDuplicadaException;
-import com.marcweb.exceptions.SemRegistrosException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

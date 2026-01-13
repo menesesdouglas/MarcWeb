@@ -5,9 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "logs_auditoria")
 @Data
@@ -20,6 +23,7 @@ public class LogAuditoria {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @CreatedDate
     @Column(nullable = false)
     private LocalDateTime timestamp; // Data e hora do log
 
@@ -40,4 +44,12 @@ public class LogAuditoria {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusLog status; // SUCESSO, ERRO
+
+    public LogAuditoria(User user, String acao, CategoriaLog categoria, String detalhes, StatusLog status) {
+        this.user = user;
+        this.acao = acao;
+        this.categoria = categoria;
+        this.detalhes = detalhes;
+        this.status = status;
+    }
 }

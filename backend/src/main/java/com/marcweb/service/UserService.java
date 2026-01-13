@@ -1,6 +1,8 @@
 package com.marcweb.service;
 
+import com.marcweb.auditoria.Auditado;
 import com.marcweb.dto.CreateUser;
+import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.User;
 import com.marcweb.exceptions.UsernameDuplicatedException;
 import com.marcweb.repository.UserRepository;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.marcweb.dto.UserResponse; // Import necessário
 import com.marcweb.repository.UserRepository; // Import necessário, se ainda não estiver
 
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -34,6 +37,11 @@ public class UserService {
 
     private final PasswordEncoder encoder;
 
+    @Auditado(
+            acao = "Cadastro de usuário",
+            detalhes = "Cadastro de usuário feito por administrador",
+            categoria = CategoriaLog.ADMIN
+    )
     public void createUser(@RequestBody @Valid CreateUser data) {
         validateUsername(data.getUsername());
         Boolean consent = data.getConsentGeoloc();
@@ -49,6 +57,11 @@ public class UserService {
     }
 
 
+    @Auditado(
+            acao = "Edição de dados do usuário",
+            detalhes = "Edição de dados do usuário sendo executado por administrador",
+            categoria = CategoriaLog.ADMIN
+    )
     @Transactional
     public void editUser(@PathVariable Long id, @RequestBody CreateUser data) {
         var user = repository.findById(id).orElse(null);
@@ -63,6 +76,12 @@ public class UserService {
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
     }
 
+
+    @Auditado(
+            acao = "Exclusão de usuário",
+            detalhes = "Exclusão usuário sendo executado por administrador",
+            categoria = CategoriaLog.ADMIN
+    )
     public void deleteUser(@PathVariable Long id) {
         repository.deleteById(id);
     }
@@ -85,12 +104,24 @@ public class UserService {
                 .getPrincipal();
     }
 
+
+    @Auditado(
+            acao = "Busca por todos os usuários",
+            detalhes = "Administrador executando busca por todos usuários",
+            categoria = CategoriaLog.ADMIN
+    )
     public List<UserResponse> findAll() {
         return repository.findAll().stream()
                 .map(UserResponse::new) // Converte cada User em UserResponse
                 .collect(Collectors.toList());
     }
 
+
+    @Auditado(
+            acao = "Busca paginada por usuários",
+            detalhes = "Administrador executando busca por usuários de forma paginada",
+            categoria = CategoriaLog.ADMIN
+    )
     public Page<UserResponse> findAll(int pageNumber) {
         Pageable page = PageRequest.of(pageNumber, 20);
         return repository.findAll(page)
