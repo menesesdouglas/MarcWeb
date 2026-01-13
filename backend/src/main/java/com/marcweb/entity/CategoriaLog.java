@@ -4,5 +4,6 @@ public enum CategoriaLog {
     PONTO,
     ADMIN,
     AUDITORIA,
-    SISTEMA
+    SISTEMA,
+    RELATORIO
 }

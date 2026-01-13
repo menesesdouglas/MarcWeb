@@ -3,6 +3,7 @@ package com.marcweb.controller;
 
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.RegistroPontoResponse;
+import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -21,7 +22,7 @@ public class RegistroPontoController {
 
 
     private final RegistroPontoService service;
-
+    private final LogAuditoriaService logAuditoriaService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping

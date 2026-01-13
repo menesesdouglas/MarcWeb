@@ -45,4 +45,31 @@ public interface FolgaRepository extends JpaRepository<Folga, Long> {
 
 
     // Outros métodos específicos, se necessário
+
+    // CONSULTA OTIMIZADA: FOLGAS POR USUÁRIO COM PAGINAÇÃO
+    @Query("SELECT f FROM Folga f WHERE f.user.id = :userId ORDER BY f.dataInicio DESC")
+    List<Folga> findByUserIdWithPagination(@Param("userId") Long userId, org.springframework.data.domain.Pageable pageable);
+
+    // CONSULTA OTIMIZADA: FOLGAS POR USUÁRIO E PERÍODO COM PAGINAÇÃO
+    @Query("SELECT f FROM Folga f WHERE f.user.id = :userId AND " +
+           "(:dataInicio IS NULL OR f.dataFim >= :dataInicio) AND " +
+           "(:dataFim IS NULL OR f.dataInicio <= :dataFim) " +
+           "ORDER BY f.dataInicio DESC")
+    List<Folga> findByUserIdAndPeriodoWithPagination(
+            @Param("userId") Long userId,
+            @Param("dataInicio") LocalDate dataInicio,
+            @Param("dataFim") LocalDate dataFim,
+            org.springframework.data.domain.Pageable pageable);
+
+    // CONSULTA OTIMIZADA: CONTAGEM DE FOLGAS POR USUÁRIO
+    @Query("SELECT COUNT(f) FROM Folga f WHERE f.user.id = :userId")
+    long countByUserId(@Param("userId") Long userId);
+
+    // CONSULTA OTIMIZADA: CONTAGEM DE FOLGAS POR USUÁRIO E PERÍODO
+    @Query("SELECT COUNT(f) FROM Folga f WHERE f.user.id = :userId AND " +
+           "f.dataInicio <= :dataFim AND f.dataFim >= :dataInicio")
+    long countByUserIdAndPeriodo(
+            @Param("userId") Long userId,
+            @Param("dataInicio") LocalDate dataInicio,
+            @Param("dataFim") LocalDate dataFim);
 }

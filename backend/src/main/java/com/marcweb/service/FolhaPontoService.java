@@ -30,6 +30,7 @@ public class FolhaPontoService {
     private final RegistroPontoService registroPontoService;
     private final FolgaService folgaService;
     private final FolhaPontoRepository repository;
+    private final LogAuditoriaService logAuditoriaService;
 
     @Transactional
     public String gerarFolhaPonto(Long userId, int mes, int ano) throws JsonProcessingException {
@@ -84,8 +85,18 @@ public class FolhaPontoService {
         ///  ORDENANDO A LISTA DE DIAS EM ORDEM CRESCENTE
         dadosFolha.organizarDias();
 
+        /// CALCULANDO HORAS EXTRAS E DÉBITO
+        BigDecimal horasExtras = calcularHorasExtras(horasTrabalhadasPorDia, registrosPorDia.size());
+        BigDecimal horasDebito = calcularHorasDebito(horasTrabalhadasPorDia);
+        BigDecimal saldoHoras = horasExtras.subtract(horasDebito);
+
         /// TOTALIZAÇÃO DE DIAS E HORAS
-        Totalizacao totalizacao = new Totalizacao(horasTotais, 0, 0, 0);
+        Totalizacao totalizacao = new Totalizacao(
+            horasTotais,
+            horasExtras.intValue(),
+            horasDebito.intValue(),
+            saldoHoras.intValue()
+        );
         dadosFolha.setTotalizacao(totalizacao);
 
         /// OBJETO USADO PARA TRANSFORMAR OBJETO EM JSON
@@ -148,9 +159,10 @@ public class FolhaPontoService {
     /// CALCULANDO AS HORAS TRABALHADAS EM UM MES
     /// RETORNANDO EM LISTA PARA SEPARAR POR DIA
     private List<BigDecimal> calcularHorarTrabalhadas(List<List<RegistroPonto>> registrosSeparadosPorDia) {
-        int minutosTrabalhados = 0;
         List<BigDecimal> horasTrabalhadasPorDia = new ArrayList<>();
         for (List<RegistroPonto> registros : registrosSeparadosPorDia) {
+            int minutosTrabalhados = 0;
+
             // COLETANDO REGISTROS DE UM UNICO DIA
             // INDICA QUE O USUARIO BATEU OS QUATRO PONTOS EM ORDEM
             if (registros.size() == 4) {
@@ -159,23 +171,21 @@ public class FolhaPontoService {
                 var timesTampFimDescanso = registros.get(2).getTimestamp();
                 var timesSaida = registros.get(3).getTimestamp();
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
-                String horasTrabalhadasNoDia = String.valueOf(
-                        ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) + ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida));
-                minutosTrabalhados += Integer.parseInt(horasTrabalhadasNoDia);
+                minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
+                                    (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
 
                 // CASO O USUÁRIO TENHA BATIDO APENAS OS PONTOS DE ENTRADA E SAÍDA
             } else if (registros.size() == 2) {
                 var timesTampEntrada = registros.get(0).getTimestamp();
                 var timesSaida = registros.get(1).getTimestamp();
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
-                String horasTrabalhadasNoDia = String.valueOf(
-                        ChronoUnit.MINUTES.between(timesTampEntrada, timesSaida));
-                minutosTrabalhados += Integer.parseInt(horasTrabalhadasNoDia);
+                minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesSaida);
             }
+
+            // CONVERTENDO MINUTOS PARA HORAS (FORMATO DECIMAL)
             BigDecimal horasTrabalhadas = BigDecimal.valueOf(minutosTrabalhados)
                     .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
             horasTrabalhadasPorDia.add(horasTrabalhadas);
-            minutosTrabalhados = 0;
         }
 
         return horasTrabalhadasPorDia;
@@ -244,5 +254,56 @@ public class FolhaPontoService {
             }
         }
         return datasDeFolga;
+    }
+
+    /// CALCULANDO HORAS EXTRAS
+    /// CONFORME LEGISLAÇÃO TRABALHISTA: HORAS EXTRAS SÃO AQUELAS QUE ULTRAPASSAM 8H DIÁRIAS OU 44H SEMANAIS
+    private BigDecimal calcularHorasExtras(List<BigDecimal> horasTrabalhadasPorDia, int diasTrabalhados) {
+        BigDecimal horasExtras = BigDecimal.ZERO;
+        BigDecimal horasDiariasExtras = BigDecimal.ZERO;
+
+        // CALCULAR HORAS EXTRAS DIÁRIAS (ACIMA DE 8H POR DIA)
+        for (BigDecimal horasDia : horasTrabalhadasPorDia) {
+            if (horasDia.compareTo(BigDecimal.valueOf(8.00)) > 0) {
+                horasDiariasExtras = horasDiariasExtras.add(horasDia.subtract(BigDecimal.valueOf(8.00)));
+            }
+        }
+
+        // CALCULAR HORAS EXTRAS SEMANAIS (ACIMA DE 44H SEMANAIS)
+        // Considerando 5 dias úteis por semana em média
+        int semanasNoMes = (int) Math.ceil(diasTrabalhados / 5.0);
+        BigDecimal limiteSemanal = BigDecimal.valueOf(44.00);
+        BigDecimal horasSemanaisExtras = BigDecimal.ZERO;
+
+        // Somar horas trabalhadas no mês
+        BigDecimal totalHorasMes = somarHorasTrabalhadas(horasTrabalhadasPorDia);
+
+        // Calcular média semanal
+        BigDecimal mediaSemanal = totalHorasMes.divide(BigDecimal.valueOf(semanasNoMes), 2, RoundingMode.HALF_UP);
+
+        // Se a média semanal exceder 44h, calcular horas extras semanais
+        if (mediaSemanal.compareTo(limiteSemanal) > 0) {
+            horasSemanaisExtras = mediaSemanal.subtract(limiteSemanal).multiply(BigDecimal.valueOf((double) semanasNoMes));
+        }
+
+        // Retornar o maior valor entre horas extras diárias e semanais
+        horasExtras = horasDiariasExtras.max(horasSemanaisExtras);
+
+        return horasExtras;
+    }
+
+    /// CALCULANDO HORAS DÉBITO (HORAS NÃO TRABALHADAS)
+    /// CONFORME LEGISLAÇÃO TRABALHISTA: HORAS DÉBITO SÃO AQUELAS QUE FALTAM PARA COMPLETAR A JORNADA
+    private BigDecimal calcularHorasDebito(List<BigDecimal> horasTrabalhadasPorDia) {
+        BigDecimal horasDebito = BigDecimal.ZERO;
+
+        // CALCULAR HORAS DÉBITO DIÁRIAS (ABAIXO DE 8H POR DIA)
+        for (BigDecimal horasDia : horasTrabalhadasPorDia) {
+            if (horasDia.compareTo(BigDecimal.valueOf(8.00)) < 0) {
+                horasDebito = horasDebito.add(BigDecimal.valueOf(8.00).subtract(horasDia));
+            }
+        }
+
+        return horasDebito;
     }
 }

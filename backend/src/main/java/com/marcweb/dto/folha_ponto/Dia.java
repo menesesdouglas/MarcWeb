@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -29,9 +30,9 @@ public class Dia {
         this.data = registrosPontoDeUmDia.get(0).getTimestamp().toLocalDate();
         this.registros = registrosPontoDeUmDia.stream().map(RegistroPontoDTO::new).toList();
         this.dia_semana = this.data.getDayOfWeek().name();
-        this.tipo_dia = this.dia_semana.equals("SABADO OU DOMINGO") ? "Dia útil" : "Final de semana"; /// VOU MODIFCAR DEPOIS
+        this.tipo_dia = this.identificarTipoDia();
         this.horas_trabalhadas = horasTrabalhadas.toString();
-        this.horas_extras = 0 + ""; /// VOU ALTERAR DEPOIS
+        this.horas_extras = "0.00"; /// VOU ALTERAR DEPOIS
         this.observacoes = "Dia normal de trabalho"; ///
     }
 
@@ -40,10 +41,20 @@ public class Dia {
     public Dia(LocalDate dataFolga) {
         this.data = dataFolga;
         this.dia_semana = dataFolga.getDayOfWeek().name();
-        this.tipo_dia = this.dia_semana.equals("SABADO OU DOMINGO") ? "Dia útil" : "Final de semana"; // VOU MODIFCAR DEPOIS
+        this.tipo_dia = this.identificarTipoDia();
         this.observacoes = "Dia de folga";
-        this.horas_extras = 0 + "";
-        this.horas_trabalhadas = 0 + "";
+        this.horas_extras = "0.00";
+        this.horas_trabalhadas = "0.00";
         this.registros = List.of(); /// LISTA VÁZIA
+    }
+
+    /// MÉTODO PARA IDENTIFICAR O TIPO DE DIA CORRETAMENTE
+    private String identificarTipoDia() {
+        DayOfWeek diaSemana = this.data.getDayOfWeek();
+        if (diaSemana == DayOfWeek.SATURDAY || diaSemana == DayOfWeek.SUNDAY) {
+            return "FINAL_DE_SEMANA";
+        } else {
+            return "DIA_UTIL";
+        }
     }
 }
