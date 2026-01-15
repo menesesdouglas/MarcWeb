@@ -21,7 +21,6 @@ import java.util.List; // Import necessário
 @EnableCaching
 @EnableScheduling
 @EnableJpaAuditing
-@EnableCaching
 @SpringBootApplication
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok)
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
