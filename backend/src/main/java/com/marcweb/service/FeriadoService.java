@@ -1,6 +1,8 @@
 package com.marcweb.service;
 
+import com.marcweb.auditoria.Auditado;
 import com.marcweb.dto.CreateFeriado;
+import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Feriado;
 import com.marcweb.entity.OrigemFeriado;
 import com.marcweb.exceptions.FeriadoAnoInvalidoException;
@@ -25,6 +27,11 @@ public class FeriadoService {
 
 
     // CADASTRO MANUAL
+    @Auditado(
+            acao = "Registro de feriado",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = "Administrador executou o registro de feriado manualmente"
+    )
     public void cadastrarFeriado(CreateFeriado dadosFeriado) {
         var feriadoExiste = validarFeriado(dadosFeriado.getData(), true);
         if (feriadoExiste) throw new FeriadoDuplicadoException();
@@ -76,10 +83,20 @@ public class FeriadoService {
         return repository.existsByData(data);
     }
 
+    @Auditado(
+            acao = "Busca por feriados dentro de um periodo",
+            categoria = CategoriaLog.AUDITORIA,
+            detalhes = "usuário executou a busca por feriados"
+    )
     public List<Feriado> findByDataBetween(LocalDate start, LocalDate end) {
         return repository.findByDataBetweenOrderByDataAsc(start, end);
     }
 
+    @Auditado(
+            acao = "Apagando feriado",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = "Administrador executou a exclusão de um feriado"
+    )
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
@@ -88,7 +105,7 @@ public class FeriadoService {
     // ATUALIZANDO FERIADOS PARA O PRÓXIMO ANO
     // EXECUTA TODO DIA 1° DE JANEIRO ÀS MEIA NOITE E DEZ MINUTOS
     @Scheduled(cron = "00 10 00 01 01 *", zone = "America/Sao_Paulo")
-    private void atualizarFeriados() {
+    protected void atualizarFeriados() {
 
         // PRIMEIRO DIA DO ANO
         LocalDate start = LocalDate.now().withDayOfYear(1);

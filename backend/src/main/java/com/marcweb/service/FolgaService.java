@@ -1,8 +1,10 @@
 package com.marcweb.service;
 
+import com.marcweb.auditoria.Auditado;
 import com.marcweb.dto.CreateFolga;
 import com.marcweb.dto.FolgaResponse;
 import com.marcweb.dto.UpdateFolga;
+import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Folga;
 import com.marcweb.entity.Role;
 import com.marcweb.entity.User;
@@ -29,12 +31,22 @@ public class FolgaService {
 
     // --- CRUD Methods ---
 
+    @Auditado(
+            acao = "Buscando todas as folgas registradas",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = "Administrador realizando consulta por todos os registros de folga"
+    )
     @Transactional(readOnly = true)
     public List<FolgaResponse> findAll() {
         List<Folga> folgas = folgaRepository.findAll();
         return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
     }
 
+    @Auditado(
+            acao = "Buscando folga especifica por id",
+            categoria = CategoriaLog.AUDITORIA,
+            detalhes = "Usuário realizando consulta por folga atravéz do id"
+    )
     @Transactional(readOnly = true)
     public FolgaResponse findById(Long id) {
 
@@ -46,6 +58,11 @@ public class FolgaService {
         return new FolgaResponse(folga);
     }
 
+    @Auditado(
+            acao = "Buscando todas as folgas de um usuário pelo id do próprio",
+            categoria = CategoriaLog.AUDITORIA,
+            detalhes = "Administrador realizando consulta por todos os registros de folga"
+    )
     @Transactional(readOnly = true)
     public List<FolgaResponse> findByUserId(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado com ID: " + userId)); // Usando ResponseStatusException para padronizar a resposta HTTP
@@ -71,8 +88,13 @@ public class FolgaService {
     }
 
 
+    @Auditado(
+            acao = "Registro de folga para usuário",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = ""
+    )
     @Transactional
-    public FolgaResponse create(CreateFolga dados) {
+    public String create(CreateFolga dados) {
         User user = userRepository.findById(dados.userId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado com ID: " + dados.userId()));
 
         // Validação de sobreposição - Usando método que será adicionado ao FolgaRepository
@@ -83,9 +105,15 @@ public class FolgaService {
         Folga folga = new Folga(user, dados);
 
         Folga savedFolga = folgaRepository.save(folga);
-        return new FolgaResponse(savedFolga);
+        return "Folga registrada para o usuário " + user.getUsername();
     }
 
+
+    @Auditado(
+            acao = "Editando dados de uma folga ",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = "Administrador alterando dados de uma folga"
+    )
     @Transactional
     public FolgaResponse update(Long id, UpdateFolga dados) {
         Folga folga = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id));
@@ -102,6 +130,12 @@ public class FolgaService {
         return new FolgaResponse(updatedFolga);
     }
 
+
+    @Auditado(
+            acao = "Deletando folga",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = "Administrador deletando folga"
+    )
     @Transactional
     public void deleteById(Long id) {
         if (!folgaRepository.existsById(id)) {
@@ -114,13 +148,13 @@ public class FolgaService {
         }
     }
 
-    public boolean existsByUserAndDate(Long idUser, LocalDate data){
+    public boolean existsByUserAndDate(Long idUser, LocalDate data) {
         return folgaRepository.existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual
                 (idUser, data, data);
     }
 
     // BUSCANDO FOLGAS EM UM DETERMINADO PERIODO
-    public List<Folga> findByPeriodo(Long userId, LocalDate start, LocalDate end){
+    public List<Folga> findByPeriodo(Long userId, LocalDate start, LocalDate end) {
         return folgaRepository.findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqual(
                 userId, start, end
         );

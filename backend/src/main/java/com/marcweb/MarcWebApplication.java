@@ -18,7 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.List; // Import necessário
 
-@EnableCaching
+
 @EnableScheduling
 @EnableJpaAuditing
 @EnableCaching
@@ -27,8 +27,8 @@ import java.util.List; // Import necessário
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().load();
-        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+       /* Dotenv dotenv = Dotenv.configure().load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));*/
         SpringApplication.run(MarcWebApplication.class, args);
     }
 

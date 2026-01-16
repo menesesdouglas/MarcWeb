@@ -58,9 +58,9 @@ public class FolgaController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // Retorna 201 Created
-    public ResponseEntity<FolgaResponse> createFolga(@RequestBody @Valid CreateFolga dados) {
-        FolgaResponse novaFolga = folgaService.create(dados);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaFolga);
+    public ResponseEntity<String> createFolga(@RequestBody @Valid CreateFolga dados) {
+        String resultado = folgaService.create(dados);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }
 
     // PUT /api/folgas/{id} - Atualizar uma folga existente

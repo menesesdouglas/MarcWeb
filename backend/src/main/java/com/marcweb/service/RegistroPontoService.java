@@ -1,12 +1,9 @@
 package com.marcweb.service;
 
+import com.marcweb.auditoria.Auditado;
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.RegistroPontoResponse;
-import com.marcweb.entity.ConfigEmpresa;
-import com.marcweb.entity.Feriado; // Import necessário
-import com.marcweb.entity.RegistroPonto;
-import com.marcweb.entity.TipoRegistro;
-import com.marcweb.entity.User;
+import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário
 import com.marcweb.repository.RegistroPontoRepository;
@@ -32,6 +29,12 @@ public class RegistroPontoService {
     private final FolgaService folgaService;
     private final LogAuditoriaService logAuditoriaService;
 
+
+    @Auditado(
+            acao = "Registro de ponto",
+            categoria = CategoriaLog.AUDITORIA,
+            detalhes = "Usuário executou registro de ponto"
+    )
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
@@ -42,7 +45,7 @@ public class RegistroPontoService {
 
         // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
         // **** TROCAR A EXCEPTION DEPOIS *****
-        if(folgaService.existsByUserAndDate(user.getId(), dataAtual)) throw new RegistroEmFolgaException();
+        if (folgaService.existsByUserAndDate(user.getId(), dataAtual)) throw new RegistroEmFolgaException();
 
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
@@ -161,6 +164,12 @@ public class RegistroPontoService {
             throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.ENTRADA);
     }
 
+
+    @Auditado(
+            acao = "Buscando registros de ponto",
+            categoria = CategoriaLog.ADMIN,
+            detalhes = "Usuário realizou a busca dos seus pontos batidos em periodo especifico"
+    )
     public List<RegistroPontoResponse> buscarPontosRegistrados(LocalDateTime start, LocalDateTime end) {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());

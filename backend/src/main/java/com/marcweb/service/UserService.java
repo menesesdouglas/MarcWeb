@@ -2,10 +2,13 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.dto.CreateUser;
+import com.marcweb.dto.LoginRequest;
+import com.marcweb.dto.LoginResponse;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.User;
 import com.marcweb.exceptions.UsernameDuplicatedException;
 import com.marcweb.repository.UserRepository;
+import com.marcweb.security.JwtService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +40,8 @@ public class UserService {
 
     private final PasswordEncoder encoder;
 
+    private final JwtService jwtService;
+
     @Auditado(
             acao = "Cadastro de usuário",
             detalhes = "Cadastro de usuário feito por administrador",
@@ -54,6 +59,28 @@ public class UserService {
                 .consentGeoloc(consent != null ? consent : false)
                 .build();
         repository.save(user);
+    }
+
+    @Auditado(
+            acao = "Login de usuário",
+            categoria = CategoriaLog.AUDITORIA,
+            detalhes = "Usuário efetuando login"
+    )
+    public LoginResponse logarUsuario(LoginRequest loginRequest) {
+        User user = findByUsername(loginRequest.getUsername());
+        if (encoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            String jwt = jwtService.generateToken(user);
+
+            // Constroi o DTO de resposta com o token e informações do usuário
+            var loginResponse = LoginResponse.builder()
+                    .token(jwt) // O JWT gerado
+                    .userId(user.getId()) // ID do usuário
+                    .username(user.getUsername()) // Nome de usuário
+                    .role(user.getRole().name()) // Papel do usuário (convertido para string)
+                    .build();
+            return loginResponse;
+        }
+        throw new UsernameNotFoundException("Erro ao logar usuário " + loginRequest.getUsername() + " (Usuário e/ou senha incorretos)");
     }
 
 
@@ -87,7 +114,7 @@ public class UserService {
     }
 
     public User findByUsername(String username) {
-        return repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+        return repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
     }
 
 
