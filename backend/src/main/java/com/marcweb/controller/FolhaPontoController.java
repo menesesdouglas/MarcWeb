@@ -2,6 +2,7 @@ package com.marcweb.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.marcweb.auditoria.Auditado;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.folha_ponto.DadosFolhaPonto;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.service.FolhaPontoService;
@@ -24,10 +25,10 @@ public class FolhaPontoController {
     private final UserService userService;
 
 
+
     @Auditado(
             acao = "Gerando folha de ponto para de mês e ano específico",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador executou a geração de folha de ponto para usuário"
+            categoria = CategoriaLog.ADMIN
     )
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/gerar")
@@ -38,9 +39,7 @@ public class FolhaPontoController {
 
     @Auditado(
             acao = "Gerando folha de ponto para de mês e ano específico",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Usuário gerou propria folha de ponto"
-    )
+            categoria = CategoriaLog.AUDITORIA)
     @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("/me")
     public String getMyFolhaPonto(@RequestParam int mes, @RequestParam int ano, Authentication authentication) throws JsonProcessingException {

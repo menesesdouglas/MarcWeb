@@ -1,6 +1,7 @@
 package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateUser;
 import com.marcweb.dto.LoginRequest;
 import com.marcweb.dto.LoginResponse;
@@ -37,18 +38,16 @@ public class UserService {
 
 
     private final UserRepository repository;
-
     private final PasswordEncoder encoder;
-
     private final JwtService jwtService;
+    private final Detalhes detalhes;
 
     @Auditado(
             acao = "Cadastro de usuário",
-            detalhes = "Cadastro de usuário feito por administrador",
             categoria = CategoriaLog.ADMIN
     )
     public void createUser(@RequestBody @Valid CreateUser data) {
-        validateUsername(data.getUsername());
+        if (validateUsername(data.getUsername())) throw new UsernameDuplicatedException(data.getUsername());
         Boolean consent = data.getConsentGeoloc();
         User user = User.builder()
                 .ativo(true)
@@ -59,13 +58,12 @@ public class UserService {
                 .consentGeoloc(consent != null ? consent : false)
                 .build();
         repository.save(user);
+        detalhes.setDetalhes("Cadastro de usuário feito por administrador");
     }
 
     @Auditado(
             acao = "Login de usuário",
-            categoria = CategoriaLog.AUDITORIA,
-            detalhes = "Usuário efetuando login"
-    )
+            categoria = CategoriaLog.AUDITORIA)
     public LoginResponse logarUsuario(LoginRequest loginRequest) {
         User user = findByUsername(loginRequest.getUsername());
         if (encoder.matches(loginRequest.getPassword(), user.getPassword())) {
@@ -78,6 +76,7 @@ public class UserService {
                     .username(user.getUsername()) // Nome de usuário
                     .role(user.getRole().name()) // Papel do usuário (convertido para string)
                     .build();
+            detalhes.setDetalhes("Login realizado pelo usuário " + user.getUsername());
             return loginResponse;
         }
         throw new UsernameNotFoundException("Erro ao logar usuário " + loginRequest.getUsername() + " (Usuário e/ou senha incorretos)");
@@ -86,7 +85,6 @@ public class UserService {
 
     @Auditado(
             acao = "Edição de dados do usuário",
-            detalhes = "Edição de dados do usuário sendo executado por administrador",
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
@@ -95,22 +93,28 @@ public class UserService {
         if (user == null) {
             throw new UsernameNotFoundException("Usuário não encontrado");
         }
-        if (!user.getUsername().equals(data.getUsername())) validateUsername(data.getUsername());
+        ///  SE O USUÁRIO ESTIVER RECEBENDO UM USERNAME QUE NÃO É IGUAL AO ATUAL SALVO NO BANCO DE DADOS
+        /// PASSA POR UMA VALIDAÇÃO PARA SABER SE JÁ NÃO PERTENCE A UM OUTRO USUÁRIO
+        if (!user.getUsername().equals(data.getUsername()) && validateUsername(data.getUsername())) {
+            throw new UsernameDuplicatedException(data.getUsername());
+        }
         if (StringUtils.isNotBlank(data.getUsername())) user.setUsername(data.getUsername());
-        if (StringUtils.isNotBlank(data.getRole().name())) user.setRole(data.getRole());
+        if (data.getRole() != null) user.setRole(data.getRole());
         if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
+        detalhes.setDetalhes("Usuário " + user.getUsername() + " teve seus dados alterados pelo administrador");
     }
 
 
     @Auditado(
             acao = "Exclusão de usuário",
-            detalhes = "Exclusão usuário sendo executado por administrador",
             categoria = CategoriaLog.ADMIN
     )
     public void deleteUser(@PathVariable Long id) {
-        repository.deleteById(id);
+        var user = findById(id);
+        repository.delete(user);
+        detalhes.setDetalhes("Usuário " + user.getUsername() + " Foi deletado por um administrador");
     }
 
     public User findByUsername(String username) {
@@ -118,10 +122,9 @@ public class UserService {
     }
 
 
-    private void validateUsername(String username) {
-        if (repository.existsByUsername(username)) {
-            throw new UsernameDuplicatedException();
-        }
+    private boolean validateUsername(String username) {
+        return repository.existsByUsername(username);
+
     }
 
     public static UserDetails getUserDetailsBySecurityContext() {
@@ -134,10 +137,10 @@ public class UserService {
 
     @Auditado(
             acao = "Busca por todos os usuários",
-            detalhes = "Administrador executando busca por todos usuários",
             categoria = CategoriaLog.ADMIN
     )
     public List<UserResponse> findAll() {
+        detalhes.setDetalhes("Administrador executando busca por todos usuários");
         return repository.findAll().stream()
                 .map(UserResponse::new) // Converte cada User em UserResponse
                 .collect(Collectors.toList());
@@ -146,10 +149,10 @@ public class UserService {
 
     @Auditado(
             acao = "Busca paginada por usuários",
-            detalhes = "Administrador executando busca por usuários de forma paginada",
             categoria = CategoriaLog.ADMIN
     )
     public Page<UserResponse> findAll(int pageNumber) {
+        detalhes.setDetalhes("Administrador executando busca por usuários de forma paginada");
         Pageable page = PageRequest.of(pageNumber, 20);
         return repository.findAll(page)
                 .map(UserResponse::new); // Converte cada User da página em UserResponse

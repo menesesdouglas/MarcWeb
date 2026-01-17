@@ -5,8 +5,10 @@ import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.ToString;
 
 import java.time.LocalDate;
+
 
 public record UpdateFolga(
         @NotNull(message = "A data de início é obrigatória.")

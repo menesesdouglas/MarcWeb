@@ -1,6 +1,7 @@
 package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateFeriado;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Feriado;
@@ -24,18 +25,18 @@ import java.util.Map;    // Import necessário
 public class FeriadoService {
 
     private final FeriadoRepository repository;
+    private final Detalhes detalhes;
 
 
     // CADASTRO MANUAL
     @Auditado(
             acao = "Registro de feriado",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador executou o registro de feriado manualmente"
-    )
+            categoria = CategoriaLog.ADMIN)
     public void cadastrarFeriado(CreateFeriado dadosFeriado) {
         var feriadoExiste = validarFeriado(dadosFeriado.getData(), true);
         if (feriadoExiste) throw new FeriadoDuplicadoException();
         repository.save(new Feriado(dadosFeriado, OrigemFeriado.MANUAL));
+        detalhes.setDetalhes("Administrador registrou o feriado de " + dadosFeriado.getNome() + " para o dia " + dadosFeriado.getData().toString());
     }
 
     // CADASTRO VIA API - Atualizado para retornar estatísticas
@@ -85,25 +86,27 @@ public class FeriadoService {
 
     @Auditado(
             acao = "Busca por feriados dentro de um periodo",
-            categoria = CategoriaLog.AUDITORIA,
-            detalhes = "usuário executou a busca por feriados"
-    )
+            categoria = CategoriaLog.AUDITORIA)
     public List<Feriado> findByDataBetween(LocalDate start, LocalDate end) {
+        detalhes.setDetalhes("Usuário executou a busca por feriados entre " + start.toString() + " e " + end.toString());
         return repository.findByDataBetweenOrderByDataAsc(start, end);
     }
 
     @Auditado(
             acao = "Apagando feriado",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador executou a exclusão de um feriado"
-    )
+            categoria = CategoriaLog.ADMIN)
     public void deleteById(Long id) {
+        var feriado = repository.findById(id).orElseThrow(() -> new RuntimeException("Feriado não encontrado"));
         repository.deleteById(id);
+        detalhes.setDetalhes("Administrador removeu o feriado " + feriado.getNome() + " que estava registrado para o dia " + feriado.getData().toString());
     }
 
 
     // ATUALIZANDO FERIADOS PARA O PRÓXIMO ANO
     // EXECUTA TODO DIA 1° DE JANEIRO ÀS MEIA NOITE E DEZ MINUTOS
+    @Auditado(
+            acao = "Atualizando feriados para o ano vigente",
+            categoria = CategoriaLog.SISTEMA)
     @Scheduled(cron = "00 10 00 01 01 *", zone = "America/Sao_Paulo")
     protected void atualizarFeriados() {
 
@@ -120,6 +123,7 @@ public class FeriadoService {
             return validarFeriado(feriado.getData(), false);
         });
         repository.saveAll(feriadosManuais);
+        detalhes.setDetalhes("Atualizando todos os feriado registrados para o ano de " + start);
     }
 
 

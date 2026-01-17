@@ -1,6 +1,7 @@
 package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateFolga;
 import com.marcweb.dto.FolgaResponse;
 import com.marcweb.dto.UpdateFolga;
@@ -28,28 +29,28 @@ public class FolgaService {
 
     private final FolgaRepository folgaRepository;
     private final UserRepository userRepository; // Para buscar o User pelo ID
+    private final Detalhes detalhes;
 
     // --- CRUD Methods ---
 
     @Auditado(
             acao = "Buscando todas as folgas registradas",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador realizando consulta por todos os registros de folga"
+            categoria = CategoriaLog.ADMIN
     )
     @Transactional(readOnly = true)
     public List<FolgaResponse> findAll() {
+        detalhes.setDetalhes("Administrador realizou consulta por todos os registros de folga");
         List<Folga> folgas = folgaRepository.findAll();
         return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
     }
 
     @Auditado(
             acao = "Buscando folga especifica por id",
-            categoria = CategoriaLog.AUDITORIA,
-            detalhes = "Usuário realizando consulta por folga atravéz do id"
+            categoria = CategoriaLog.AUDITORIA
     )
     @Transactional(readOnly = true)
     public FolgaResponse findById(Long id) {
-
+        detalhes.setDetalhes("Usuário realizou consulta de folga pelo id " + id);
         Folga folga = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id)); // Usando ResponseStatusException para padronizar a resposta HTTP
 
         // VALIDANDO SE USUÁRIO TEM PERMISSÃO OU NÃO
@@ -60,15 +61,13 @@ public class FolgaService {
 
     @Auditado(
             acao = "Buscando todas as folgas de um usuário pelo id do próprio",
-            categoria = CategoriaLog.AUDITORIA,
-            detalhes = "Administrador realizando consulta por todos os registros de folga"
-    )
+            categoria = CategoriaLog.AUDITORIA)
     @Transactional(readOnly = true)
     public List<FolgaResponse> findByUserId(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado com ID: " + userId)); // Usando ResponseStatusException para padronizar a resposta HTTP
         // VALIDANDO SE USUÁRIO TEM PERMISSÃO OU NÃO
         validarUsuario(userId);
-
+        detalhes.setDetalhes("Consulta por todas as folgas do usuário " + user.getUsername());
         //List<Folga> allUserFolgas = folgaRepository.findByUser(user);
         List<Folga> folgas = folgaRepository.findByUserId(userId);
         return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
@@ -90,9 +89,7 @@ public class FolgaService {
 
     @Auditado(
             acao = "Registro de folga para usuário",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = ""
-    )
+            categoria = CategoriaLog.ADMIN)
     @Transactional
     public String create(CreateFolga dados) {
         User user = userRepository.findById(dados.userId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado com ID: " + dados.userId()));
@@ -105,14 +102,14 @@ public class FolgaService {
         Folga folga = new Folga(user, dados);
 
         Folga savedFolga = folgaRepository.save(folga);
+        detalhes.setDetalhes("Administrador registrou folga para o usuário " + user.getUsername() + " de " + dados.dataInicio().toString() + " à " + dados.dataFim().toString());
         return "Folga registrada para o usuário " + user.getUsername();
     }
 
 
     @Auditado(
             acao = "Editando dados de uma folga ",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador alterando dados de uma folga"
+            categoria = CategoriaLog.ADMIN
     )
     @Transactional
     public FolgaResponse update(Long id, UpdateFolga dados) {
@@ -127,22 +124,24 @@ public class FolgaService {
         folga.updateFolga(dados);
 
         Folga updatedFolga = folgaRepository.save(folga);
+        detalhes.setDetalhes("Administrador alterou dados da folga do usuário " + folga.getUser().getUsername() + ", que estava marcada para " + folga.getDataInicio().toString() + ". \n Novos dados: " + dados);
         return new FolgaResponse(updatedFolga);
     }
 
 
     @Auditado(
             acao = "Deletando folga",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador deletando folga"
+            categoria = CategoriaLog.ADMIN
     )
     @Transactional
     public void deleteById(Long id) {
-        if (!folgaRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id);
-        }
+        var folga = folgaRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id)
+        );
+
         try {
             folgaRepository.deleteById(id);
+            detalhes.setDetalhes("Administrador deletou a folga do usuário " + folga.getUser().getUsername() + " marcada entre os dias " + folga.getDataInicio().toString() + " e " + folga.getDataFim().toString());
         } catch (EmptyResultDataAccessException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id);
         }

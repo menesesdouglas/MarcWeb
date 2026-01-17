@@ -10,6 +10,8 @@ import com.marcweb.entity.StatusLog;
 import com.marcweb.repository.LogAuditoriaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +23,9 @@ public class LogAuditoriaService {
     private final LogAuditoriaRepository repository;
     private final ObjectMapper objectMapper;
 
+
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW) /// PARA NÃO DAR ROLLBACK NO AUDITADO DE ERRO
     public void registrarLog(User user, String acao, CategoriaLog categoria, StatusLog status, Object detalhes) throws JsonProcessingException {
         String detalhesJson = detalhes != null ? objectMapper.writeValueAsString(detalhes) : null;
         LogAuditoria log = new LogAuditoria(user, acao, categoria, detalhesJson, status);

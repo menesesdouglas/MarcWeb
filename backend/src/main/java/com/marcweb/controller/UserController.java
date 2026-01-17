@@ -62,7 +62,7 @@ public class UserController {
 
     // VISUALIZANDO O ENTIDADE DE USUÁRIO
     @GetMapping("/teste")
-    public User get(){
+    public User get() {
         return repository.findById(2L).orElse(null);
     }
 

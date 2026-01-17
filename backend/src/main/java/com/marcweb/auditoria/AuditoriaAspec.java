@@ -6,7 +6,6 @@ import com.marcweb.entity.StatusLog;
 import com.marcweb.entity.User;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.UserService;
-import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -22,6 +21,7 @@ public class AuditoriaAspec {
 
     private final UserService userService;
     private final LogAuditoriaService service;
+    private final Detalhes detalhes;
 
 
     /// ♦♦♦♦♦♦♦♦♦♦♦   ♦♦♦♦♦
@@ -40,15 +40,15 @@ public class AuditoriaAspec {
         User usuario = userService.findByUsername(
                 username
         );
-        service.registrarLog(usuario, auditado.acao(), auditado.categoria(), StatusLog.SUCESSO,
-                StringUtils.isNotBlank(auditado.detalhes()) ? auditado.detalhes() : retorno.toString());
+        service.registrarLog(usuario, auditado.acao(), auditado.categoria(), StatusLog.SUCESSO, detalhes.getDetalhes());
+        detalhes.setDetalhes("");
     }
 
 
     /// ♥♥♥♥♥♥♥♥♥♥♥
     @AfterThrowing(pointcut = "@annotation(auditado)",
             throwing = "e")
-    public void auditarErro(JoinPoint jp, Auditado auditado, Exception e) throws JsonProcessingException {
+    public void auditarErro(Auditado auditado, Exception e) throws JsonProcessingException {
         User usuarioLogado = null;
         try {
             usuarioLogado = userService.findByUsername(
@@ -57,7 +57,6 @@ public class AuditoriaAspec {
         } catch (Exception ex) {
             System.out.println("No pasa nada!!");
         }
-
         service.registrarLog(usuarioLogado, auditado.acao(), auditado.categoria(), StatusLog.ERRO, e.getMessage());
     }
 }

@@ -1,11 +1,8 @@
 package com.marcweb.controller;
 
-import com.marcweb.auditoria.Auditado;
 import com.marcweb.dto.CreateUser;
 import com.marcweb.dto.LoginRequest;
 import com.marcweb.dto.LoginResponse;
-import com.marcweb.entity.CategoriaLog;
-import com.marcweb.entity.User;
 import com.marcweb.security.JwtService;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.UserService;
@@ -15,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController // Marca como um controlador REST

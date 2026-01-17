@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.folha_ponto.*;
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.SemRegistrosException;
@@ -30,12 +31,14 @@ public class FolhaPontoService {
     private final RegistroPontoService registroPontoService;
     private final FolgaService folgaService;
     private final FolhaPontoRepository repository;
-    private final LogAuditoriaService logAuditoriaService;
+    private final Detalhes detalhes;
+
 
     @Transactional
     public String gerarFolhaPonto(Long userId, int mes, int ano) throws JsonProcessingException {
 
         var userEntity = userService.findById(userId);
+        detalhes.setDetalhes("Folha de ponto do periódo " + mes + "-" + ano + " gerada para o usuário " + userEntity.getUsername());
 
         var folhaPonto = repository.findByUserIdAndMesAndAno(userId, mes, ano);
         ///  RETORNA OS DADOS SALVOS CASO JÁ EXISTA UMA FOLHA DE PONTO
@@ -92,10 +95,10 @@ public class FolhaPontoService {
 
         /// TOTALIZAÇÃO DE DIAS E HORAS
         Totalizacao totalizacao = new Totalizacao(
-            horasTotais,
-            horasExtras.intValue(),
-            horasDebito.intValue(),
-            saldoHoras.intValue()
+                horasTotais,
+                horasExtras.intValue(),
+                horasDebito.intValue(),
+                saldoHoras.intValue()
         );
         dadosFolha.setTotalizacao(totalizacao);
 
@@ -172,7 +175,7 @@ public class FolhaPontoService {
                 var timesSaida = registros.get(3).getTimestamp();
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
                 minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
-                                    (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
+                                     (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
 
                 // CASO O USUÁRIO TENHA BATIDO APENAS OS PONTOS DE ENTRADA E SAÍDA
             } else if (registros.size() == 2) {
@@ -303,7 +306,6 @@ public class FolhaPontoService {
                 horasDebito = horasDebito.add(BigDecimal.valueOf(8.00).subtract(horasDia));
             }
         }
-
         return horasDebito;
     }
 }

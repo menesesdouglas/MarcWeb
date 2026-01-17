@@ -1,6 +1,7 @@
 package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.FeriadoNacionalDTO;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Feriado;
@@ -23,6 +24,8 @@ public class BrasilApiService {
 
     private final FeriadoService feriadoService;
 
+    private final Detalhes detalhes;
+
 
     // Método auxiliar para buscar feriados da API, recebe ano como parâmetro
     private List<FeriadoNacionalDTO> buscarFeriados(int ano) {
@@ -37,13 +40,11 @@ public class BrasilApiService {
     // Método para sincronizar feriados de um ano específico, retorna estatísticas
     @Auditado(
             acao = "Registro de feriados de um ano específico",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador executou o registro dos feriados nacionais de um ano específico"
-    )
+            categoria = CategoriaLog.ADMIN)
     public Map<String, Integer> sincronizarFeriados(int ano) {
         // Validação de ano pode ser adicionada aqui se necessário
         // if (ano < Year.now().getValue()) throw new IllegalArgumentException(...)
-
+        detalhes.setDetalhes("Administrador executou o registro dos feriados nacionais de um ano específico");
         List<FeriadoNacionalDTO> feriadoDTOList = buscarFeriados(ano);
         List<Feriado> feriadosNacionais = feriadoDTOList
                 .stream()
@@ -58,13 +59,12 @@ public class BrasilApiService {
     // EXECUTA TODO DIA 1° DE JANEIRO ÀS MEIA NOITE E DEZ MINUTOS
     @Auditado(
             acao = "Cadastrando feriados nacionais",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Administrador executou o registro dos feriados nacionais do ano vigente"
-    )
+            categoria = CategoriaLog.ADMIN)
     @Scheduled(cron = "00 10 00 01 01 *", zone = "America/Sao_Paulo")
     public void cadastrarFeriadosNacionais() {
         // Chama o novo método com o ano atual
         sincronizarFeriados(Year.now().getValue());
+        detalhes.setDetalhes("Administrador executou o registro dos feriados nacionais do ano vigente");
         // O retorno (estatísticas) pode ser logado aqui se desejado
         // log.info("Sincronização automática de feriados para {}: {}", Year.now().getValue(), stats);
     }

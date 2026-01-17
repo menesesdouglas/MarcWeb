@@ -1,6 +1,7 @@
 package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.entity.*;
@@ -27,14 +28,12 @@ public class RegistroPontoService {
     private final ConfigEmpresaService configEmpresaService; // Injetando o serviço de configuração
     private final FeriadoRepository feriadoRepository; // Injetando o repositório de feriados
     private final FolgaService folgaService;
-    private final LogAuditoriaService logAuditoriaService;
+    private final Detalhes detalhes;
 
 
     @Auditado(
             acao = "Registro de ponto",
-            categoria = CategoriaLog.AUDITORIA,
-            detalhes = "Usuário executou registro de ponto"
-    )
+            categoria = CategoriaLog.PONTO)
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
@@ -61,6 +60,7 @@ public class RegistroPontoService {
         // SALVANDO CASO PASSE NAS VALIDAÇÕES
         // O RegistroPonto deve receber os dados do DTO e o usuário, o timestamp é definido internamente
         repository.save(new RegistroPonto(data, user, getIpUser(request))); // Assumindo que o construtor da entidade ou o JPA lida com o timestamp
+        detalhes.setDetalhes("Usuário registrou ponto de " + data.getTipo().getText());
     }
 
     // VALIDANDO DIA ÚTIL
@@ -167,12 +167,11 @@ public class RegistroPontoService {
 
     @Auditado(
             acao = "Buscando registros de ponto",
-            categoria = CategoriaLog.ADMIN,
-            detalhes = "Usuário realizou a busca dos seus pontos batidos em periodo especifico"
-    )
+            categoria = CategoriaLog.ADMIN)
     public List<RegistroPontoResponse> buscarPontosRegistrados(LocalDateTime start, LocalDateTime end) {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
+        detalhes.setDetalhes("Usuário realizou a busca dos seus pontos batidos entre " + start.toLocalDate().toString() + " e " + end.toLocalDate().toString());
         return repository.findByUserAndTimestampBetweenOrderByTimestampAsc(user, start, end);
     }
 
