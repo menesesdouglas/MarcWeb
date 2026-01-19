@@ -4,7 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusElement = document.getElementById('currentStatus');
     const punchList = document.getElementById('punchList');
     const punchButtons = document.querySelectorAll('.punch-btn');
-
+    const usernameTag = document.getElementById("username");
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    usernameTag.textContent = auth.username;
     // 1. Atualizar Relógio em Tempo Real com animação suave
     function updateTime() {
         const now = new Date();
@@ -39,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', (e) => {
             const type = button.getAttribute('data-type');
             const time = clockElement.textContent;
+            const value = button.value;
 
             // Animação de clique no botão
             button.style.transform = 'scale(0.95)';
@@ -46,48 +49,76 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.style.transform = '';
             }, 150);
 
-            registerPunch(type, time);
+            registerPunch(type, time, value);
         });
     });
 
-    function registerPunch(type, time) {
-        // Remover mensagem de lista vazia se for o primeiro item
-        if (punchList.querySelector('.empty-msg')) {
-            punchList.innerHTML = '';
+    async function registerPunch(type, time, value) {
+
+        /// -- ☻☻☻☻☻ VIA API
+        const dados = {
+            tipo: value, // ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
+            latitude: -23.5505,
+            longitude: -46.6333,
+            precisao: 10,
+            justificativa: "Batendo ponto em dia normal de trabalho"
         }
 
-        // Criar novo item na lista com animação
-        const li = document.createElement('li');
-        li.className = 'punch-item';
-        li.style.opacity = '0';
-        li.style.transform = 'translateY(10px)';
-        li.innerHTML = `
-            <span class="item-type">${type}</span>
-            <span class="item-time">${time}</span>
-        `;
+        const result = await fetch("http://localhost:8080/api/ponto", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${auth.token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        if (result.status == 201) {
+            alert("Ponto batido com sucesso")
+            // Remover mensagem de lista vazia se for o primeiro item
+            if (punchList.querySelector('.empty-msg')) {
+                punchList.innerHTML = '';
+            }
 
-        // Adicionar ao topo da lista
-        punchList.prepend(li);
 
-        // Animação de entrada
-        setTimeout(() => {
-            li.style.opacity = '1';
-            li.style.transform = 'translateY(0)';
-            li.style.transition = 'all 0.3s ease-out';
-        }, 50);
+            // Criar novo item na lista com animação
+            const li = document.createElement('li');
+            li.className = 'punch-item';
+            li.style.opacity = '0';
+            li.style.transform = 'translateY(10px)';
+            li.innerHTML = `
+                <span class="item-type">${type}</span>
+                <span class="item-time">${time}</span>
+            `;
 
-        // Atualizar Badge de Status com animação
-        statusElement.textContent = `Status: ${type}`;
-        statusElement.style.color = '#2dce89'; // Verde sucesso
-        statusElement.classList.add('loading');
+            // Adicionar ao topo da lista
+            punchList.prepend(li);
 
-        // Remover animação após 2 segundos
-        setTimeout(() => {
-            statusElement.classList.remove('loading');
-        }, 2000);
+            // Animação de entrada
+            setTimeout(() => {
+                li.style.opacity = '1';
+                li.style.transform = 'translateY(0)';
+                li.style.transition = 'all 0.3s ease-out';
+            }, 50);
 
-        // Feedback visual moderno (toast notification)
-        showToast(`✅ Ponto registrado: ${type} às ${time}`, 'success');
+            // Atualizar Badge de Status com animação
+            statusElement.textContent = `Status: ${type}`;
+            statusElement.style.color = '#2dce89'; // Verde sucesso
+            statusElement.classList.add('loading');
+
+            // Remover animação após 2 segundos
+            setTimeout(() => {
+                statusElement.classList.remove('loading');
+            }, 2000);
+
+            // Feedback visual moderno (toast notification)
+            showToast(`✅ Ponto registrado: ${type} às ${time}`, 'success');
+        } else {
+            const erro = await result.json();
+            alert(erro.erro)
+        }
+
+
+
     }
 
     // 3. Sistema de Toast Notifications
@@ -141,9 +172,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btnLogout').addEventListener('click', () => {
-        if(confirm('Deseja realmente sair do sistema?')) {
+        if (confirm('Deseja realmente sair do sistema?')) {
             showToast('👋 Saindo do sistema... Até logo!', 'info');
             setTimeout(() => {
+                localStorage.removeItem("auth");
                 window.location.href = 'login.html';
             }, 1000);
         }

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Simulação de submissão do formulário
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // Validação básica
@@ -37,9 +37,39 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Entrar no Sistema';
 
             // Simula sucesso de login
-            alert('✅ Acesso autorizado! Redirecionando para o dashboard...');
+            //alert('✅ Acesso autorizado! Redirecionando para o dashboard...');
             // Em um cenário real, seria: window.location.href = 'dashboard.html';
         }, 1500);
+
+
+        /// -->>  LOGIN VIA API <<<---
+        const dadosLogin = {
+            username: username,
+            password: password
+        }
+        const loginResponse = await fetch("http://localhost:8080/api/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dadosLogin)
+        });
+        const resultado = await loginResponse.json();
+        if (loginResponse.status == 200) {
+            const auth = {
+                id: resultado.userId,
+                role: resultado.role,
+                token: resultado.token,
+                username: resultado.username
+            }
+            localStorage.setItem("auth", JSON.stringify(auth));
+            window.location.href = auth.role == "ADMIN"? "admin.html" : "employee.html";
+        } else {
+            alert(resultado.erro);
+        }
+
+
+
     });
 
     // Efeito sutil de movimento no blob de fundo baseado no mouse
@@ -61,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Feedback visual para campos obrigatórios
     const requiredFields = document.querySelectorAll('[required]');
     requiredFields.forEach(field => {
-        field.addEventListener('invalid', function(e) {
+        field.addEventListener('invalid', function (e) {
             e.preventDefault();
             this.style.borderColor = '#ff4444';
             this.style.boxShadow = '0 0 0 2px rgba(255, 68, 68, 0.2)';
@@ -72,9 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
         });
 
-        field.addEventListener('input', function() {
+        field.addEventListener('input', function () {
             this.style.borderColor = '';
             this.style.boxShadow = '';
         });
     });
 });
+
+
+

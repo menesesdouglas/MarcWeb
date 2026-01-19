@@ -20,14 +20,14 @@ public class LogAuditoriaController {
 
     private final LogAuditoriaService logAuditoriaService;
 
-    @PreAuthorize("HasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs")
     public ResponseEntity<List<LogAuditoriaResponse>> buscarLogsPorUsuario(@RequestParam Long userId) {
         List<LogAuditoriaResponse> logs = logAuditoriaService.buscarLogsPorUsuario(userId);
         return ResponseEntity.ok(logs);
     }
 
-    @PreAuthorize("HasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs/periodo")
     public ResponseEntity<List<LogAuditoriaResponse>> buscarLogsPorPeriodo(
             @RequestParam LocalDateTime inicio,
@@ -36,7 +36,7 @@ public class LogAuditoriaController {
         return ResponseEntity.ok(logs);
     }
 
-    @PreAuthorize("HasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs/categoria")
     public ResponseEntity<List<LogAuditoriaResponse>> buscarLogsPorCategoria(
             @RequestParam CategoriaLog categoria) {
@@ -44,7 +44,7 @@ public class LogAuditoriaController {
         return ResponseEntity.ok(logs);
     }
 
-    @PreAuthorize("HasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs/status")
     public ResponseEntity<List<LogAuditoriaResponse>> buscarLogsPorStatus(
             @RequestParam StatusLog status) {

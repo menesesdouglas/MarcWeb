@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestControllerAdvice // Aplica a todos os @RestController
 public class GlobalExceptionHandler {
 
@@ -15,96 +18,100 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(UsernameDuplicatedException.class)
-    public String handlerUsernameDuplicatedException(UsernameDuplicatedException e) {
+    public Map<String, Object> handlerUsernameDuplicatedException(UsernameDuplicatedException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(UsernameNotFoundException.class)
-    public String handlerUsernameNotFoundException(UsernameNotFoundException e) {
+    public Map<String, Object> handlerUsernameNotFoundException(UsernameNotFoundException e) {
         log.error(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ConfigEmpresaNotFoundException.class)
-    public String handlerConfigEmpresaNotFoundException(ConfigEmpresaNotFoundException e) {
+    public Map<String, Object> handlerConfigEmpresaNotFoundException(ConfigEmpresaNotFoundException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroPontoSequenciaInvalidaException.class)
-    public String handlerRegistroPontoSequenciaInvalidaException(RegistroPontoSequenciaInvalidaException e) {
+    public Map<String, Object> handlerRegistroPontoSequenciaInvalidaException(RegistroPontoSequenciaInvalidaException e) {
         log.warn("Erro na ordem dos registros de ponto");
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(FeriadoAnoInvalidoException.class)
-    public String handlerFeriadoAnoInvalidoException(FeriadoAnoInvalidoException e) {
+    public Map<String, Object> handlerFeriadoAnoInvalidoException(FeriadoAnoInvalidoException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(FeriadoDuplicadoException.class)
-    public String handlerFeriadoDuplicadoException(FeriadoDuplicadoException e) { // Corrigido nome do método
+    public Map<String, Object> handlerFeriadoDuplicadoException(FeriadoDuplicadoException e) { // Corrigido nome do método
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
-
 
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(SemRegistrosException.class)
-    public String handlerSemRegistrosException(SemRegistrosException e) {
+    public Map<String, Object> handlerSemRegistrosException(SemRegistrosException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroEmFolgaException.class)
-    public String handlerRegistroEmFolgaException(RegistroEmFolgaException e) {
+    public Map<String, Object> handlerRegistroEmFolgaException(RegistroEmFolgaException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
     // --- NOVAS EXCEÇÕES PARA DIA ÚTIL ---
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroEmDomingoException.class)
-    public String handlerRegistroEmDomingoException(RegistroEmDomingoException e) {
+    public Map<String, Object> handlerRegistroEmDomingoException(RegistroEmDomingoException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroEmFeriadoException.class)
-    public String handlerRegistroEmFeriadoException(RegistroEmFeriadoException e) {
+    public Map<String, Object> handlerRegistroEmFeriadoException(RegistroEmFeriadoException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
     // --- FIM DAS NOVAS EXCEÇÕES ---
 
     // --- EXCEÇÕES GEOLOCALIZAÇÃO (já implementadas anteriormente) ---
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(GeolocalizacaoObrigatoriaException.class)
-    public String handlerGeolocalizacaoObrigatoriaException(GeolocalizacaoObrigatoriaException e) {
+    public Map<String, Object> handlerGeolocalizacaoObrigatoriaException(GeolocalizacaoObrigatoriaException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroForaDoRaioException.class)
-    public String handlerRegistroForaDoRaioException(RegistroForaDoRaioException e) {
+    public Map<String, Object> handlerRegistroForaDoRaioException(RegistroForaDoRaioException e) {
         log.warn(e.getMessage());
-        return e.getMessage();
+        return errorObject(e.getMessage());
     }
     // --- FIM EXCEÇÕES GEOLOCALIZAÇÃO ---
 
+    private Map<String, Object> errorObject(String message) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("erro", message);
+        return map;
+    }
 }

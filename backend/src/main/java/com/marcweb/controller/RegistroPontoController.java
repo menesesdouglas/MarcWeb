@@ -2,6 +2,7 @@ package com.marcweb.controller;
 
 
 import com.marcweb.dto.CreateRegistroPonto;
+import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -36,8 +38,15 @@ public class RegistroPontoController {
     public ResponseEntity<List<RegistroPontoResponse>> meusPontos(
             @RequestParam LocalDateTime start,
             @RequestParam LocalDateTime end
-            ) {
+    ) {
         var pontos = service.buscarPontosRegistrados(start, end);
         return !pontos.isEmpty() ? ResponseEntity.ok(pontos) : ResponseEntity.notFound().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/recentes")
+    public ResponseEntity<List<PontosRecentes>> getStatusRecentes() {
+        var lista = service.getStatusRecentes();
+        return ResponseEntity.ok(lista);
     }
 }

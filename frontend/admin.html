@@ -134,15 +134,30 @@
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal card">
             <h2 id="modalTitle">Cadastrar Funcionário</h2>
-            <form id="employeeForm">
+            <form id="employeeForm" >
                 <input type="hidden" id="editIndex">
                 <div class="input-group">
                     <label>Nome Completo</label>
-                    <input type="text" id="empName" required>
+                    <input type="text" id="empName" value="Paulo Oliveira" required>
+                </div>
+                <div class="input-group">
+                    <label>Nome de Usuário</label>
+                    <input type="text" id="empUsername" value="O_Paulo_Rich" required>
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <input type="password" id="empPassword" value="123" required>
                 </div>
                 <div class="input-group">
                     <label>Cargo</label>
-                    <input type="text" id="empRole" required>
+                    <input type="text" id="empRole" value="Palhaço" required>
+                </div>
+                <div class="input-group">
+                    <label>Perfil</label>
+                    <select id="empProfile">
+                        <option value="EMPLOYEE">Usuário</option>
+                        <option value="ADMIN">Administrador</option>
+                    </select>
                 </div>
                 <div class="input-group">
                     <label>Situação no Cadastro</label>

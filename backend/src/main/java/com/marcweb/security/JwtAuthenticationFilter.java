@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
+        log.info(authHeader);
         log.debug("Filtro JWT chamado para: {}", request.getRequestURI());
 
         // Verifica se o header Authorization está presente e começa com "Bearer "

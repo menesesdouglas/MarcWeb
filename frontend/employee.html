@@ -1,19 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Colaborador | MarcWeb</title>
     <link rel="stylesheet" href="css/custom-styles_employee.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Estilos adicionais para ícones modernos */
-        .punch-btn[data-type="Entrada"] .icon::before { content: "🚀"; }
-        .punch-btn[data-type="Início Descanso"] .icon::before { content: "☕"; }
-        .punch-btn[data-type="Fim Descanso"] .icon::before { content: "⏳"; }
-        .punch-btn[data-type="Saída"] .icon::before { content: "🏁"; }
+        .punch-btn[data-type="Entrada"] .icon::before {
+            content: "🚀";
+        }
+
+        .punch-btn[data-type="Início Descanso"] .icon::before {
+            content: "☕";
+        }
+
+        .punch-btn[data-type="Fim Descanso"] .icon::before {
+            content: "⏳";
+        }
+
+        .punch-btn[data-type="Saída"] .icon::before {
+            content: "🏁";
+        }
 
         /* Animação de loading para o corpo */
         body.loading {
@@ -27,13 +41,14 @@
         }
     </style>
 </head>
+
 <body>
 
     <nav class="navbar">
         <div class="container">
             <div class="logo">Marc<span>Web</span></div>
             <div class="user-info">
-                <span>Olá, <strong>João Silva</strong></span>
+                <span>Olá, <strong id="username"></strong></span>
                 <button id="btnLogout" class="btn-logout">Sair</button>
             </div>
         </div>
@@ -47,19 +62,19 @@
         </section>
 
         <section class="actions-grid">
-            <button class="punch-btn" data-type="Entrada">
+            <button value="ENTRADA" class="punch-btn" data-type="Entrada">
                 <span class="icon">🚀</span>
                 Entrada
             </button>
-            <button class="punch-btn" data-type="Início Descanso">
+            <button value="INICIO_DESCANSO" class="punch-btn" data-type="Início Descanso">
                 <span class="icon">☕</span>
                 Início Descanso
             </button>
-            <button class="punch-btn" data-type="Fim Descanso">
+            <button value="FIM_DESCANSO" class="punch-btn" data-type="Fim Descanso">
                 <span class="icon">⏳</span>
                 Fim Descanso
             </button>
-            <button class="punch-btn" data-type="Saída">
+            <button value="SAIDA" class="punch-btn" data-type="Saída">
                 <span class="icon">🏁</span>
                 Saída
             </button>
@@ -78,4 +93,5 @@
 
     <script src="js/script_employee.js"></script>
 </body>
+
 </html>

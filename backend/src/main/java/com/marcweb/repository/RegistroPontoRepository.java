@@ -63,4 +63,8 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     long countByUserAndPeriod(@Param("user") User user, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
 
+    @Query(nativeQuery = true, value = "Select * from registros_ponto order by timestamp DESC limit 10")
+    List<RegistroPonto> getStatusRecentes();
+
+
 }

@@ -3,6 +3,7 @@ package com.marcweb.service;
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateRegistroPonto;
+import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek; // Import necessário
 import java.time.LocalDate; // Import necessário
 import java.time.LocalDateTime; // Import necessário
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -48,7 +50,7 @@ public class RegistroPontoService {
 
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
-        validarDiaUtil(dataAtual); // <-- Usando LocalDateTime.now()
+        /// validarDiaUtil(dataAtual); // <-- Usando LocalDateTime.now()
 
         // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
         ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
@@ -196,5 +198,15 @@ public class RegistroPontoService {
         return repository.buscarRegistrosEmIntervaloDeData(
                 user, inicioMes, finalMes
         );
+    }
+
+
+    public List<PontosRecentes> getStatusRecentes() {
+        List<RegistroPonto> pontosRecentesEntity = repository.getStatusRecentes();
+        List<PontosRecentes> pontosRecentesDTO = pontosRecentesEntity.stream().map(r -> {
+            String horario = r.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm"));
+            return new PontosRecentes(r.getUser().getNome(), r.getTipo().getText(), horario);
+        }).toList();
+        return pontosRecentesDTO;
     }
 }

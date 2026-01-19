@@ -1,15 +1,27 @@
 // Dados iniciais (Mock)
+/// REGISTROS RECENTES VIA API ♠♠♠♠♠
+
 let employees = [
     { name: "João Silva", role: "Desenvolvedor", status: "Ativo", lastStatus: "Entrada", lastTime: "08:55" },
     { name: "Maria Clara", role: "RH Especialista", status: "Ativo", lastStatus: "Início Descanso", lastTime: "12:02" },
     { name: "Roberto Souza", role: "Gestor Comercial", status: "Inativo", lastStatus: "Saída", lastTime: "18:00" }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    if (auth == null) window.location.href = "login.html";
+    const result = await fetch("http://localhost:8080/api/ponto/recentes", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${auth.token}`
+        }
+    })
+    const employees = await result.json();
+
     initNavigation();
-    renderEmployees();
-    renderDashboard();
     populateSelects();
+    renderEmployees(employees);
+    renderDashboard(employees);
 
     // Formulário de Cadastro/Edição
     document.getElementById('employeeForm').addEventListener('submit', handleEmployeeSubmit);
@@ -28,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btnLogout').addEventListener('click', () => {
-        if(confirm('Deseja encerrar a sessão administrativa?')) window.location.href = 'login.html';
+        if (confirm('Deseja encerrar a sessão administrativa?')) window.location.href = 'login.html';
     });
 });
 
@@ -47,23 +59,24 @@ function initNavigation() {
 
             sections.forEach(s => {
                 s.classList.remove('active');
-                if(s.id === target) s.classList.add('active');
+                if (s.id === target) s.classList.add('active');
             });
         });
     });
 }
 
 // Renderizar Lista de Funcionários
-function renderEmployees() {
+function renderEmployees(employees) {
     const container = document.getElementById('employeeListBody');
     container.innerHTML = '';
 
     employees.forEach((emp, index) => {
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${emp.name}</td>
             <td>${emp.role}</td>
-            <td><span class="status-badge status-${emp.status.toLowerCase()}">${emp.status}</span></td>
+            <td><span class="status-badge status-${emp.status}">${emp.status}</span></td>
             <td>
                 <button onclick="editEmployee(${index})" style="background:none; border:none; color:#0a9396; cursor:pointer">Editar</button>
             </td>
@@ -73,10 +86,10 @@ function renderEmployees() {
 }
 
 // Renderizar Dashboard
-function renderDashboard() {
+function renderDashboard(employees) {
     const activity = document.getElementById('recentActivityBody');
     activity.innerHTML = '';
-    
+
     // Mostra as últimas atividades
     employees.forEach(emp => {
         const tr = document.createElement('tr');
@@ -101,7 +114,7 @@ function populateSelects() {
 function openModal(type) {
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('modalOverlay').style.animation = 'fadeIn 0.3s ease';
-    if(type === 'add') {
+    if (type === 'add') {
         document.getElementById('modalTitle').textContent = 'Cadastrar Funcionário';
         document.getElementById('employeeForm').reset();
         document.getElementById('editIndex').value = '';
@@ -137,7 +150,7 @@ function editEmployee(index) {
     document.getElementById('editIndex').value = index;
 }
 
-function handleEmployeeSubmit(e) {
+async function handleEmployeeSubmit(e) {
     e.preventDefault();
     const index = document.getElementById('editIndex').value;
     const newData = {
@@ -148,10 +161,38 @@ function handleEmployeeSubmit(e) {
         lastTime: "--:--"
     };
 
-    if(index === "") {
+    if (index === "") {
         employees.push(newData);
     } else {
-        employees[index] = {...employees[index], ...newData};
+        employees[index] = { ...employees[index], ...newData };
+    }
+
+
+    /// ------- | -----------
+    const newUser = {
+        username: document.getElementById("empUsername").value,
+        nome: document.getElementById('empName').value,
+        password: document.getElementById("empPassword").value,
+        role: document.getElementById("empProfile").value,
+        consentGeoloc: true
+
+    }
+
+    const token = JSON.parse(localStorage.getItem("auth")).token;
+
+    const result = await fetch("http://localhost:8080/api/user", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newUser)
+    });
+    if (result.status == 201) {
+        alert("Usuário cadastrado com sucesso")
+    } else {
+        const erro = await result.json();
+        alert(erro.erro);
     }
 
     renderEmployees();
