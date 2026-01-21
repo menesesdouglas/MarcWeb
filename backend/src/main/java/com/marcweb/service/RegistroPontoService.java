@@ -45,7 +45,6 @@ public class RegistroPontoService {
         var dataAtual = LocalDate.now();
 
         // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
-        // **** TROCAR A EXCEPTION DEPOIS *****
         if (folgaService.existsByUserAndDate(user.getId(), dataAtual)) throw new RegistroEmFolgaException();
 
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)

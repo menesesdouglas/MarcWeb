@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         headers: {
             "Authorization": `Bearer ${auth.token}`
         }
-    })
+    });
+    if (result.status == 403) window.location.href = "login.html";
     const employees = await result.json();
 
     initNavigation();
@@ -195,8 +196,6 @@ async function handleEmployeeSubmit(e) {
         alert(erro.erro);
     }
 
-    renderEmployees();
-    populateSelects();
     closeModal();
 }
 

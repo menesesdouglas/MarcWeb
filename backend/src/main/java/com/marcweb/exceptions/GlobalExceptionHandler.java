@@ -1,5 +1,6 @@
 package com.marcweb.exceptions; // ou o pacote que você usar para handlers/configs
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -90,6 +91,14 @@ public class GlobalExceptionHandler {
     public Map<String, Object> handlerRegistroEmFeriadoException(RegistroEmFeriadoException e) {
         log.warn(e.getMessage());
         return errorObject(e.getMessage());
+    }
+
+    /// ---->> NÃO FUNCIONA
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(ExpiredJwtException.class)
+    public Map<String, Object> handlerRegistroEmFeriadoException(ExpiredJwtException e) {
+        log.warn(e.getMessage());
+        return errorObject("Sessão expirou");
     }
     // --- FIM DAS NOVAS EXCEÇÕES ---
 
