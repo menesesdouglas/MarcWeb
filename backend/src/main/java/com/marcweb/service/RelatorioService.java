@@ -1,6 +1,14 @@
 package com.marcweb.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
 import com.marcweb.entity.User;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
@@ -31,76 +39,76 @@ public class RelatorioService {
 
             // Cria PDF em memória
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            // PdfWriter writer = new PdfWriter(outputStream);
-            // PdfDocument pdf = new PdfDocument(writer);
-            // Document document = new Document(pdf);
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
 
             // Adiciona título
-            // PdfFont font = PdfFontFactory.createFont("Helvetica-Bold");
-            // Paragraph title = new Paragraph("Relatório de Folha de Ponto")
-            //         .setFont(font)
-            //         .setFontSize(18)
-            //         .setTextAlignment(TextAlignment.CENTER)
-            //         .setMarginBottom(20);
-            // document.add(title);
+            PdfFont font = PdfFontFactory.createFont();
+            Paragraph title = new Paragraph("Relatório de Folha de Ponto")
+                    .setFont(font)
+                    .setFontSize(18)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(20);
+            document.add(title);
 
             // Adiciona informações do funcionário
-            // document.add(new Paragraph("Funcionário: " + user.getNome())
-            //         .setBold()
-            //         .setMarginBottom(5));
-            // document.add(new Paragraph("CPF: " + user.getUsername())
-            //         .setMarginBottom(10));
+            document.add(new Paragraph("Funcionário: " + user.getNome())
+                    .setBold()
+                    .setMarginBottom(5));
+            document.add(new Paragraph("CPF: " + user.getUsername())
+                    .setMarginBottom(10));
 
             // Adiciona período
             Map<String, Object> periodo = (Map<String, Object>) folhaPonto.get("periodo");
-            // document.add(new Paragraph("Período: " + periodo.get("mes") + "/" + periodo.get("ano"))
-            //         .setMarginBottom(10));
+            document.add(new Paragraph("Período: " + periodo.get("mes") + "/" + periodo.get("ano"))
+                    .setMarginBottom(10));
 
             // Adiciona tabela de dias trabalhados
-            // float[] columnWidths = {100, 100, 100, 100};
-            // Table table = new Table(columnWidths);
+            float[] columnWidths = {100, 100, 100, 100};
+            Table table = new Table(columnWidths);
 
             // Cabeçalho da tabela
-            // table.addHeaderCell("Data");
-            // table.addHeaderCell("Horas Trabalhadas");
-            // table.addHeaderCell("Tipo de Dia");
-            // table.addHeaderCell("Observações");
+            table.addHeaderCell("Data");
+            table.addHeaderCell("Horas Trabalhadas");
+            table.addHeaderCell("Tipo de Dia");
+            table.addHeaderCell("Observações");
 
             // Dados da tabela
-            // for (Object diaObj : (Iterable<?>) folhaPonto.get("dias")) {
-            //     Map<String, Object> dia = (Map<String, Object>) diaObj;
-            //     table.addCell(dia.get("data").toString());
-            //     table.addCell(dia.get("horasTrabalhadas").toString());
-            //     table.addCell(dia.get("tipoDia").toString());
-            //     table.addCell(dia.getOrDefault("observacoes", "").toString());
-            // }
+            for (Object diaObj : (Iterable<?>) folhaPonto.get("dias")) {
+                Map<String, Object> dia = (Map<String, Object>) diaObj;
+                table.addCell(dia.get("data").toString());
+                table.addCell(dia.get("horasTrabalhadas").toString());
+                table.addCell(dia.get("tipoDia").toString());
+                table.addCell(dia.getOrDefault("observacoes", "").toString());
+            }
 
-            // document.add(table.setMarginTop(20));
+            document.add(table.setMarginTop(20));
 
             // Adiciona totalização
             Map<String, Object> totalizacao = (Map<String, Object>) folhaPonto.get("totalizacao");
-            // document.add(new Paragraph("\nTotalização:")
-            //         .setBold()
-            //         .setMarginTop(20));
+            document.add(new Paragraph("\nTotalização:")
+                    .setBold()
+                    .setMarginTop(20));
 
-            // document.add(new Paragraph("Horas Trabalhadas: " + totalizacao.get("horasTrabalhadas"))
-            //         .setMarginBottom(5));
-            // document.add(new Paragraph("Horas Extras: " + totalizacao.get("horasExtras"))
-            //         .setMarginBottom(5));
-            // document.add(new Paragraph("Horas Débito: " + totalizacao.get("horasDebito"))
-            //         .setMarginBottom(5));
-            // document.add(new Paragraph("Saldo de Horas: " + totalizacao.get("saldoHoras"))
-            //         .setMarginBottom(10));
+            document.add(new Paragraph("Horas Trabalhadas: " + totalizacao.get("horasTrabalhadas"))
+                    .setMarginBottom(5));
+            document.add(new Paragraph("Horas Extras: " + totalizacao.get("horasExtras"))
+                    .setMarginBottom(5));
+            document.add(new Paragraph("Horas Débito: " + totalizacao.get("horasDebito"))
+                    .setMarginBottom(5));
+            document.add(new Paragraph("Saldo de Horas: " + totalizacao.get("saldoHoras"))
+                    .setMarginBottom(10));
 
             // Adiciona rodapé
-            // document.add(new Paragraph("Relatório gerado em: " +
-            //         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
-            //         .setFontSize(8)
-            //         .setTextAlignment(TextAlignment.RIGHT)
-            //         .setMarginTop(30));
+            document.add(new Paragraph("Relatório gerado em: " +
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                    .setFontSize(8)
+                    .setTextAlignment(TextAlignment.RIGHT)
+                    .setMarginTop(30));
 
             // Finaliza documento
-            // document.close();
+            document.close();
 
             // Converte para Base64
             String pdfBase64 = Base64.getEncoder().encodeToString(outputStream.toByteArray());

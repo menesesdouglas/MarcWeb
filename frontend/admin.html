@@ -34,19 +34,15 @@
                     <h1>Dashboard</h1>
                     <p>Visão geral da operação hoje.</p>
                 </header>
-                <div class="stats-grid">
-                    <div class="stat-card"><h3>Ativos</h3><p id="countActive">12</p></div>
-                    <div class="stat-card"><h3>Em Pausa</h3><p id="countBreak">3</p></div>
-                    <div class="stat-card"><h3>Faltas</h3><p id="countAbsence">1</p></div>
-                </div>
+
                 <div class="recent-activity card">
-                    <h3>Status Recentes</h3>
+                    <h3>Funcionários em Serviço</h3>
                     <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Funcionário</th>
-                                <th>Status</th>
-                                <th>Horário</th>
+                                <th>Status Atual</th>
+                                <th>Horário de Entrada</th>
                             </tr>
                         </thead>
                         <tbody id="recentActivityBody">
@@ -136,21 +132,22 @@
             <h2 id="modalTitle">Cadastrar Funcionário</h2>
             <form id="employeeForm" >
                 <input type="hidden" id="editIndex">
+                <input type="hidden" id="editUserId">
                 <div class="input-group">
                     <label>Nome Completo</label>
-                    <input type="text" id="empName" value="Paulo Oliveira" required>
+                    <input type="text" id="empName" required>
                 </div>
                 <div class="input-group">
                     <label>Nome de Usuário</label>
-                    <input type="text" id="empUsername" value="O_Paulo_Rich" required>
+                    <input type="text" id="empUsername" required>
                 </div>
                 <div class="input-group">
                     <label>Senha</label>
-                    <input type="password" id="empPassword" value="123" required>
+                    <input type="password" id="empPassword" required>
                 </div>
                 <div class="input-group">
                     <label>Cargo</label>
-                    <input type="text" id="empRole" value="Palhaço" required>
+                    <input type="text" id="empRole" required>
                 </div>
                 <div class="input-group">
                     <label>Perfil</label>

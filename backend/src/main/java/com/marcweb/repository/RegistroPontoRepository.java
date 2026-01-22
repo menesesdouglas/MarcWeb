@@ -66,5 +66,44 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     @Query(nativeQuery = true, value = "Select * from registros_ponto order by timestamp DESC limit 10")
     List<RegistroPonto> getStatusRecentes();
 
+    @Query(nativeQuery = true, value = """
+        SELECT u.nome,
+               COALESCE(r.tipo, 'Falta') as status,
+               COALESCE(TO_CHAR(e.timestamp, 'HH24:MI'), '--:--') as horario_entrada,
+               CASE
+                   WHEN r.tipo IS NULL THEN 0
+                   WHEN r.tipo IN ('ENTRADA', 'FIM_DESCANSO') THEN 1
+                   ELSE 0
+               END as em_servico
+        FROM users u
+        LEFT JOIN (
+            SELECT rp.user_id, rp.tipo
+            FROM registros_ponto rp
+            WHERE DATE(rp.timestamp) = CURRENT_DATE
+            AND rp.timestamp = (
+                SELECT MAX(rp2.timestamp)
+                FROM registros_ponto rp2
+                WHERE rp2.user_id = rp.user_id
+                AND DATE(rp2.timestamp) = CURRENT_DATE
+            )
+        ) r ON u.id = r.user_id
+        LEFT JOIN (
+            SELECT rp.user_id, rp.timestamp
+            FROM registros_ponto rp
+            WHERE DATE(rp.timestamp) = CURRENT_DATE
+            AND rp.tipo = 'ENTRADA'
+            AND rp.timestamp = (
+                SELECT MIN(rp2.timestamp)
+                FROM registros_ponto rp2
+                WHERE rp2.user_id = rp.user_id
+                AND DATE(rp2.timestamp) = CURRENT_DATE
+                AND rp2.tipo = 'ENTRADA'
+            )
+        ) e ON u.id = e.user_id
+        WHERE u.ativo = true
+        ORDER BY u.nome
+        """)
+    List<Object[]> getStatusAtualFuncionarios();
+
 
 }

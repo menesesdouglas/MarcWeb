@@ -9,6 +9,8 @@ import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.repository.LogAuditoriaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,5 +48,11 @@ public class LogAuditoriaService {
 
     public List<LogAuditoriaResponse> buscarLogsPorStatus(StatusLog status) {
         return repository.findByStatus(status);
+    }
+
+    public Page<LogAuditoriaResponse> buscarLogsComFiltros(Long userId, LocalDateTime inicio, LocalDateTime fim,
+                                                           CategoriaLog categoria, StatusLog status, String acao,
+                                                           Pageable pageable) {
+        return repository.findWithFilters(userId, inicio, fim, categoria, status, acao, pageable);
     }
 }

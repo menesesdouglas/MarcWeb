@@ -1,6 +1,8 @@
 package com.marcweb.controller;
 
 import com.marcweb.dto.CreateUser;
+import com.marcweb.dto.PageUserDTO;
+import com.marcweb.dto.UserDTO;
 import com.marcweb.dto.UserResponse; // Import necessário
 import com.marcweb.entity.User;
 import com.marcweb.repository.UserRepository;
@@ -20,12 +22,19 @@ import java.util.List; // Import necessário para findAll sem paginação
 public class UserController {
 
     private final UserService service;
-    private final UserRepository repository;
+
 
     // NOVO Endpoint: Listar todos os usuários
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<UserResponse> findAllUsers() { // Retorna List<UserResponse> sem paginação
+        return service.findAll();
+    }
+
+    // Endpoint alternativo para compatibilidade com frontend
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/all")
+    public List<UserResponse> findAllUsersAlt() { // Retorna List<UserResponse> sem paginação
         return service.findAll();
     }
 
@@ -60,10 +69,11 @@ public class UserController {
     }
 
 
-    // VISUALIZANDO O ENTIDADE DE USUÁRIO
-    @GetMapping("/teste")
-    public User get() {
-        return repository.findById(2L).orElse(null);
+    // BUSCA PAGINADA FILTRADA POR NOME
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(params = {"nome", "pageNumber"})
+    public PageUserDTO findByNomeLike(@RequestParam(required = false) String nome, @RequestParam int pageNumber) {
+        return service.findByNomeLike(nome, pageNumber);
     }
 
 }
