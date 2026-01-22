@@ -4,6 +4,7 @@ package com.marcweb.controller;
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
+import com.marcweb.dto.StatusAtualFuncionario;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,6 +48,13 @@ public class RegistroPontoController {
     @GetMapping("/recentes")
     public ResponseEntity<List<PontosRecentes>> getStatusRecentes() {
         var lista = service.getStatusRecentes();
+        return ResponseEntity.ok(lista);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/status-atual")
+    public ResponseEntity<List<StatusAtualFuncionario>> getStatusAtualFuncionarios() {
+        var lista = service.getStatusAtualFuncionarios();
         return ResponseEntity.ok(lista);
     }
 }

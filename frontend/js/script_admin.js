@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Carregar dados
     await Promise.all([
         loadUsers(),
-        loadRecentPunches(),
-        loadDashboardStats()
+        loadRecentPunches()
     ]);
 
     // Configurar eventos
@@ -74,7 +73,7 @@ async function loadUsers() {
 async function loadRecentPunches() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch("http://localhost:8080/api/ponto/recentes", {
+        const response = await fetch("http://localhost:8080/api/ponto/status-atual", {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -84,20 +83,15 @@ async function loadRecentPunches() {
             recentPunches = await response.json();
             renderDashboard(recentPunches);
         } else {
-            showToast('Erro ao carregar registros recentes', 'error');
+            showToast('Erro ao carregar status dos funcionários', 'error');
         }
     } catch (error) {
-        console.error('Erro ao carregar registros recentes:', error);
-        showToast('Erro ao carregar registros recentes', 'error');
+        console.error('Erro ao carregar status dos funcionários:', error);
+        showToast('Erro ao carregar status dos funcionários', 'error');
     }
 }
 
-async function loadDashboardStats() {
-    // Calcular estatísticas básicas
-    const activeUsers = allUsers.filter(user => user.ativo !== false).length;
 
-    document.getElementById('countActive').textContent = activeUsers;
-}
 
 // Navegação entre seções (Sidebar)
 function initNavigation() {
@@ -147,13 +141,15 @@ function renderDashboard(employees) {
     const activity = document.getElementById('recentActivityBody');
     activity.innerHTML = '';
 
-    // Mostra as últimas atividades
+    // Mostra o status atual dos funcionários
     employees.forEach(emp => {
         const tr = document.createElement('tr');
+        const statusClass = emp.emServico ? 'status-active' : 'status-inactive';
+        const statusText = emp.emServico ? emp.status : `<span class="status-absent">${emp.status}</span>`;
         tr.innerHTML = `
-            <td>${emp.name}</td>
-            <td><strong>${emp.lastStatus}</strong></td>
-            <td>${emp.lastTime}</td>
+            <td>${emp.nome}</td>
+            <td><strong class="${statusClass}">${statusText}</strong></td>
+            <td>${emp.horarioEntrada}</td>
         `;
         activity.appendChild(tr);
     });
@@ -174,7 +170,10 @@ function openModal(type) {
     if (type === 'add') {
         document.getElementById('modalTitle').textContent = 'Cadastrar Funcionário';
         document.getElementById('employeeForm').reset();
+        document.getElementById('empPassword').required = true; // Senha obrigatória para novo usuário
+        document.getElementById('empPassword').placeholder = '';
         document.getElementById('editIndex').value = '';
+        document.getElementById('editUserId').value = '';
     }
 }
 
@@ -203,47 +202,63 @@ function editEmployee(index) {
     document.getElementById('modalTitle').textContent = 'Editar Funcionário';
     document.getElementById('empName').value = emp.nome;
     document.getElementById('empUsername').value = emp.username;
+    document.getElementById('empPassword').required = false; // Senha opcional na edição
+    document.getElementById('empPassword').placeholder = 'Deixe em branco para manter a senha atual';
     document.getElementById('empRole').value = emp.role;
     document.getElementById('empActive').value = emp.ativo ? 'Ativo' : 'Inativo';
     document.getElementById('empProfile').value = emp.role;
     document.getElementById('editIndex').value = index;
+    document.getElementById('editUserId').value = emp.id;
 }
 
 async function handleEmployeeSubmit(e) {
     e.preventDefault();
 
-    const newUser = {
+    const userId = document.getElementById('editUserId').value;
+    const isEdit = userId && userId.trim() !== '';
+
+    const userData = {
         username: document.getElementById("empUsername").value,
         nome: document.getElementById('empName').value,
-        password: document.getElementById("empPassword").value,
         role: document.getElementById("empProfile").value,
+        ativo: document.getElementById("empActive").value === 'Ativo',
         consentGeoloc: true
     }
 
+    // Incluir senha apenas se foi preenchida (para edição) ou se é criação
+    const password = document.getElementById("empPassword").value;
+    if (password.trim() !== '') {
+        userData.password = password;
+    }
+
     const token = JSON.parse(localStorage.getItem("auth")).token;
+    const url = isEdit ? `http://localhost:8080/api/user/${userId}` : "http://localhost:8080/api/user";
+    const method = isEdit ? "PUT" : "POST";
 
     try {
-        const result = await fetch("http://localhost:8080/api/user", {
-            method: "POST",
+        const result = await fetch(url, {
+            method: method,
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(newUser)
+            body: JSON.stringify(userData)
         });
 
-        if (result.status == 201) {
-            showToast("Usuário cadastrado com sucesso", "success");
+        if (result.status == 201 || result.status == 200) {
+            const message = isEdit ? "Usuário atualizado com sucesso" : "Usuário cadastrado com sucesso";
+            showToast(message, "success");
             // Recarregar lista de usuários
             await loadUsers();
-            await loadDashboardStats();
         } else {
             const erro = await result.json();
-            showToast(erro.erro || "Erro ao cadastrar usuário", "error");
+            const errorMessage = isEdit ? "Erro ao atualizar usuário" : "Erro ao cadastrar usuário";
+            showToast(erro.erro || errorMessage, "error");
         }
     } catch (error) {
-        console.error('Erro ao cadastrar usuário:', error);
-        showToast("Erro ao cadastrar usuário", "error");
+        console.error('Erro ao salvar usuário:', error);
+        const errorMessage = isEdit ? "Erro ao atualizar usuário" : "Erro ao cadastrar usuário";
+        showToast(errorMessage, "error");
     }
 
     closeModal();

@@ -5,6 +5,7 @@ import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
+import com.marcweb.dto.StatusAtualFuncionario;
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário
@@ -207,5 +208,18 @@ public class RegistroPontoService {
             return new PontosRecentes(r.getUser().getNome(), r.getTipo().getText(), horario);
         }).toList();
         return pontosRecentesDTO;
+    }
+
+    public List<StatusAtualFuncionario> getStatusAtualFuncionarios() {
+        List<Object[]> results = repository.getStatusAtualFuncionarios();
+        return results.stream().map(row -> {
+            String nome = (String) row[0];
+            String tipoStr = (String) row[1];
+            String status = tipoStr.equals("Falta") ? "Falta" : TipoRegistro.valueOf(tipoStr).getText();
+            String horarioEntrada = (String) row[2];
+            Integer emServicoInt = ((Number) row[3]).intValue();
+            Boolean emServico = emServicoInt == 1;
+            return new StatusAtualFuncionario(nome, status, horarioEntrada, emServico);
+        }).toList();
     }
 }

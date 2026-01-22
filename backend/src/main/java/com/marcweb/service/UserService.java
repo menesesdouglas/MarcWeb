@@ -102,6 +102,7 @@ public class UserService {
         if (data.getRole() != null) user.setRole(data.getRole());
         if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
+        if (data.getAtivo() != null) user.setAtivo(data.getAtivo());
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
         detalhes.setDetalhes("Usuário " + user.getUsername() + " teve seus dados alterados pelo administrador");
     }

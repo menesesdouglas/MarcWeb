@@ -34,19 +34,15 @@
                     <h1>Dashboard</h1>
                     <p>Visão geral da operação hoje.</p>
                 </header>
-                <div class="stats-grid">
-                    <div class="stat-card"><h3>Ativos</h3><p id="countActive">12</p></div>
-                    <div class="stat-card"><h3>Em Pausa</h3><p id="countBreak">3</p></div>
-                    <div class="stat-card"><h3>Faltas</h3><p id="countAbsence">1</p></div>
-                </div>
+
                 <div class="recent-activity card">
-                    <h3>Status Recentes</h3>
+                    <h3>Funcionários em Serviço</h3>
                     <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Funcionário</th>
-                                <th>Status</th>
-                                <th>Horário</th>
+                                <th>Status Atual</th>
+                                <th>Horário de Entrada</th>
                             </tr>
                         </thead>
                         <tbody id="recentActivityBody">
@@ -136,6 +132,7 @@
             <h2 id="modalTitle">Cadastrar Funcionário</h2>
             <form id="employeeForm" >
                 <input type="hidden" id="editIndex">
+                <input type="hidden" id="editUserId">
                 <div class="input-group">
                     <label>Nome Completo</label>
                     <input type="text" id="empName" required>

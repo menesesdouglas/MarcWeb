@@ -22,6 +22,8 @@ public class CreateUser {
     @NotNull(message = "Campo obrigatório")
     private Role role;
 
+    private Boolean ativo;
+
     private Boolean consentGeoloc;
 
 
