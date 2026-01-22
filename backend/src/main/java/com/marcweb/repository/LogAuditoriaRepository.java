@@ -5,6 +5,8 @@ import com.marcweb.entity.LogAuditoria;
 import com.marcweb.entity.User;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +29,20 @@ public interface LogAuditoriaRepository extends JpaRepository<LogAuditoria, Long
 
     @Query("Select new com.marcweb.dto.LogAuditoriaResponse(l) from LogAuditoria l where l.status = :status ")
     List<LogAuditoriaResponse> findByStatus(@Param("status") StatusLog status);
+
+    @Query("SELECT new com.marcweb.dto.LogAuditoriaResponse(l) FROM LogAuditoria l WHERE " +
+           "(:userId IS NULL OR l.user.id = :userId) AND " +
+           "(:inicio IS NULL OR l.timestamp >= :inicio) AND " +
+           "(:fim IS NULL OR l.timestamp <= :fim) AND " +
+           "(:categoria IS NULL OR l.categoria = :categoria) AND " +
+           "(:status IS NULL OR l.status = :status) AND " +
+           "(:acao IS NULL OR LOWER(l.acao) LIKE LOWER(CONCAT('%', :acao, '%'))) " +
+           "ORDER BY l.timestamp DESC")
+    Page<LogAuditoriaResponse> findWithFilters(@Param("userId") Long userId,
+                                               @Param("inicio") LocalDateTime inicio,
+                                               @Param("fim") LocalDateTime fim,
+                                               @Param("categoria") CategoriaLog categoria,
+                                               @Param("status") StatusLog status,
+                                               @Param("acao") String acao,
+                                               Pageable pageable);
 }

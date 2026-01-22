@@ -29,6 +29,13 @@ public class UserController {
         return service.findAll();
     }
 
+    // Endpoint alternativo para compatibilidade com frontend
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/all")
+    public List<UserResponse> findAllUsersAlt() { // Retorna List<UserResponse> sem paginação
+        return service.findAll();
+    }
+
     // Endpoint com paginação
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(params = "pageNumber")
