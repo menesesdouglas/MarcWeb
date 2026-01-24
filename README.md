@@ -103,6 +103,63 @@
 * **Frontend:** Pico CSS (Minimalista/Leve).
 * **API Externa:** BrasilAPI (Feriados e CEP).
 
+## 🔐 Segurança e Configuração
+
+### Geração de Chave JWT
+Para gerar uma chave segura para JWT, utilize o comando:
+```bash
+openssl rand -base64 48
+```
+Copie a saída e configure no arquivo `.env` como `JWT_SECRET`.
+
+### Rotação de Chaves JWT
+Para rotacionar chaves JWT sem invalidar tokens existentes:
+
+1. **Prepare a nova chave**:
+   ```bash
+   openssl rand -base64 48
+   ```
+   Anote o valor gerado.
+
+2. **Atualize o arquivo `.env`**:
+   ```env
+   JWT_SECRET=<nova_chave_base64>
+   APPLICATION_SECURITY_JWT_KID=key-2026-02
+   APPLICATION_SECURITY_JWT_PREVIOUS_KEYS=key-2026-01:<chave_antiga_base64>
+   ```
+
+3. **Distribua a nova chave** para todos os nós da aplicação.
+
+4. **Aguarde o período de transição** (até que todos os tokens antigos expirem).
+
+5. **Remova a chave antiga** do `previous-keys` quando não houver mais tokens com o `kid` antigo.
+
+### Variáveis de Ambiente
+O projeto utiliza variáveis de ambiente para configurações sensíveis. Copie `.env.example` para `.env` e preencha com valores seguros:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+**Importante:** Nunca comite o arquivo `.env` com valores reais. Ele está listado no `.gitignore`.
+
+### Configuração de Ambientes
+- **Desenvolvimento**: `application-dev.yml`
+- **Produção**: `application-prod.yml`
+
+Para ativar o perfil de produção:
+```bash
+java -jar marcweb.jar --spring.profiles.active=prod
+```
+
+### Forçar HTTPS
+Em produção, o HTTPS é ativado por padrão. Para desenvolvimento, você pode ativar manualmente:
+```env
+SSL_ENABLED=true
+SSL_KEYSTORE_PASSWORD=<sua_senha>
+```
+
+
 ---
 
 ## 📈 Histórico de Commits & Marcos

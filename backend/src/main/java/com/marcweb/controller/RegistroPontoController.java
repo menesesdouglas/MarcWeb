@@ -1,18 +1,20 @@
 package com.marcweb.controller;
 
-
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
+import com.marcweb.dto.RegistroPontoResponseWithWarning;
 import com.marcweb.dto.StatusAtualFuncionario;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
+import com.marcweb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,17 +25,29 @@ import java.util.List;
 @RequestMapping("/api/ponto")
 public class RegistroPontoController {
 
-
     private final RegistroPontoService service;
     private final LogAuditoriaService logAuditoriaService;
+    private final UserService userService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public String registrarPonto(@RequestBody @Valid CreateRegistroPonto data, HttpServletRequest request) {
-        service.registrarPonto(data, request);
-        return "Ponto batido com sucesso!!!";
-    }
+    public ResponseEntity<RegistroPontoResponseWithWarning> registrarPonto(@RequestBody @Valid CreateRegistroPonto data, HttpServletRequest request) {
+        // Verificar se o usuário tem registros incompletos de dias anteriores
+        UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
+        Long userId = userService.findByUsername(userDetails.getUsername()).getId();
+        boolean hasIncompletePreviousDay = service.temRegistroIncompletoAnterior(userId);
 
+        // Registrar o ponto
+        service.registrarPonto(data, request);
+
+        // Retornar resposta com aviso se necessário
+        RegistroPontoResponseWithWarning response = new RegistroPontoResponseWithWarning(
+            "Ponto batido com sucesso!!!",
+            hasIncompletePreviousDay
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
     @GetMapping("/me")
     public ResponseEntity<List<RegistroPontoResponse>> meusPontos(
