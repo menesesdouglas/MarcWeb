@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
     <div class="admin-wrapper">
@@ -16,19 +18,19 @@
                 <div class="logo">Marc<span>Web</span></div>
                 <small>ADMIN PANEL</small>
             </div>
-<nav class="sidebar-nav">
-    <a href="#" class="nav-link active" data-section="dashboard"><span>📊 Dashboard</span></a>
-    <a href="#" class="nav-link" data-section="employees"><span>👥 Funcionários</span></a>
-    <a href="#" class="nav-link" data-section="adjustments"><span>⚙️ Ajustes de Ponto</span></a>
-    <a href="#" class="nav-link" data-section="reports"><span>📄 Relatórios</span></a>
-</nav>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-section="dashboard"><span>📊 Dashboard</span></a>
+                <a href="#" class="nav-link" data-section="employees"><span>👥 Funcionários</span></a>
+                <a href="#" class="nav-link" data-section="adjustments"><span>⚙️ Ajustes de Ponto</span></a>
+                <a href="#" class="nav-link" data-section="reports"><span>📄 Relatórios</span></a>
+            </nav>
             <div class="sidebar-footer">
                 <button id="btnLogout" class="btn-logout">Sair do Sistema</button>
             </div>
         </aside>
 
         <main class="main-content">
-            
+
             <section id="dashboard" class="content-section active">
                 <header class="section-header">
                     <h1>Dashboard</h1>
@@ -46,16 +48,20 @@
                             </tr>
                         </thead>
                         <tbody id="recentActivityBody">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </section>
 
-            <section id="employees" class="content-section">
+            <section id="employees" class="content-section ">
                 <header class="section-header">
                     <h1>Gestão de Funcionários</h1>
                     <button class="btn-primary" onclick="openModal('add')">+ Novo Funcionário</button>
                 </header>
+                <div style="margin: 25px 0px;">
+                    <h2 style="margin-bottom: 15px;">Filtrar por nome</h2>
+                    <input id="filter-by-name" type="text" />
+                </div>
                 <div class="card">
                     <table class="admin-table">
                         <thead>
@@ -67,7 +73,7 @@
                             </tr>
                         </thead>
                         <tbody id="employeeListBody">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </section>
@@ -86,26 +92,27 @@
                             <label>Data do Ajuste</label>
                             <input type="date" id="adjDate" required>
                         </div>
-<div class="input-row">
-    <div class="input-group">
-        <label>Novo Status</label>
-        <select id="adjStatus">
-            <option value="Entrada">Entrada</option>
-            <option value="Início Descanso">Início Descanso</option>
-            <option value="Fim Descanso">Fim Descanso</option>
-            <option value="Saída">Saída</option>
-        </select>
-    </div>
-    <div class="input-group">
-        <label>Novo Horário</label>
-        <input type="time" id="adjTime" required>
-    </div>
-</div>
-<div class="input-group">
-    <label>Justificativa</label>
-    <textarea id="adjJustification" rows="3" placeholder="Informe o motivo do ajuste de ponto..." required></textarea>
-</div>
-<button type="submit" class="btn-primary">Salvar Alteração</button>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Novo Status</label>
+                                <select id="adjStatus">
+                                    <option value="Entrada">Entrada</option>
+                                    <option value="Início Descanso">Início Descanso</option>
+                                    <option value="Fim Descanso">Fim Descanso</option>
+                                    <option value="Saída">Saída</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Novo Horário</label>
+                                <input type="time" id="adjTime" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Justificativa</label>
+                            <textarea id="adjJustification" rows="3"
+                                placeholder="Informe o motivo do ajuste de ponto..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Salvar Alteração</button>
                     </form>
                 </div>
             </section>
@@ -130,7 +137,7 @@
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal card">
             <h2 id="modalTitle">Cadastrar Funcionário</h2>
-            <form id="employeeForm" >
+            <form id="employeeForm">
                 <input type="hidden" id="editIndex">
                 <input type="hidden" id="editUserId">
                 <div class="input-group">
@@ -173,4 +180,5 @@
 
     <script src="js/script_admin.js"></script>
 </body>
+
 </html>
