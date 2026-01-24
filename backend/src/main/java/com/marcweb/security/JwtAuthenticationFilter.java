@@ -1,5 +1,7 @@
 package com.marcweb.security;
 
+import com.marcweb.entity.User;
+import com.marcweb.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -25,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
     @Override
     protected void doFilterInternal(
@@ -65,7 +69,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             log.debug("Username não nulo e contexto de segurança vazio. Carregando UserDetails...");
             // Carrega os detalhes do usuário a partir do username
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            User user  = userService.findByUsername(username);
+            UserDetails userDetails = org.springframework.security.core.userdetails.User
+                    .withUsername(user.getUsername())
+                    .roles(user.getRole().name())
+                    .build();
 
             // Verifica se o token JWT é válido para o userDetails carregado
             if (jwtService.isTokenValid(jwt, userDetails)) {

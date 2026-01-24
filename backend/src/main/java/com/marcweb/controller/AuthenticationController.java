@@ -23,10 +23,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok)
 public class AuthenticationController {
 
-    private final AuthenticationManager authenticationManager; // Injeta o gerenciador de autenticação
     private final JwtService jwtService; // Injeta o serviço JWT
     private final UserService userService;
-    private final LogAuditoriaService logAuditoriaService;
 
 
 

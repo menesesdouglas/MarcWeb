@@ -69,7 +69,7 @@ public class UserController {
     }
 
 
-    // BUSCA PAGINADA FILTRADA POR NOME
+    /// BUSCA PAGINADA FILTRADA POR NOME
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(params = {"nome", "pageNumber"})
     public PageUserDTO findByNomeLike(@RequestParam(required = false) String nome, @RequestParam int pageNumber) {

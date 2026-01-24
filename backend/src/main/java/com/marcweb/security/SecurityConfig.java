@@ -33,8 +33,6 @@ import java.util.List;
 public class SecurityConfig {
 
 
-    private final com.marcweb.repository.UserRepository userRepository;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http.cors().and()
@@ -47,7 +45,6 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider()) // Define o provedor de autenticação
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona o filtro JWT antes do filtro padrão de login
 
         return http.build(); // Constroi e retorna o objeto SecurityFilterChain
@@ -72,25 +69,14 @@ public class SecurityConfig {
     }
 
 
-    @Bean // Provedor de autenticação baseado em DAO (UserDetailsService)
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService()); // Define o serviço para carregar usuário
-        authProvider.setPasswordEncoder(passwordEncoder()); // Define o encoder de senha
-        return authProvider;
-    }
 
     @Bean // Encoder de senha BCrypt (conforme SDD)
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean // Serviço para carregar UserDetails a partir do username
-    public UserDetailsService userDetailsService() {
-        // Retorna uma implementação funcional que carrega do repositório
-        return username -> userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
-    }
+
+
 
     @Bean // Gerenciador de autenticação (necessário para o controller de login)
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
