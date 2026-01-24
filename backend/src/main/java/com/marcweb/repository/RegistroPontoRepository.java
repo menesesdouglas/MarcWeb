@@ -66,6 +66,13 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     @Query(nativeQuery = true, value = "Select * from registros_ponto order by timestamp DESC limit 10")
     List<RegistroPonto> getStatusRecentes();
 
+    @Query("""
+        Select r from RegistroPonto r where r.user.id = :userId
+        and r.timestamp < CURRENT_DATE
+        order by r.timestamp DESC
+        """)
+    List<RegistroPonto> findLastRecordsFromPreviousDays(@Param("userId") Long userId);
+
     @Query(nativeQuery = true, value = """
         SELECT u.nome,
                COALESCE(r.tipo, 'Falta') as status,

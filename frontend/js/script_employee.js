@@ -72,13 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify(dados)
         });
+
         if (result.status == 201) {
-            alert("Ponto batido com sucesso")
+            const response = await result.json();
+
             // Remover mensagem de lista vazia se for o primeiro item
             if (punchList.querySelector('.empty-msg')) {
                 punchList.innerHTML = '';
             }
-
 
             // Criar novo item na lista com animação
             const li = document.createElement('li');
@@ -112,13 +113,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Feedback visual moderno (toast notification)
             showToast(`✅ Ponto registrado: ${type} às ${time}`, 'success');
+
+            // Verificar se há aviso de registro incompleto do dia anterior
+            if (response.hasIncompletePreviousDay && response.warningMessage) {
+                showIncompleteRecordWarning(response.warningMessage);
+            }
         } else {
             const erro = await result.json();
             alert(erro.erro)
         }
 
+    }
 
+    // Função para mostrar aviso de registro incompleto
+    function showIncompleteRecordWarning(message) {
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '2000';
+        modal.style.backdropFilter = 'blur(5px)';
 
+        const modalContent = document.createElement('div');
+        modalContent.style.backgroundColor = 'white';
+        modalContent.style.padding = '30px';
+        modalContent.style.borderRadius = '12px';
+        modalContent.style.maxWidth = '500px';
+        modalContent.style.width = '90%';
+        modalContent.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+        modalContent.style.textAlign = 'center';
+        modalContent.style.position = 'relative';
+
+        const closeButton = document.createElement('button');
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '10px';
+        closeButton.style.right = '10px';
+        closeButton.style.background = 'none';
+        closeButton.style.border = 'none';
+        closeButton.style.fontSize = '24px';
+        closeButton.style.cursor = 'pointer';
+        closeButton.style.color = '#666';
+        closeButton.textContent = '×';
+        closeButton.onclick = () => {
+            modal.remove();
+        };
+
+        const title = document.createElement('h3');
+        title.style.color = '#e74c3c';
+        title.style.marginTop = '10px';
+        title.style.marginBottom = '20px';
+        title.textContent = '⚠️ ATENÇÃO';
+
+        const messageElement = document.createElement('p');
+        messageElement.style.color = '#333';
+        messageElement.style.fontSize = '16px';
+        messageElement.style.lineHeight = '1.6';
+        messageElement.style.marginBottom = '25px';
+        messageElement.textContent = message;
+
+        const okButton = document.createElement('button');
+        okButton.style.backgroundColor = '#3498db';
+        okButton.style.color = 'white';
+        okButton.style.border = 'none';
+        okButton.style.padding = '12px 25px';
+        okButton.style.borderRadius = '6px';
+        okButton.style.fontSize = '16px';
+        okButton.style.fontWeight = '600';
+        okButton.style.cursor = 'pointer';
+        okButton.style.transition = 'background-color 0.3s';
+        okButton.textContent = 'Entendi';
+        okButton.onmouseover = () => {
+            okButton.style.backgroundColor = '#2980b9';
+        };
+        okButton.onmouseout = () => {
+            okButton.style.backgroundColor = '#3498db';
+        };
+        okButton.onclick = () => {
+            modal.remove();
+        };
+
+        modalContent.appendChild(closeButton);
+        modalContent.appendChild(title);
+        modalContent.appendChild(messageElement);
+        modalContent.appendChild(okButton);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Animação de entrada
+        modalContent.style.transform = 'scale(0.9)';
+        modalContent.style.opacity = '0';
+        setTimeout(() => {
+            modalContent.style.transform = 'scale(1)';
+            modalContent.style.opacity = '1';
+            modalContent.style.transition = 'all 0.3s ease-out';
+        }, 10);
     }
 
     // 3. Sistema de Toast Notifications

@@ -24,11 +24,23 @@ spring:
 application:
   security:
     jwt:
-      # Chave secreta para assinar os tokens JWT - SUBSTITUA POR UMA CHAVE SEGURO E SECRETA EM PROD!
-      # Exemplo gerado com: openssl rand -base64 64
-      secret-key: cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZxN042cTc4TjZ
+      # Chave secreta para assinar os tokens JWT - Lida do arquivo .env ou variável de ambiente
+      secret-key: ${JWT_SECRET}
+      # Identificador da chave atual (kid) — usado para rotação de chaves (ex: key-2026-01)
+      kid: ${APPLICATION_SECURITY_JWT_KID:default}
+      # Chaves anteriores no formato id:base64key,id2:base64key2 — usadas para validar tokens assinados com chaves antigas
+      previous-keys: ${APPLICATION_SECURITY_JWT_PREVIOUS_KEYS:}
       # Tempo de expiração do token em milissegundos (8 horas = 8 * 60 * 60 * 1000)
       expiration: 28800000
 
 server:
   port: 8080
+  ssl:
+    enabled: ${SSL_ENABLED:false} # Desativado em dev por padrão
+    key-store: classpath:keystore.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: marcweb
+    protocol: TLS
+    enabled-protocols: TLSv1.2,TLSv1.3
+    cipher-suites: TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384

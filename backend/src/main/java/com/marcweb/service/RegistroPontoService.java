@@ -136,6 +136,17 @@ public class RegistroPontoService {
     }
 
 
+    // VERIFICAR SE EXISTEM REGISTROS INCOMPLETOS DE DIAS ANTERIORES
+    public boolean temRegistroIncompletoAnterior(Long userId) {
+        List<RegistroPonto> registrosAnteriores = repository.findLastRecordsFromPreviousDays(userId);
+        if (!registrosAnteriores.isEmpty()) {
+            RegistroPonto ultimoRegistro = registrosAnteriores.get(0);
+            // Verificar se o último registro não é SAIDA (ou seja, o dia não foi finalizado corretamente)
+            return !ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA);
+        }
+        return false;
+    }
+
     // VALIDANDO ORDEM DE TIPO DE REGISTRO DE PONTO
     private void validarRegistro(TipoRegistro tipoRegistro, Long idUsuario) {
         // BUSCANDO ULTIMO REGISTRO NO BANCO DE DADOS
@@ -150,6 +161,21 @@ public class RegistroPontoService {
             }
             // Se for ENTRADA, é um registro válido, não precisa validar regras subsequentes
             return;
+        }
+
+        // NOVA LÓGICA: VERIFICAR SE O ÚLTIMO REGISTRO É DE UM DIA ANTERIOR E NÃO FOI FINALIZADO (SAÍDA)
+        if (tipoRegistro == TipoRegistro.ENTRADA && !ultimoTipoRegistro.equals(TipoRegistro.SAIDA)) {
+            // Verificar se o último registro é de um dia anterior
+            List<RegistroPonto> registrosAnteriores = repository.findLastRecordsFromPreviousDays(idUsuario);
+            if (!registrosAnteriores.isEmpty()) {
+                RegistroPonto ultimoRegistro = registrosAnteriores.get(0);
+                // Se o último registro não é SAIDA e é de um dia anterior, permitir ENTRADA mas com aviso
+                if (!ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
+                    // Permitir o registro de ENTRADA, mas o sistema deverá notificar o usuário
+                    // que ele precisa contatar o supervisor para ajustar o dia anterior
+                    return; // Permite a entrada, o aviso será tratado no frontend
+                }
+            }
         }
 
         // VALIDAÇÃO DE ORDEM PARA REGISTROS SUBSEQUENTES (código original ajustado)

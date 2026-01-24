@@ -34,5 +34,15 @@ build/
 *.env
 .env
 
+### Security sensitive files ###
+*.p12
+*.jks
+*.key
+*.crt
+*.pem
+logs/
+!logs/.gitkeep
+keystore/
+!keystore/.gitkeep
 
 allNameArchives.txt
