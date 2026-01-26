@@ -2,15 +2,12 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-<<<<<<< HEAD
 import com.marcweb.dto.*;
-=======
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.dto.StatusAtualFuncionario;
 import com.marcweb.dto.TimeAdjustmentRequest;
->>>>>>> b4661d13d91741a3856cf44ac5b943c614eca264
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário

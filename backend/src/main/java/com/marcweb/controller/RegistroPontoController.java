@@ -1,15 +1,13 @@
 package com.marcweb.controller;
 
-<<<<<<< HEAD
+
 import com.marcweb.dto.*;
-=======
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.dto.RegistroPontoResponseWithWarning;
 import com.marcweb.dto.StatusAtualFuncionario;
 import com.marcweb.dto.TimeAdjustmentRequest;
->>>>>>> b4661d13d91741a3856cf44ac5b943c614eca264
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
 import com.marcweb.service.UserService;
