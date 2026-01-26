@@ -197,14 +197,14 @@ class RegistroPontoServiceTest {
         // Arrange
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
-        when(repository.findByUserAndTimestampBetweenOrderByTimestampAsc(any(User.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(repository.findByUserAndTimestampBetween(any(User.class), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(Collections.emptyList());
 
         // Act
         var resultado = registroPontoService.buscarPontosRegistrados(LocalDateTime.now().minusDays(1), LocalDateTime.now());
 
         // Assert
-        assertTrue(resultado.isEmpty());
+        assertTrue(resultado.getRegistros().isEmpty());
     }
 
     @Test
