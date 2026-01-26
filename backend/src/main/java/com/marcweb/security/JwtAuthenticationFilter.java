@@ -6,7 +6,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
@@ -23,13 +22,17 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
     private final UserService userService;
+
+    public JwtAuthenticationFilter(JwtService jwtService, UserService userService) {
+        this.jwtService = jwtService;
+        this.userService = userService;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -70,6 +73,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.debug("Username não nulo e contexto de segurança vazio. Carregando UserDetails...");
             // Carrega os detalhes do usuário a partir do username
             User user  = userService.findByUsername(username);
+
+            // Verifica se o usuário e o role não são nulos
+            if (user == null || user.getRole() == null) {
+                log.error("Usuário ou role nulo para username: {}", username);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // Verifica se username e role name não são vazios
+            if (user.getUsername() == null || user.getUsername().isBlank() ||
+                user.getRole().name() == null || user.getRole().name().isBlank()) {
+                log.error("Username ou role name vazio para username: {}", username);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             UserDetails userDetails = org.springframework.security.core.userdetails.User
                     .withUsername(user.getUsername())
                     .roles(user.getRole().name())
