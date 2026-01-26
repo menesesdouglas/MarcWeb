@@ -20,9 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import com.marcweb.repository.UserRepository; // Import necessário, se ainda não estiver
 
-import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -60,6 +58,7 @@ public class UserService {
             categoria = CategoriaLog.AUDITORIA)
     public LoginResponse logarUsuario(LoginRequest loginRequest) {
         User user = findByUsername(loginRequest.getUsername());
+        if (!user.getAtivo()) throw new RuntimeException("Erro ao logar com este usuário");
         if (encoder.matches(loginRequest.getPassword(), user.getPassword())) {
             String jwt = jwtService.generateToken(user);
 
@@ -106,14 +105,18 @@ public class UserService {
             acao = "Exclusão de usuário",
             categoria = CategoriaLog.ADMIN
     )
+    @Transactional
     public void deleteUser(@PathVariable Long id) {
         var user = findById(id);
-        repository.delete(user);
+        user.setAtivo(false);
         detalhes.setDetalhes("Usuário " + user.getUsername() + " Foi deletado por um administrador");
     }
 
+    ///  SÓ É,LIBERADO SE O USUÁRIO ESTIVER ATIVO
     public User findByUsername(String username) {
-        return repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
+        var user = repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
+        if (!user.getAtivo()) throw new RuntimeException("Erro ao buuscar usuário");
+        return user;
     }
 
 

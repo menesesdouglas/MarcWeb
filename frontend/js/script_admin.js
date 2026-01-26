@@ -2,6 +2,7 @@
 let allUsers = [];
 let recentPunches = [];
 let employees = []; // Alias para compatibilidade
+const textField = document.getElementById("filter-by-name");
 
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -49,6 +50,20 @@ function setupEventListeners() {
             window.location.href = 'login.html';
         }
     });
+
+    // ♠♠♠♠♠♠6 FILTRANDO POR NOME
+    textField.addEventListener("keypress", (e) => {
+        if (e.key !== "Enter") {
+            let text = textField.value + e.key;
+            renderEmployees(allUsers.filter(item => item.nome.toLowerCase().startsWith(text.trim().toLowerCase())));
+        }
+    })
+
+    textField.addEventListener("input", (e) => {
+        if (e.inputType == "deleteContentBackward" || e.inputType == "deleteContentForward") {
+            renderEmployees(allUsers.filter(item => item.nome.toLowerCase().startsWith(textField.value.trim().toLowerCase())));
+        }
+    })
 }
 
 async function loadUsers() {
@@ -235,7 +250,7 @@ async function handleEmployeeSubmit(e) {
     }
 
     const token = JSON.parse(localStorage.getItem("auth")).token;
-    const url = isEdit ? `http://localhost:8080/api/user/${userId}` : "http://localhost:8080/api/user";
+    const url = `http://localhost:8080/api/user${isEdit ? `/${userId}` : ''}`;
     const method = isEdit ? "PUT" : "POST";
 
     try {
