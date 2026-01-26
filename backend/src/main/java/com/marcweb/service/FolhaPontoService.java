@@ -12,6 +12,7 @@ import com.marcweb.repository.FolhaPontoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
@@ -148,9 +149,18 @@ public class FolhaPontoService {
         List<List<RegistroPonto>> listaFinal = new ArrayList<>();
         ///  USADO PARA SEPARAR OS PONTOS BATIDOS DE CADA DIA
         List<RegistroPonto> listaPorDia = new ArrayList<>();
-        for (RegistroPonto registro : registros) {
-            listaPorDia.add(registro);
-            if (registro.getTipo().equals(TipoRegistro.SAIDA)) {
+        for (int i = 0; i < registros.size(); i++) {
+            var registroAtual = registros.get(i);
+            listaPorDia.add(registroAtual);
+            var dataRegistroAtual = registroAtual.getTimestamp().toLocalDate();
+            /// PARANDO O LOOP CASO SEJA O ULTIMO REGISTRO PARA NÃO DAR ERRO
+            if (i == registros.size() - 1) {
+                listaFinal.add(listaPorDia);
+                break;
+            }
+
+            /// FINALIZANDO A LISTA DO DIA CASO A DATA DO PRÓXIMO REGISTRO SEJA DIFERENTE
+            if (!registros.get(i + 1).getTimestamp().toLocalDate().equals(dataRegistroAtual)) {
                 listaFinal.add(listaPorDia);
                 listaPorDia = new ArrayList<>();
             }

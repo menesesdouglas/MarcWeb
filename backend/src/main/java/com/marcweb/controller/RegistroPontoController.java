@@ -1,5 +1,7 @@
 package com.marcweb.controller;
 
+
+import com.marcweb.dto.*;
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
@@ -43,20 +45,20 @@ public class RegistroPontoController {
 
         // Retornar resposta com aviso se necessário
         RegistroPontoResponseWithWarning response = new RegistroPontoResponseWithWarning(
-            "Ponto batido com sucesso!!!",
-            hasIncompletePreviousDay
+                "Ponto batido com sucesso!!!",
+                hasIncompletePreviousDay
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<RegistroPontoResponse>> meusPontos(
+    public ResponseEntity<RegistroPontoMe> meusPontos(
             @RequestParam LocalDateTime start,
             @RequestParam LocalDateTime end
     ) {
         var pontos = service.buscarPontosRegistrados(start, end);
-        return !pontos.isEmpty() ? ResponseEntity.ok(pontos) : ResponseEntity.notFound().build();
+        return !pontos.getRegistros().isEmpty() ? ResponseEntity.ok(pontos) : ResponseEntity.notFound().build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")

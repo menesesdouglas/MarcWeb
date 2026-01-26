@@ -80,7 +80,14 @@ async function loadUsers() {
             renderEmployees(allUsers);
             populateSelects();
         } else {
-            showToast('Erro ao carregar usuários', 'error');
+            if (response.status === 403) {
+                localStorage.removeItem("auth");
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 2000)
+            } else {
+                showToast('Erro ao carregar usuários', 'error');
+            }
         }
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
@@ -228,6 +235,9 @@ function editEmployee(index) {
     document.getElementById('editIndex').value = index;
     document.getElementById('editUserId').value = emp.id;
 }
+
+
+
 
 async function handleEmployeeSubmit(e) {
     e.preventDefault();
@@ -488,17 +498,18 @@ async function generateReport() {
     }
 }
 
-function showToast(message, type = 'info') {
+function showToast(message, type) {
     const toast = document.createElement('div');
+    let backgroundToast = type === 'success' ? 'rgba(45, 206, 137, 0.95)' : 'rgba(220, 53, 69, 0.95)';
+    if (type === 'info') backgroundToast = 'rgba(255, 152, 0, 0.9)';
     toast.className = `toast-notification ${type}`;
     toast.textContent = message;
-
     toast.style.position = 'fixed';
     toast.style.bottom = '20px';
     toast.style.right = '20px';
     toast.style.padding = '12px 20px';
     toast.style.borderRadius = '8px';
-    toast.style.backgroundColor = type === 'success' ? 'rgba(45, 206, 137, 0.95)' : 'rgba(220, 53, 69, 0.95)';
+    toast.style.backgroundColor = backgroundToast;
     toast.style.color = 'white';
     toast.style.fontSize = '0.9rem';
     toast.style.fontWeight = '600';

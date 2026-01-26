@@ -1,21 +1,17 @@
 package com.marcweb.security;
 
-import com.marcweb.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.SigningKeyResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PostConstruct;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,7 +21,7 @@ import java.util.function.Function;
 /**
  * Serviço responsável por operações relacionadas ao JWT (JSON Web Token).
  * Fornece funcionalidades para geração, validação e extração de informações de tokens JWT.
- *
+ * <p>
  * Este serviço utiliza uma chave secreta configurada via variáveis de ambiente
  * para assinar e verificar tokens, garantindo segurança na autenticação.
  *
@@ -58,7 +54,7 @@ public class JwtService {
             Decoders.BASE64.decode(secretKey);
         } catch (Exception e) {
             throw new IllegalArgumentException("JWT_SECRET inválido: a chave deve ser uma string Base64 válida. Erro: " + e.getMessage() +
-                "\nExemplo de geração de chave válida: openssl rand -base64 48");
+                                               "\nExemplo de geração de chave válida: openssl rand -base64 48");
         }
 
         return secretKey;
@@ -119,7 +115,7 @@ public class JwtService {
     /**
      * Extrai uma informação específica (claim) do token JWT usando uma função resolver.
      *
-     * @param token Token JWT do qual extrair a informação
+     * @param token          Token JWT do qual extrair a informação
      * @param claimsResolver Função que define qual claim extrair
      * @return Valor do claim extraído
      * @throws Exception se o token for inválido
@@ -147,6 +143,7 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token) // Faz o parse do token JWS
                 .getBody(); // Retorna o corpo (claims) do token
+
     }
 
     /**
@@ -254,7 +251,7 @@ public class JwtService {
      *
      * @param extraClaims Claims adicionais
      * @param userDetails Informações do usuário
-     * @param expiration Tempo de expiração em milissegundos
+     * @param expiration  Tempo de expiração em milissegundos
      * @return Token JWT completo e assinado
      */
     private String buildToken(
@@ -277,7 +274,7 @@ public class JwtService {
      * Verifica se o token JWT é válido para o usuário fornecido.
      * Verifica se o username corresponde e se o token não expirou.
      *
-     * @param token Token JWT a ser validado
+     * @param token       Token JWT a ser validado
      * @param userDetails Informações do usuário esperado
      * @return true se o token for válido, false caso contrário
      */
@@ -306,7 +303,6 @@ public class JwtService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
 
 
 }

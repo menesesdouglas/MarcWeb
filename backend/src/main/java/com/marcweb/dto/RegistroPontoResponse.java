@@ -17,4 +17,5 @@ public class RegistroPontoResponse {
     private String ip;
     private String justificativa;
     private LocalDateTime timestamp;
+
 }
