@@ -2,6 +2,7 @@ package com.marcweb.security;
 
 import com.marcweb.entity.User;
 import com.marcweb.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,6 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = org.springframework.security.core.userdetails.User
                     .withUsername(user.getUsername())
                     .roles(user.getRole().name())
+                    .password(user.getPassword())
                     .build();
 
             // Verifica se o token JWT é válido para o userDetails carregado

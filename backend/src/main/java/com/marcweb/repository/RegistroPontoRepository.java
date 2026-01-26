@@ -19,8 +19,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
              from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             """)
-    List<RegistroPontoResponse> findByUserAndTimestampBetweenOrderByTimestampAsc(User user, LocalDateTime start, LocalDateTime end);
-
+    List<RegistroPontoResponse> findByUserAndTimestampBetween(User user, LocalDateTime start, LocalDateTime end);
 
     // BUSCANDO REGISTROS DE UM USUÁRIO EM UM INTERVALO DE DATA
     @Query("""
@@ -29,7 +28,6 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             """)
     List<RegistroPonto> buscarRegistrosEmIntervaloDeData(User user, LocalDateTime start, LocalDateTime end);
     // Outros métodos específicos, se necessário
-
 
     // BUSCANDO ULTIMO TIPO DE REGISTRO DE UM USUÁRIO
     @Query(nativeQuery = true, value = """
@@ -61,7 +59,6 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     // CONSULTA OTIMIZADA: CONTAGEM DE REGISTROS POR USUÁRIO E PERÍODO
     @Query("Select count(r) from RegistroPonto r where r.user = :user and r.timestamp between :start and :end")
     long countByUserAndPeriod(@Param("user") User user, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
 
     @Query(nativeQuery = true, value = "Select * from registros_ponto order by timestamp DESC limit 10")
     List<RegistroPonto> getStatusRecentes();
@@ -112,5 +109,6 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
         """)
     List<Object[]> getStatusAtualFuncionarios();
 
-
+    // Método para verificar se já existe um registro no mesmo horário para evitar duplicatas
+    boolean existsByUserAndTimestamp(User user, LocalDateTime timestamp);
 }

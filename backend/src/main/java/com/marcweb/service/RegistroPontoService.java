@@ -2,10 +2,15 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
+<<<<<<< HEAD
+import com.marcweb.dto.*;
+=======
 import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.dto.StatusAtualFuncionario;
+import com.marcweb.dto.TimeAdjustmentRequest;
+>>>>>>> b4661d13d91741a3856cf44ac5b943c614eca264
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário
@@ -16,10 +21,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek; // Import necessário
 import java.time.LocalDate; // Import necessário
 import java.time.LocalDateTime; // Import necessário
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -196,14 +206,54 @@ public class RegistroPontoService {
     @Auditado(
             acao = "Buscando registros de ponto",
             categoria = CategoriaLog.ADMIN)
-    public List<RegistroPontoResponse> buscarPontosRegistrados(LocalDateTime start, LocalDateTime end) {
+    public RegistroPontoMe buscarPontosRegistrados(LocalDateTime start, LocalDateTime end) {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
         detalhes.setDetalhes("Usuário realizou a busca dos seus pontos batidos entre " + start.toLocalDate().toString() + " e " + end.toLocalDate().toString());
-        return repository.findByUserAndTimestampBetweenOrderByTimestampAsc(user, start, end);
+        var registros = repository.findByUserAndTimestampBetween(user, start, end);
+        registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
+        RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros));
+        return meusRegistros;
     }
 
-    // COLETANDO IP DO USUÁRIO ATRAVÉZ DA REQUISIÇÃO
+    private long calcularHoras(List<RegistroPontoResponse> registros) {
+        long minutosTrabalhados = 0;
+
+        /// PARA SEPARAR REGISTROS POR DIA
+        List<List<RegistroPontoResponse>> registrosSeparados = new ArrayList<>();
+        List<RegistroPontoResponse> listaAux = new ArrayList<>();
+        for (int i = 0; i < registros.size(); i++) {
+            var registroAtual = registros.get(i);
+            listaAux.add(registroAtual);
+            var dataRegistroAtual = registroAtual.getTimestamp().toLocalDate();
+            /// PARANDO O LOOP CASO SEJA O ULTIMO REGISTRO PARA NÃO DAR ERRO
+            if (i == registros.size() - 1) {
+                registrosSeparados.add(listaAux);
+                break;
+            }
+
+            /// FINALIZANDO A LISTA DO DIA CASO A DATA DO PRÓXIMO REGISTRO SEJA DIFERENTE
+            if (!registros.get(i + 1).getTimestamp().toLocalDate().equals(dataRegistroAtual)) {
+                registrosSeparados.add(listaAux);
+                listaAux = new ArrayList<>();
+            }
+        }
+
+        for (List<RegistroPontoResponse> r : registrosSeparados) {
+            if (r.size() == 4) {
+                minutosTrabalhados += ChronoUnit.MINUTES.between(r.get(0).getTimestamp(), r.get(1).getTimestamp());
+                minutosTrabalhados += ChronoUnit.MINUTES.between(r.get(2).getTimestamp(), r.get(3).getTimestamp());
+            } else if (r.size() == 2) {
+                minutosTrabalhados += ChronoUnit.MINUTES.between(r.get(0).getTimestamp(), r.get(1).getTimestamp());
+            } else {
+                System.out.println("IMPOSSÍVEL CALCULAR PARA OS REGISTROS ATUAL");
+            }
+        }
+        return minutosTrabalhados;
+    }
+
+
+    /// COLETANDO IP DO USUÁRIO ATRAVÉZ DA REQUISIÇÃO
     private String getIpUser(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
@@ -247,5 +297,49 @@ public class RegistroPontoService {
             Boolean emServico = emServicoInt == 1;
             return new StatusAtualFuncionario(nome, status, horarioEntrada, emServico);
         }).toList();
+    }
+
+    @Auditado(
+            acao = "Ajuste de ponto manual",
+            categoria = CategoriaLog.ADMIN
+    )
+    @Transactional
+    public void ajustarPonto(TimeAdjustmentRequest request) {
+        // Buscar o usuário
+        User user = userService.findById(request.userId());
+
+        // Validar o tipo de registro
+        TipoRegistro tipoRegistro = mapTipoStringToEnum(request.tipo());
+
+        // Criar o timestamp combinando data e hora
+        LocalDateTime timestamp = request.date().atTime(request.time());
+
+        // Verificar se já existe um registro no mesmo horário para evitar duplicatas
+        boolean exists = repository.existsByUserAndTimestamp(user, timestamp);
+        if (exists) {
+            throw new IllegalStateException("Já existe um registro de ponto neste horário para este usuário");
+        }
+
+        // Criar e salvar o novo registro de ponto
+        RegistroPonto novoRegistro = new RegistroPonto();
+        novoRegistro.setUser(user);
+        novoRegistro.setTipo(tipoRegistro);
+        novoRegistro.setTimestamp(timestamp);
+        novoRegistro.setJustificativa(request.justificativa());
+        novoRegistro.setIp("AJUSTE_ADMIN"); // Marcar como ajuste administrativo
+
+        repository.save(novoRegistro);
+        detalhes.setDetalhes("Ajuste de ponto realizado para " + user.getNome() + ": " + tipoRegistro.getText() + " em " + timestamp);
+    }
+
+    // Método auxiliar para mapear string para TipoRegistro
+    private TipoRegistro mapTipoStringToEnum(String tipoString) {
+        return switch (tipoString.toLowerCase()) {
+            case "entrada" -> TipoRegistro.ENTRADA;
+            case "início descanso" -> TipoRegistro.INICIO_DESCANSO;
+            case "fim descanso" -> TipoRegistro.FIM_DESCANSO;
+            case "saída" -> TipoRegistro.SAIDA;
+            default -> throw new IllegalArgumentException("Tipo de registro inválido: " + tipoString);
+        };
     }
 }

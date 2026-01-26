@@ -66,9 +66,8 @@ async function carregarHistorico() {
         }
 
         // Converter para timestamps
-        const inicioTimestamp = new Date(dataInicio + 'T00:00:00').toISOString();
-        const fimTimestamp = new Date(dataFinal + 'T23:59:59').toISOString();
-
+        const inicioTimestamp = new Date(dataInicio + 'T00:00:00').toISOString().replace(".000Z", "");
+        const fimTimestamp = new Date(dataFinal + 'T23:59:59').toISOString().replace(".000Z", "");
         const response = await fetch(`http://localhost:8080/api/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
@@ -76,10 +75,11 @@ async function carregarHistorico() {
         });
 
         if (response.ok) {
-            const registros = await response.json();
-            renderizarHistorico(registros);
-            calcularEstatisticas(registros);
+            const resultado = await response.json();
+            renderizarHistorico(resultado.registros);
+            calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados);
         } else {
+            if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
             historyBody.innerHTML = `<tr><td colspan="5" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${error.erro || 'Erro ao carregar registros'}</td></tr>`;
         }
@@ -129,7 +129,7 @@ function renderizarHistorico(registros) {
     historyBody.innerHTML = registrosHtml;
 }
 
-function calcularEstatisticas(registros) {
+function calcularEstatisticas(registros, minutosTrabalhados) {
     if (!registros || registros.length === 0) {
         document.getElementById('totalHoras').textContent = '--:--';
         document.getElementById('diasTrabalhados').textContent = '--';
@@ -140,20 +140,25 @@ function calcularEstatisticas(registros) {
 
     // Calcular estatísticas básicas
     const diasUnicos = new Set();
-    let totalMinutos = 0;
 
     registros.forEach(registro => {
         const data = new Date(registro.timestamp);
         diasUnicos.add(data.toDateString());
     });
 
+    // QUANTIDADE DE MINUTOS QUE O USUÁRIO PRECISA TER TRABALHADO NOS DIAS REGISTRADOS
+    const minutosExigidos = 480 * diasUnicos.size;
+    const minutosDebito = minutosExigidos - minutosTrabalhados;
+
+
+
     // Para cálculo mais preciso de horas, seria necessário agrupar por dia
     // e calcular diferenças entre entrada/saída
     // Por enquanto, vamos mostrar estatísticas básicas
     document.getElementById('diasTrabalhados').textContent = diasUnicos.size;
-    document.getElementById('totalHoras').textContent = `${Math.floor(totalMinutos / 60)}:${(totalMinutos % 60).toString().padStart(2, '0')}`;
-    document.getElementById('horasExtras').textContent = '--:--';
-    document.getElementById('horasDebito').textContent = '--:--';
+    document.getElementById('totalHoras').textContent = `${Math.floor(minutosTrabalhados / 60)}:${(minutosTrabalhados % 60).toString().padStart(2, '0')}`;
+    document.getElementById('horasExtras').textContent = minutosDebito < 0 ? `${Math.floor(Math.abs(minutosDebito) / 60)}:${(Math.abs(minutosDebito) % 60).toString().padStart(2, '0')}` : '00:00';
+    document.getElementById('horasDebito').textContent = minutosDebito > 0 ? `${Math.floor(Math.abs(minutosDebito) / 60)}:${(Math.abs(minutosDebito) % 60).toString().padStart(2, '0')}` : '00:00';
 }
 
 function formatarTipoRegistro(tipo) {

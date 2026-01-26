@@ -93,13 +93,7 @@ public class GlobalExceptionHandler {
         return errorObject(e.getMessage());
     }
 
-    /// ---->> NÃO FUNCIONA
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    @ExceptionHandler(ExpiredJwtException.class)
-    public Map<String, Object> handlerRegistroEmFeriadoException(ExpiredJwtException e) {
-        log.warn(e.getMessage());
-        return errorObject("Sessão expirou");
-    }
+
     // --- FIM DAS NOVAS EXCEÇÕES ---
 
     // --- EXCEÇÕES GEOLOCALIZAÇÃO (já implementadas anteriormente) ---
@@ -118,6 +112,7 @@ public class GlobalExceptionHandler {
     }
     // --- FIM EXCEÇÕES GEOLOCALIZAÇÃO ---
 
+    /// PARA PADRONIZAR A RESPOSTA DE ERRO
     private Map<String, Object> errorObject(String message) {
         Map<String, Object> map = new HashMap<>();
         map.put("erro", message);
