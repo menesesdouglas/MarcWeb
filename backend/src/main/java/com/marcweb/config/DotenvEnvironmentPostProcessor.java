@@ -23,7 +23,7 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor 
             // Isso corrige um problema onde os testes (executados dentro de 'backend') não
             // encontravam 'backend/.env' (pois o working dir já era 'backend').
             Dotenv dotenv = null;
-            String[] candidates = new String[] { "backend", ".", ".." };
+            String[] candidates = new String[] { ".", "..", "../backend" };
             for (String dir : candidates) {
                 try {
                     Dotenv d = Dotenv.configure()
@@ -50,7 +50,9 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor 
             }
 
             Map<String, Object> map = new HashMap<>();
-            dotenv.entries().forEach(entry -> map.put(entry.getKey(), entry.getValue()));
+            if (dotenv != null && dotenv.entries() != null) {
+                dotenv.entries().forEach(entry -> map.put(entry.getKey(), entry.getValue()));
+            }
 
             if (!map.isEmpty()) {
                 // Insere as propriedades carregadas na primeira posição para que sejam usadas na resolução de placeholders
