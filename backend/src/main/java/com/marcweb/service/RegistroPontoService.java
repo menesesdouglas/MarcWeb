@@ -6,6 +6,7 @@ import com.marcweb.dto.CreateRegistroPonto;
 import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.dto.StatusAtualFuncionario;
+import com.marcweb.dto.TimeAdjustmentRequest;
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário
@@ -247,5 +248,49 @@ public class RegistroPontoService {
             Boolean emServico = emServicoInt == 1;
             return new StatusAtualFuncionario(nome, status, horarioEntrada, emServico);
         }).toList();
+    }
+
+    @Auditado(
+            acao = "Ajuste de ponto manual",
+            categoria = CategoriaLog.ADMIN
+    )
+    @Transactional
+    public void ajustarPonto(TimeAdjustmentRequest request) {
+        // Buscar o usuário
+        User user = userService.findById(request.userId());
+
+        // Validar o tipo de registro
+        TipoRegistro tipoRegistro = mapTipoStringToEnum(request.tipo());
+
+        // Criar o timestamp combinando data e hora
+        LocalDateTime timestamp = request.date().atTime(request.time());
+
+        // Verificar se já existe um registro no mesmo horário para evitar duplicatas
+        boolean exists = repository.existsByUserAndTimestamp(user, timestamp);
+        if (exists) {
+            throw new IllegalStateException("Já existe um registro de ponto neste horário para este usuário");
+        }
+
+        // Criar e salvar o novo registro de ponto
+        RegistroPonto novoRegistro = new RegistroPonto();
+        novoRegistro.setUser(user);
+        novoRegistro.setTipo(tipoRegistro);
+        novoRegistro.setTimestamp(timestamp);
+        novoRegistro.setJustificativa(request.justificativa());
+        novoRegistro.setIp("AJUSTE_ADMIN"); // Marcar como ajuste administrativo
+
+        repository.save(novoRegistro);
+        detalhes.setDetalhes("Ajuste de ponto realizado para " + user.getNome() + ": " + tipoRegistro.getText() + " em " + timestamp);
+    }
+
+    // Método auxiliar para mapear string para TipoRegistro
+    private TipoRegistro mapTipoStringToEnum(String tipoString) {
+        return switch (tipoString.toLowerCase()) {
+            case "entrada" -> TipoRegistro.ENTRADA;
+            case "início descanso" -> TipoRegistro.INICIO_DESCANSO;
+            case "fim descanso" -> TipoRegistro.FIM_DESCANSO;
+            case "saída" -> TipoRegistro.SAIDA;
+            default -> throw new IllegalArgumentException("Tipo de registro inválido: " + tipoString);
+        };
     }
 }

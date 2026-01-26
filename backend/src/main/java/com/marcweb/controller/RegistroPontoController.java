@@ -5,6 +5,7 @@ import com.marcweb.dto.PontosRecentes;
 import com.marcweb.dto.RegistroPontoResponse;
 import com.marcweb.dto.RegistroPontoResponseWithWarning;
 import com.marcweb.dto.StatusAtualFuncionario;
+import com.marcweb.dto.TimeAdjustmentRequest;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
 import com.marcweb.service.UserService;
@@ -70,5 +71,12 @@ public class RegistroPontoController {
     public ResponseEntity<List<StatusAtualFuncionario>> getStatusAtualFuncionarios() {
         var lista = service.getStatusAtualFuncionarios();
         return ResponseEntity.ok(lista);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/ajuste")
+    public ResponseEntity<String> ajustarPonto(@RequestBody TimeAdjustmentRequest request) {
+        service.ajustarPonto(request);
+        return ResponseEntity.ok("Ajuste de ponto realizado com sucesso");
     }
 }

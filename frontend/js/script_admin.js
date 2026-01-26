@@ -36,8 +36,11 @@ function setupEventListeners() {
         employeeForm.addEventListener('submit', handleEmployeeSubmit);
     }
 
-    // Formulário de Ajuste
+// Formulário de Ajuste
     document.getElementById('adjustmentForm').addEventListener('submit', handleAdjustmentSubmit);
+
+// Carregar histórico de ajustes
+    loadAdjustmentHistory();
 
     // Logout
     document.getElementById('btnLogout').addEventListener('click', () => {
@@ -273,8 +276,17 @@ async function handleAdjustmentSubmit(e) {
     const time = document.getElementById('adjTime').value;
     const justificativa = document.getElementById('adjJustification').value;
 
-    if (!employeeId || !date || !tipo || !time || !justificativa) {
-        showToast('Preencha todos os campos obrigatórios', 'error');
+    // Validate data
+    const validation = validateAdjustmentData({
+        userId: employeeId,
+        date: date,
+        tipo: tipo,
+        time: time,
+        justificativa: justificativa
+    });
+
+    if (!validation.isValid) {
+        validation.errors.forEach(error => showToast(error, 'error'));
         return;
     }
 
@@ -282,9 +294,9 @@ async function handleAdjustmentSubmit(e) {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const adjustmentData = {
             userId: employeeId,
-            data: date,
+            date: date,
             tipo: tipo,
-            horario: time,
+            time: time,
             justificativa: justificativa
         };
 
@@ -300,6 +312,8 @@ async function handleAdjustmentSubmit(e) {
         if (response.ok) {
             showToast('Ajuste de ponto realizado com sucesso!', 'success');
             e.target.reset();
+            // Refresh adjustment history
+            await loadAdjustmentHistory();
         } else {
             const error = await response.json();
             showToast(error.erro || 'Erro ao realizar ajuste', 'error');
@@ -308,6 +322,97 @@ async function handleAdjustmentSubmit(e) {
         console.error('Erro ao realizar ajuste:', error);
         showToast('Erro ao realizar ajuste', 'error');
     }
+}
+
+async function loadAdjustmentHistory() {
+    try {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        // Format dates for API
+        const formatDateForAPI = (date) => {
+            return date.toISOString().split('T')[0] + 'T00:00:00';
+        };
+
+        const response = await fetch(`http://localhost:8080/api/ponto/me?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`, {
+            headers: {
+                "Authorization": `Bearer ${auth.token}`
+            }
+        });
+
+        if (response.ok) {
+            const adjustments = await response.json();
+            renderAdjustmentHistory(adjustments);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar histórico de ajustes:', error);
+    }
+}
+
+function renderAdjustmentHistory(adjustments) {
+    // Create adjustment history section if it doesn't exist
+    let historySection = document.getElementById('adjustmentHistory');
+    if (!historySection) {
+        const adjustmentsSection = document.getElementById('adjustments');
+        if (adjustmentsSection) {
+            historySection = document.createElement('div');
+            historySection.id = 'adjustmentHistory';
+            historySection.className = 'card';
+            historySection.style.marginTop = '20px';
+            historySection.innerHTML = `
+                <h3>Histórico de Ajustes Recentes</h3>
+                <div id="adjustmentHistoryList" style="max-height: 300px; overflow-y: auto;"></div>
+            `;
+            adjustmentsSection.appendChild(historySection);
+        }
+    }
+
+    const historyList = document.getElementById('adjustmentHistoryList');
+    if (historyList) {
+        historyList.innerHTML = '';
+
+        // Filter adjustments (those with "AJUSTE_ADMIN" as IP)
+        const adminAdjustments = adjustments.filter(adj => adj.ip === 'AJUSTE_ADMIN');
+
+        if (adminAdjustments.length === 0) {
+            historyList.innerHTML = '<p>Nenhum ajuste recente encontrado.</p>';
+            return;
+        }
+
+        adminAdjustments.forEach(adj => {
+            const adjElement = document.createElement('div');
+            adjElement.style.padding = '10px';
+            adjElement.style.borderBottom = '1px solid #eee';
+            adjElement.style.marginBottom = '5px';
+
+            const employeeName = allUsers.find(u => u.id === adj.userId)?.nome || 'Desconhecido';
+
+            adjElement.innerHTML = `
+                <strong>${employeeName}</strong> - ${new Date(adj.timestamp).toLocaleString('pt-BR')}<br>
+                <small style="color: #666;">${adj.tipo} - ${adj.justificativa}</small>
+            `;
+            historyList.appendChild(adjElement);
+        });
+    }
+}
+
+function validateAdjustmentData(data) {
+    const errors = [];
+
+    if (!data.userId) errors.push("Funcionário não selecionado");
+    if (!data.date) errors.push("Data não informada");
+    if (!data.tipo) errors.push("Tipo de registro não informado");
+    if (!data.time) errors.push("Horário não informado");
+    if (!data.justificativa || data.justificativa.trim().length < 10) {
+        errors.push("Justificativa deve ter pelo menos 10 caracteres");
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
 }
 
 async function generateReport() {
