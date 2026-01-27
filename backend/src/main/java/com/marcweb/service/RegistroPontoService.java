@@ -57,7 +57,7 @@ public class RegistroPontoService {
 
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
-        /// validarDiaUtil(dataAtual); // <-- Usando LocalDateTime.now()
+        validarDiaUtil(dataAtual); // <-- Valida se é dia útil (não domingo e não feriado)
 
         // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
         ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
@@ -207,7 +207,7 @@ public class RegistroPontoService {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
         detalhes.setDetalhes("Usuário realizou a busca dos seus pontos batidos entre " + start.toLocalDate().toString() + " e " + end.toLocalDate().toString());
-        var registros = repository.findByUserAndTimestampBetweenOrderByTimestampAsc(user, start, end);
+        List<RegistroPontoResponse> registros = repository.findByUserAndTimestampBetween(user, start, end);
         registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
         RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros));
         return meusRegistros;
