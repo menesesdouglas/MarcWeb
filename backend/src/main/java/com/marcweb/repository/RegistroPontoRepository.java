@@ -19,7 +19,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
              from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             """)
-    List<RegistroPontoResponse> findByUserAndTimestampBetweenOrderByTimestampAsc(User user, LocalDateTime start, LocalDateTime end);
+    List<RegistroPontoResponse> findByUserAndTimestampBetween(User user, LocalDateTime start, LocalDateTime end);
 
 
     // BUSCANDO REGISTROS DE UM USUÁRIO EM UM INTERVALO DE DATA

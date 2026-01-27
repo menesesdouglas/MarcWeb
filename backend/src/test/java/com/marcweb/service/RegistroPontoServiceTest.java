@@ -197,7 +197,7 @@ class RegistroPontoServiceTest {
         // Arrange
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
-        when(repository.findByUserAndTimestampBetweenOrderByTimestampAsc(any(User.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(repository.findByUserAndTimestampBetween(any(User.class), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(Collections.emptyList());
 
         // Act
