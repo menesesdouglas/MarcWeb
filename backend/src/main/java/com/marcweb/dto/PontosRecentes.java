@@ -1,4 +1,4 @@
 package com.marcweb.dto;
 
-public record PontosRecentes(String name, String lastStatus, String lastTime) {
+public record PontosRecentes(String tipo, String horario) {
 }

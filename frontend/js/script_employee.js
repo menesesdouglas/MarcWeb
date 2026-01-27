@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const punchButtons = document.querySelectorAll('.punch-btn');
     const usernameTag = document.getElementById("username");
     const auth = JSON.parse(localStorage.getItem("auth"));
-    
+
     // Verificar autenticação
     if (!auth) {
         window.location.href = 'login.html';
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Verificar se os elementos críticos existem
-    if (!clockElement || !dateElement || !statusElement || !punchList || !usernameTag) {
+    if (!clockElement || !dateElement || !statusElement || !usernameTag) {
         console.error('Elementos críticos não encontrados no DOM');
         return;
     }
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Tratar erros de forma mais detalhada
                 let errorMessage = 'Erro ao registrar ponto';
-                
+
                 try {
                     const errorData = await result.json();
                     errorMessage = errorData.erro || errorData.message || 'Erro desconhecido';
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         errorMessage = `Erro HTTP: ${result.status}`;
                     }
                 }
-                
+
                 console.error('Erro ao registrar ponto:', errorMessage);
                 showToast(`❌ ${errorMessage}`, 'error');
             }
@@ -344,11 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // Função para garantir que o logout esteja funcionando corretamente
 function initLogout() {
     const logoutBtn = document.getElementById('btnLogout');
-    
+
     if (logoutBtn) {
         // Remover event listeners existentes para evitar duplicação
         logoutBtn.removeEventListener('click', handleLogout);
-        
+
         // Adicionar evento de logout
         logoutBtn.addEventListener('click', handleLogout);
         console.log('Logout inicializado corretamente');
@@ -378,7 +378,6 @@ async function loadTodayPunches() {
                 "Authorization": `Bearer ${auth.token}`
             }
         });
-
         if (response.ok) {
             const punches = await response.json();
             renderPunchHistory(punches);

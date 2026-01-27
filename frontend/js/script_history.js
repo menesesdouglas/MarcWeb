@@ -130,6 +130,7 @@ function renderizarHistorico(registros) {
 }
 
 function calcularEstatisticas(registros, minutosTrabalhados) {
+    alert(minutosTrabalhados);
     if (!registros || registros.length === 0) {
         document.getElementById('totalHoras').textContent = '--:--';
         document.getElementById('diasTrabalhados').textContent = '--';

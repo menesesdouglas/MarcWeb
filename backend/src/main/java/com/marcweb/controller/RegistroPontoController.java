@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -61,10 +62,10 @@ public class RegistroPontoController {
         return !pontos.getRegistros().isEmpty() ? ResponseEntity.ok(pontos) : ResponseEntity.notFound().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/recentes")
-    public ResponseEntity<List<PontosRecentes>> getStatusRecentes() {
-        var lista = service.getStatusRecentes();
+    /// CARREGANDO HISTÓRICO RECENTE DO USUÁRIO LOGADO
+    @GetMapping("/historico")
+    public ResponseEntity<List<PontosRecentes>> getStatusRecentes(@RequestParam LocalDate date) {
+        var lista = service.getStatusRecentes(date);
         return ResponseEntity.ok(lista);
     }
 

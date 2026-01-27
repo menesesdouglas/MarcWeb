@@ -18,11 +18,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.DayOfWeek; // Import necessário
 import java.time.LocalDate; // Import necessário
 import java.time.LocalDateTime; // Import necessário
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,7 +48,7 @@ public class RegistroPontoService {
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
-
+        if (repository.findLastTypeRegistration(user.getId()).equals(TipoRegistro.SAIDA)) throw new RuntimeException("Usuário já concluiu o ciclo diariozs");
         var dataAtual = LocalDate.now();
 
         // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
@@ -237,13 +236,23 @@ public class RegistroPontoService {
         }
 
         for (List<RegistroPontoResponse> r : registrosSeparados) {
-            if (r.size() == 4) {
-                minutosTrabalhados += ChronoUnit.MINUTES.between(r.get(0).getTimestamp(), r.get(1).getTimestamp());
-                minutosTrabalhados += ChronoUnit.MINUTES.between(r.get(2).getTimestamp(), r.get(3).getTimestamp());
-            } else if (r.size() == 2) {
-                minutosTrabalhados += ChronoUnit.MINUTES.between(r.get(0).getTimestamp(), r.get(1).getTimestamp());
-            } else {
-                System.out.println("IMPOSSÍVEL CALCULAR PARA OS REGISTROS ATUAL");
+            try {
+                var primeiroRegistro = r.get(0);
+                var segundoRegistro = r.get(1);
+                if (primeiroRegistro.getTipo().equals(TipoRegistro.ENTRADA) && segundoRegistro.getTipo().equals(TipoRegistro.INICIO_DESCANSO)) {
+                    minutosTrabalhados += ChronoUnit.MINUTES.between(primeiroRegistro.getTimestamp(), segundoRegistro.getTimestamp());
+                }
+            } catch (Exception e) {
+                System.out.println("NÃO FOI POSSÍVEL CALCULAR COM OS REGISTROS ATUAIS");
+            }
+            try {
+                var terceiroRegistro = r.get(2);
+                var quartoRegistro = r.get(3);
+                if (terceiroRegistro.getTipo().equals(TipoRegistro.FIM_DESCANSO) && quartoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
+                    minutosTrabalhados += ChronoUnit.MINUTES.between(terceiroRegistro.getTimestamp(), quartoRegistro.getTimestamp());
+                }
+            } catch (Exception e) {
+                System.out.println("NÃO FOI POSSÍVEL CALCULAR COM OS REGISTROS ATUAIS");
             }
         }
         return minutosTrabalhados;
@@ -274,11 +283,14 @@ public class RegistroPontoService {
     }
 
 
-    public List<PontosRecentes> getStatusRecentes() {
-        List<RegistroPonto> pontosRecentesEntity = repository.getStatusRecentes();
+    public List<PontosRecentes> getStatusRecentes(LocalDate date) {
+        var userDetails = UserService.getUserDetailsBySecurityContext();
+        var user = userService.findByUsername(userDetails.getUsername());
+        ///  BUSCANDO REGISTROS DE UMA DATA ESPECÍFICA EM QUALQUER HORÁRIO DO DIA
+        List<RegistroPonto> pontosRecentesEntity = repository.buscarRegistrosEmIntervaloDeData(user, date.atStartOfDay(), date.atTime(LocalTime.MAX));
         List<PontosRecentes> pontosRecentesDTO = pontosRecentesEntity.stream().map(r -> {
             String horario = r.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm"));
-            return new PontosRecentes(r.getUser().getNome(), r.getTipo().getText(), horario);
+            return new PontosRecentes(r.getTipo().getText(), horario);
         }).toList();
         return pontosRecentesDTO;
     }
@@ -300,12 +312,12 @@ public class RegistroPontoService {
         List<RegistroPonto> ajustes = repository.findByIpAndTimestampBetweenOrderByTimestampDesc("AJUSTE_ADMIN", start, end);
         return ajustes.stream().map(r -> {
             return new RegistroPontoResponse(
-                r.getTipo(),
-                r.getUser().getNome(), // Nome do usuário
-                r.getUser().getUsername(),
-                r.getIp(),
-                r.getJustificativa(),
-                r.getTimestamp()
+                    r.getTipo(),
+                    r.getUser().getNome(), // Nome do usuário
+                    r.getUser().getUsername(),
+                    r.getIp(),
+                    r.getJustificativa(),
+                    r.getTimestamp()
             );
         }).toList();
     }
