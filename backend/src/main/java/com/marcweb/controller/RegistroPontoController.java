@@ -81,4 +81,14 @@ public class RegistroPontoController {
         service.ajustarPonto(request);
         return ResponseEntity.ok("Ajuste de ponto realizado com sucesso");
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/ajustes-admin")
+    public ResponseEntity<List<RegistroPontoResponse>> getAjustesAdministrativos(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end
+    ) {
+        var ajustes = service.getAjustesAdministrativos(start, end);
+        return ResponseEntity.ok(ajustes);
+    }
 }

@@ -361,7 +361,7 @@ async function loadAdjustmentHistory() {
             return date.toISOString().split('T')[0] + 'T00:00:00';
         };
 
-        const response = await fetch(`http://localhost:8080/api/ponto/me?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`, {
+        const response = await fetch(`http://localhost:8080/api/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -412,7 +412,13 @@ function renderAdjustmentHistory(adjustments) {
             adjElement.style.borderBottom = '1px solid #eee';
             adjElement.style.marginBottom = '5px';
 
-            const employeeName = allUsers.find(u => u.id === adj.userId)?.nome || 'Desconhecido';
+            // Debug: Verificar o que está vindo do backend
+            console.log('Ajuste recebido:', adj);
+            console.log('Campos disponíveis:', Object.keys(adj));
+
+            // Buscar o nome do funcionário no array allUsers
+            // O backend retorna o nome do usuário no campo 'nomeUsuario' (não 'user')
+            const employeeName = adj.nomeUsuario || 'Desconhecido';
 
             adjElement.innerHTML = `
                 <strong>${employeeName}</strong> - ${new Date(adj.timestamp).toLocaleString('pt-BR')}<br>
@@ -453,20 +459,10 @@ async function generateReport() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const [year, month] = monthYear.split('-');
 
-        // Primeiro, gerar a folha de ponto
-        const folhaResponse = await fetch(`http://localhost:8080/api/folha-ponto/gerar?userId=${userId}&mes=${month}&ano=${year}`, {
-            headers: {
-                'Authorization': `Bearer ${auth.token}`
-            }
-        });
+        // Mostrar feedback de carregamento
+        showToast('Gerando relatório PDF...', 'info');
 
-        if (!folhaResponse.ok) {
-            throw new Error('Erro ao gerar folha de ponto');
-        }
-
-        const folhaPontoJson = await folhaResponse.text();
-
-        // Depois, gerar o PDF
+        // Gerar o PDF diretamente com o novo endpoint
         const pdfResponse = await fetch('http://localhost:8080/api/relatorios/pdf', {
             method: 'POST',
             headers: {
@@ -474,8 +470,9 @@ async function generateReport() {
                 'Authorization': `Bearer ${auth.token}`
             },
             body: JSON.stringify({
-                folhaPontoJson: folhaPontoJson,
-                userId: userId
+                userId: parseInt(userId),
+                mes: parseInt(month),
+                ano: parseInt(year)
             })
         });
 
@@ -490,7 +487,21 @@ async function generateReport() {
 
             showToast('Relatório PDF gerado e baixado com sucesso!', 'success');
         } else {
-            throw new Error('Erro ao gerar PDF');
+            // Tratar respostas de erro que podem não ser JSON
+            let errorMessage = 'Erro ao gerar PDF';
+            try {
+                const errorData = await pdfResponse.json();
+                errorMessage = errorData.erro || 'Erro ao gerar PDF';
+            } catch (e) {
+                // Se não for JSON, tentar obter texto simples
+                try {
+                    const errorText = await pdfResponse.text();
+                    errorMessage = errorText || 'Erro ao gerar PDF';
+                } catch (e2) {
+                    errorMessage = 'Erro ao gerar PDF';
+                }
+            }
+            showToast(errorMessage, 'error');
         }
     } catch (error) {
         console.error('Erro ao gerar relatório:', error);

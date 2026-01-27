@@ -1,26 +1,45 @@
 package com.marcweb.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.VerticalAlignment;
+import com.marcweb.entity.Feriado;
+import com.marcweb.entity.Folga;
 import com.marcweb.entity.User;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
+import com.marcweb.entity.TipoFolga;
 import com.marcweb.exceptions.RelatorioException;
+import com.marcweb.exceptions.SemRegistrosException;
+import com.marcweb.dto.folha_ponto.DadosFolhaPonto;
+import com.marcweb.dto.folha_ponto.Dia;
+import com.marcweb.dto.folha_ponto.Periodo;
+import com.marcweb.dto.folha_ponto.RegistroPontoDTO;
+import com.marcweb.dto.folha_ponto.Totalizacao;
+import com.marcweb.dto.folha_ponto.UsuarioDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Base64;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -28,14 +47,29 @@ public class RelatorioService {
 
     private final ObjectMapper objectMapper;
     private final LogAuditoriaService logAuditoriaService;
+    private final FolhaPontoService folhaPontoService;
+    private final FeriadoService feriadoService;
+    private final FolgaService folgaService;
+    private final UserService userService;
 
     /**
-     * Gera relatório PDF de folha de ponto
+     * Gera relatório PDF de folha de ponto com layout completo
      */
-    public String gerarRelatorioPDF(String folhaPontoJson, User user) throws RelatorioException {
+    public String gerarRelatorioPDF(Long userId, int mes, int ano) throws RelatorioException {
         try {
-            // Converte JSON para mapa
-            Map<String, Object> folhaPonto = objectMapper.readValue(folhaPontoJson, Map.class);
+            User user = userService.findById(userId);
+            
+            // Gera a folha de ponto internamente
+            String folhaPontoJson;
+            try {
+                folhaPontoJson = folhaPontoService.gerarFolhaPonto(userId, mes, ano);
+            } catch (SemRegistrosException e) {
+                // Caso não haja registros, cria um JSON vazio para gerar PDF em branco
+                folhaPontoJson = criarFolhaPontoVazia(userId, mes, ano);
+            }
+
+            // Converte JSON para objeto
+            DadosFolhaPonto folhaPonto = objectMapper.readValue(folhaPontoJson, DadosFolhaPonto.class);
 
             // Cria PDF em memória
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -43,69 +77,22 @@ public class RelatorioService {
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            // Adiciona título
+            // Configurações de fonte
             PdfFont font = PdfFontFactory.createFont();
-            Paragraph title = new Paragraph("Relatório de Folha de Ponto")
-                    .setFont(font)
-                    .setFontSize(18)
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginBottom(20);
-            document.add(title);
+            PdfFont boldFont = PdfFontFactory.createFont();
 
-            // Adiciona informações do funcionário
-            document.add(new Paragraph("Funcionário: " + user.getNome())
-                    .setBold()
-                    .setMarginBottom(5));
-            document.add(new Paragraph("CPF: " + user.getUsername())
-                    .setMarginBottom(10));
+            // Cabeçalho do PDF
+            adicionarCabecalho(document, user, mes, ano, font);
 
-            // Adiciona período
-            Map<String, Object> periodo = (Map<String, Object>) folhaPonto.get("periodo");
-            document.add(new Paragraph("Período: " + periodo.get("mes") + "/" + periodo.get("ano"))
-                    .setMarginBottom(10));
-
-            // Adiciona tabela de dias trabalhados
-            float[] columnWidths = {100, 100, 100, 100};
-            Table table = new Table(columnWidths);
-
-            // Cabeçalho da tabela
-            table.addHeaderCell("Data");
-            table.addHeaderCell("Horas Trabalhadas");
-            table.addHeaderCell("Tipo de Dia");
-            table.addHeaderCell("Observações");
-
-            // Dados da tabela
-            for (Object diaObj : (Iterable<?>) folhaPonto.get("dias")) {
-                Map<String, Object> dia = (Map<String, Object>) diaObj;
-                table.addCell(dia.get("data").toString());
-                table.addCell(dia.get("horasTrabalhadas").toString());
-                table.addCell(dia.get("tipoDia").toString());
-                table.addCell(dia.getOrDefault("observacoes", "").toString());
-            }
-
+            // Tabela principal com todos os dias do mês
+            Table table = criarTabelaPrincipal(folhaPonto, font, boldFont);
             document.add(table.setMarginTop(20));
 
-            // Adiciona totalização
-            Map<String, Object> totalizacao = (Map<String, Object>) folhaPonto.get("totalizacao");
-            document.add(new Paragraph("\nTotalização:")
-                    .setBold()
-                    .setMarginTop(20));
+            // Totalização
+            adicionarTotalizacao(document, folhaPonto, font, boldFont);
 
-            document.add(new Paragraph("Horas Trabalhadas: " + totalizacao.get("horasTrabalhadas"))
-                    .setMarginBottom(5));
-            document.add(new Paragraph("Horas Extras: " + totalizacao.get("horasExtras"))
-                    .setMarginBottom(5));
-            document.add(new Paragraph("Horas Débito: " + totalizacao.get("horasDebito"))
-                    .setMarginBottom(5));
-            document.add(new Paragraph("Saldo de Horas: " + totalizacao.get("saldoHoras"))
-                    .setMarginBottom(10));
-
-            // Adiciona rodapé
-            document.add(new Paragraph("Relatório gerado em: " +
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
-                    .setFontSize(8)
-                    .setTextAlignment(TextAlignment.RIGHT)
-                    .setMarginTop(30));
+            // Rodapé
+            adicionarRodape(document, font);
 
             // Finaliza documento
             document.close();
@@ -117,14 +104,15 @@ public class RelatorioService {
             logAuditoriaService.registrarLog(
                 user,
                 "Geração de relatório PDF",
-                CategoriaLog.RELATORIO,
+                CategoriaLog.USO_SISTEMA,
                 StatusLog.SUCESSO,
-                "Relatório PDF gerado com sucesso"
+                "Relatório PDF gerado com sucesso - Período: " + mes + "/" + ano
             );
 
             return pdfBase64;
         } catch (Exception e) {
             try {
+                User user = userService.findById(userId);
                 logAuditoriaService.registrarLog(
                     user,
                     "Geração de relatório PDF",
@@ -137,5 +125,278 @@ public class RelatorioService {
             }
             throw new RelatorioException("Falha ao gerar relatório PDF", e);
         }
+    }
+
+    private void adicionarCabecalho(Document document, User user, int mes, int ano, PdfFont font) {
+        // Título principal
+        Paragraph title = new Paragraph("MarcWeb - TechHub Soluções Tecnológicas")
+                .setFont(font)
+                .setFontSize(20)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(5);
+        document.add(title);
+
+        // Subtítulo
+        Paragraph subtitle = new Paragraph("Folha de Ponto Mensal")
+                .setFont(font)
+                .setFontSize(16)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(20);
+        document.add(subtitle);
+
+        // Informações do funcionário
+        document.add(new Paragraph("Funcionário: " + user.getNome())
+                .setFont(font)
+                .setBold()
+                .setMarginBottom(3));
+        document.add(new Paragraph("CPF: " + user.getUsername())
+                .setFont(font)
+                .setMarginBottom(3));
+        document.add(new Paragraph("Período: " + String.format("%02d", mes) + "/" + ano)
+                .setFont(font)
+                .setMarginBottom(15));
+    }
+
+    private Table criarTabelaPrincipal(DadosFolhaPonto folhaPonto, PdfFont font, PdfFont boldFont) {
+        // Configuração das colunas
+        float[] columnWidths = {60, 80, 80, 80, 80, 100, 120};
+        Table table = new Table(columnWidths);
+
+        // Cabeçalho da tabela
+        adicionarCabecalhoTabela(table, boldFont);
+
+        // Obter todos os dias do mês
+        int diasNoMes = LocalDate.of(folhaPonto.getPeriodo().getAno(), folhaPonto.getPeriodo().getMes(), 1).lengthOfMonth();
+        LocalDate inicioMes = LocalDate.of(folhaPonto.getPeriodo().getAno(), folhaPonto.getPeriodo().getMes(), 1);
+        LocalDate finalMes = inicioMes.withDayOfMonth(diasNoMes);
+
+        // Obter feriados e folgas do período
+        List<Feriado> feriados = feriadoService.findByDataBetween(inicioMes, finalMes);
+        List<Folga> folgas = folgaService.findByPeriodo(folhaPonto.getUsuario().getId(), inicioMes, finalMes);
+
+        // Preencher todos os dias do mês
+        for (int dia = 1; dia <= diasNoMes; dia++) {
+            LocalDate dataAtual = LocalDate.of(folhaPonto.getPeriodo().getAno(), folhaPonto.getPeriodo().getMes(), dia);
+            adicionarLinhaDia(table, dataAtual, folhaPonto.getDias(), feriados, folgas, font, boldFont);
+        }
+
+        return table;
+    }
+
+    private void adicionarCabecalhoTabela(Table table, PdfFont boldFont) {
+        Cell cell = new Cell().add(new Paragraph("Data").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+        
+        cell = new Cell().add(new Paragraph("Entrada").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+        
+        cell = new Cell().add(new Paragraph("Início Descanso").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+        
+        cell = new Cell().add(new Paragraph("Fim Descanso").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+        
+        cell = new Cell().add(new Paragraph("Saída").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+        
+        cell = new Cell().add(new Paragraph("Tipo de Dia").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+        
+        cell = new Cell().add(new Paragraph("Observações").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addHeaderCell(cell);
+    }
+
+    private void adicionarLinhaDia(Table table, LocalDate data, List<Dia> diasRegistrados, List<Feriado> feriados, List<Folga> folgas, PdfFont font, PdfFont boldFont) {
+        // Verifica o tipo de dia
+        TipoDia tipoDia = identificarTipoDia(data, feriados, folgas);
+        String observacoes = getObservacoes(data, tipoDia, feriados, folgas);
+
+        // Busca registros do dia
+        Dia diaRegistrado = buscarDiaRegistrado(data, diasRegistrados);
+        List<RegistroPontoDTO> registros = (diaRegistrado != null) ? diaRegistrado.getRegistros() : new ArrayList<>();
+
+        // Cria células com formatação
+        Cell cell;
+
+        // Coluna Data
+        String diaSemana = data.getDayOfWeek().getDisplayName(TextStyle.SHORT, new Locale("pt", "BR")).toUpperCase();
+        cell = new Cell().add(new Paragraph(data.format(DateTimeFormatter.ofPattern("dd/MM")) + " - " + diaSemana).setFont(font));
+        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addCell(cell);
+
+        // Colunas de horários
+        String entrada = getHorarioPorTipo(registros, "ENTRADA");
+        String inicioDescanso = getHorarioPorTipo(registros, "INICIO_DESCANSO");
+        String fimDescanso = getHorarioPorTipo(registros, "FIM_DESCANSO");
+        String saida = getHorarioPorTipo(registros, "SAIDA");
+
+        cell = new Cell().add(new Paragraph(entrada).setFont(font));
+        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addCell(cell);
+
+        cell = new Cell().add(new Paragraph(inicioDescanso).setFont(font));
+        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addCell(cell);
+
+        cell = new Cell().add(new Paragraph(fimDescanso).setFont(font));
+        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addCell(cell);
+
+        cell = new Cell().add(new Paragraph(saida).setFont(font));
+        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addCell(cell);
+
+        // Coluna Tipo de Dia
+        cell = new Cell().add(new Paragraph(tipoDia.getDescricao()).setFont(boldFont)).setBold();
+        cell.setBackgroundColor(tipoDia.getCor());
+        table.addCell(cell);
+
+        // Coluna Observações
+        cell = new Cell().add(new Paragraph(observacoes).setFont(font));
+        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        table.addCell(cell);
+    }
+
+    private TipoDia identificarTipoDia(LocalDate data, List<Feriado> feriados, List<Folga> folgas) {
+        // Verifica se é final de semana
+        if (data.getDayOfWeek() == DayOfWeek.SATURDAY || data.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            return TipoDia.FINAL_DE_SEMANA;
+        }
+
+        // Verifica se é feriado
+        for (Feriado feriado : feriados) {
+            if (feriado.getData().equals(data)) {
+                return TipoDia.FERIADO;
+            }
+        }
+
+        // Verifica se é folga
+        for (Folga folga : folgas) {
+            if (!data.isBefore(folga.getDataInicio()) && !data.isAfter(folga.getDataFim())) {
+                return TipoDia.FOLGA;
+            }
+        }
+
+        // Verifica se é falta (não tem registro e não é final de semana, feriado ou folga)
+        // Isso será tratado na lógica de observações
+
+        return TipoDia.DIA_UTIL;
+    }
+
+    private String getObservacoes(LocalDate data, TipoDia tipoDia, List<Feriado> feriados, List<Folga> folgas) {
+        StringBuilder obs = new StringBuilder();
+
+        switch (tipoDia) {
+            case FERIADO:
+                for (Feriado feriado : feriados) {
+                    if (feriado.getData().equals(data)) {
+                        obs.append("Feriado: ").append(feriado.getNome());
+                        if (feriado.getOrigem() != null) {
+                            obs.append(" (").append(feriado.getOrigem().name()).append(")");
+                        }
+                        break;
+                    }
+                }
+                break;
+            case FOLGA:
+                for (Folga folga : folgas) {
+                    if (!data.isBefore(folga.getDataInicio()) && !data.isAfter(folga.getDataFim())) {
+                        obs.append("Folga: ").append(folga.getTipo().name());
+                        if (folga.getJustificativa() != null && !folga.getJustificativa().isEmpty()) {
+                            obs.append(" - ").append(folga.getJustificativa());
+                        }
+                        break;
+                    }
+                }
+                break;
+            case FALTA:
+                obs.append("Falta não justificada");
+                break;
+            case DIA_UTIL:
+                obs.append("Dia útil normal");
+                break;
+            case FINAL_DE_SEMANA:
+                obs.append("Final de semana");
+                break;
+        }
+
+        return obs.toString();
+    }
+
+    private Dia buscarDiaRegistrado(LocalDate data, List<Dia> dias) {
+        for (Dia dia : dias) {
+            if (dia.getData().equals(data)) {
+                return dia;
+            }
+        }
+        return null;
+    }
+
+    private String getHorarioPorTipo(List<RegistroPontoDTO> registros, String tipo) {
+        for (RegistroPontoDTO registro : registros) {
+            if (registro.getTipo().name().equals(tipo)) {
+                return registro.getTimestamp().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            }
+        }
+        return "-";
+    }
+
+    private void adicionarTotalizacao(Document document, DadosFolhaPonto folhaPonto, PdfFont font, PdfFont boldFont) {
+        document.add(new Paragraph("\nTotalização do Período:")
+                .setFont(boldFont)
+                .setBold()
+                .setMarginTop(20)
+                .setMarginBottom(10));
+
+        document.add(new Paragraph("Horas Trabalhadas: " + folhaPonto.getTotalizacao().getHoras_trabalhadas())
+                .setFont(font)
+                .setMarginBottom(5));
+        document.add(new Paragraph("Horas Extras: " + folhaPonto.getTotalizacao().getHoras_extras())
+                .setFont(font)
+                .setMarginBottom(5));
+        document.add(new Paragraph("Horas Débito: " + folhaPonto.getTotalizacao().getHoras_debito())
+                .setFont(font)
+                .setMarginBottom(10));
+    }
+
+    private void adicionarRodape(Document document, PdfFont font) {
+        document.add(new Paragraph("Relatório gerado em: " +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                .setFont(font)
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setMarginTop(30));
+    }
+
+    private String criarFolhaPontoVazia(Long userId, int mes, int ano) throws Exception {
+        User user = userService.findById(userId);
+        DadosFolhaPonto folha = new DadosFolhaPonto();
+        folha.setUsuario(new UsuarioDTO(userId, user.getNome(), user.getUsername()));
+        folha.setPeriodo(new Periodo(mes, ano, 0));
+        folha.setDias(new ArrayList<>());
+        folha.setTotalizacao(new Totalizacao(BigDecimal.ZERO, 0, 0, 0));
+        return objectMapper.writeValueAsString(folha);
+    }
+
+    // Enum para tipos de dia com cores
+    private enum TipoDia {
+        DIA_UTIL("DIA ÚTIL", ColorConstants.WHITE),
+        FALTA("FALTA", ColorConstants.LIGHT_GRAY),
+        FOLGA("FOLGA", ColorConstants.LIGHT_GRAY),
+        FERIADO("FERIADO", ColorConstants.LIGHT_GRAY),
+        FINAL_DE_SEMANA("FINAL DE SEMANA", ColorConstants.LIGHT_GRAY);
+
+        private final String descricao;
+        private final com.itextpdf.kernel.colors.Color cor;
+
+        TipoDia(String descricao, com.itextpdf.kernel.colors.Color cor) {
+            this.descricao = descricao;
+            this.cor = cor;
+        }
+
+        public String getDescricao() { return descricao; }
+        public com.itextpdf.kernel.colors.Color getCor() { return cor; }
     }
 }

@@ -207,7 +207,7 @@ public class RegistroPontoService {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
         detalhes.setDetalhes("Usuário realizou a busca dos seus pontos batidos entre " + start.toLocalDate().toString() + " e " + end.toLocalDate().toString());
-        var registros = repository.findByUserAndTimestampBetween(user, start, end);
+        var registros = repository.findByUserAndTimestampBetweenOrderByTimestampAsc(user, start, end);
         registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
         RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros));
         return meusRegistros;
@@ -293,6 +293,20 @@ public class RegistroPontoService {
             Integer emServicoInt = ((Number) row[3]).intValue();
             Boolean emServico = emServicoInt == 1;
             return new StatusAtualFuncionario(nome, status, horarioEntrada, emServico);
+        }).toList();
+    }
+
+    public List<RegistroPontoResponse> getAjustesAdministrativos(LocalDateTime start, LocalDateTime end) {
+        List<RegistroPonto> ajustes = repository.findByIpAndTimestampBetweenOrderByTimestampDesc("AJUSTE_ADMIN", start, end);
+        return ajustes.stream().map(r -> {
+            return new RegistroPontoResponse(
+                r.getTipo(),
+                r.getUser().getNome(), // Nome do usuário
+                r.getUser().getUsername(),
+                r.getIp(),
+                r.getJustificativa(),
+                r.getTimestamp()
+            );
         }).toList();
     }
 

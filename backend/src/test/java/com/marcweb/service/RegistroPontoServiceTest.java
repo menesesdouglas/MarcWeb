@@ -204,7 +204,7 @@ class RegistroPontoServiceTest {
         var resultado = registroPontoService.buscarPontosRegistrados(LocalDateTime.now().minusDays(1), LocalDateTime.now());
 
         // Assert
-        assertTrue(resultado.isEmpty());
+        assertTrue(resultado.getRegistros().isEmpty());
     }
 
     @Test

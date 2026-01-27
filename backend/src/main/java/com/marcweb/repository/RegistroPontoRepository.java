@@ -112,4 +112,8 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // Método para verificar se já existe um registro no mesmo horário para evitar duplicatas
     boolean existsByUserAndTimestamp(User user, LocalDateTime timestamp);
+
+    // Método para buscar ajustes administrativos por IP e período
+    @Query("SELECT r FROM RegistroPonto r WHERE r.ip = :ip AND r.timestamp BETWEEN :start AND :end ORDER BY r.timestamp DESC")
+    List<RegistroPonto> findByIpAndTimestampBetweenOrderByTimestampDesc(@Param("ip") String ip, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
