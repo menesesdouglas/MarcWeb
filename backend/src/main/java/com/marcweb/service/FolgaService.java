@@ -159,6 +159,16 @@ public class FolgaService {
         );
     }
 
+    // NOVO Método: Listar folgas do usuário autenticado
+    public List<FolgaResponse> findByMe() {
+        UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(
+                () -> new RuntimeException("Usuário não encontrado")
+        );
+        List<Folga> folgas = folgaRepository.findByUserId(user.getId());
+        return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
+    }
+
     // --- Validation Helper ---
 
     /**

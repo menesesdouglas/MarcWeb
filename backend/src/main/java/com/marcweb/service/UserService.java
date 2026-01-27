@@ -177,5 +177,35 @@ public class UserService {
         return new PageUserDTO(pageDTO, pageEntity.getTotalPages());
     }
 
+    // NOVO Método: Obter dados do usuário autenticado
+    public UserResponse getMe() {
+        UserDetails userDetails = getUserDetailsBySecurityContext();
+        User user = findByUsername(userDetails.getUsername());
+        return new UserResponse(user);
+    }
+
+    // NOVO Método: Atualizar perfil do usuário autenticado
+    @Auditado(
+            acao = "Atualização de perfil do usuário",
+            categoria = CategoriaLog.AUDITORIA
+    )
+    @Transactional
+    public void updateProfile(CreateUser data) {
+        UserDetails userDetails = getUserDetailsBySecurityContext();
+        User user = findByUsername(userDetails.getUsername());
+        
+        // Apenas administradores podem alterar o cargo
+        if (data.getRole() != null && !user.getRole().equals(data.getRole())) {
+            throw new RuntimeException("Apenas administradores podem alterar o cargo");
+        }
+        
+        // Atualizar os campos permitidos
+        if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
+        if (data.getRole() != null) user.setRole(data.getRole());
+        if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
+        
+        detalhes.setDetalhes("Usuário " + user.getUsername() + " atualizou seu perfil");
+    }
+
 
 }

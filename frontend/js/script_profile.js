@@ -53,12 +53,30 @@ async function loadUserProfile() {
             document.getElementById('nome').value = user.nome;
             document.getElementById('username').value = user.username;
             document.getElementById('role').value = user.role;
+
+            // Lógica de permissões para edição de cargo
+            setupRolePermissions(user.role);
         } else {
             showToast('Erro ao carregar dados do usuário', 'error');
         }
     } catch (error) {
         console.error('Erro ao carregar perfil:', error);
         showToast('Erro ao carregar dados do usuário', 'error');
+    }
+}
+
+function setupRolePermissions(userRole) {
+    const roleInput = document.getElementById('role');
+    
+    // Apenas administradores podem editar o cargo
+    if (userRole === 'ADMIN') {
+        roleInput.disabled = false;
+        roleInput.style.backgroundColor = '#fff';
+        roleInput.style.cursor = 'text';
+    } else {
+        roleInput.disabled = true;
+        roleInput.style.backgroundColor = '#f5f5f5';
+        roleInput.style.cursor = 'not-allowed';
     }
 }
 
@@ -86,7 +104,7 @@ async function loadUserFolgas() {
 async function loadRecentActivity() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch('http://localhost:8080/api/auditoria/logs', {
+        const response = await fetch('http://localhost:8080/api/auditoria/me/logs', {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -96,6 +114,8 @@ async function loadRecentActivity() {
             const logs = await response.json();
             renderRecentActivity(logs.slice(0, 10)); // Últimas 10 atividades
         } else {
+            const error = await response.json();
+            console.error('Erro ao carregar atividades:', error);
             document.getElementById('recentActivity').innerHTML = '<p>Nenhuma atividade recente.</p>';
         }
     } catch (error) {
@@ -160,6 +180,7 @@ async function handleProfileUpdate(e) {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const role = document.getElementById('role').value;
 
     // Validação de senha
     if (newPassword && newPassword !== confirmPassword) {
@@ -169,7 +190,23 @@ async function handleProfileUpdate(e) {
 
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const updateData = { nome };
+        
+        // Verificar se o usuário pode editar o cargo
+        const userRole = document.getElementById('userRole').textContent;
+        let updateData;
+        
+        if (userRole === 'ADMIN') {
+            // Administrador pode editar tudo
+            updateData = { 
+                nome: nome,
+                role: role
+            };
+        } else {
+            // Usuário comum só pode editar nome e senha
+            updateData = { 
+                nome: nome
+            };
+        }
 
         if (newPassword) {
             updateData.currentPassword = currentPassword;

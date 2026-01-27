@@ -8,9 +8,12 @@ import com.marcweb.entity.User;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.repository.LogAuditoriaRepository;
+import com.marcweb.repository.UserRepository;
+import com.marcweb.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import java.util.List;
 public class LogAuditoriaService {
 
     private final LogAuditoriaRepository repository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
 
@@ -54,5 +58,14 @@ public class LogAuditoriaService {
                                                            CategoriaLog categoria, StatusLog status, String acao,
                                                            Pageable pageable) {
         return repository.findWithFilters(userId, inicio, fim, categoria, status, acao, pageable);
+    }
+
+    // NOVO Método: Buscar logs do usuário autenticado
+    public List<LogAuditoriaResponse> buscarLogsPorMe() {
+        UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(
+                () -> new RuntimeException("Usuário não encontrado")
+        );
+        return repository.findByUserId(user.getId());
     }
 }

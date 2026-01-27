@@ -38,6 +38,12 @@ public class UserController {
         return service.findAll();
     }
 
+    // NOVO Endpoint: Obter dados do usuário autenticado
+    @GetMapping("/me")
+    public UserResponse getMe() {
+        return service.getMe();
+    }
+
     // Endpoint com paginação
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(params = "pageNumber")
@@ -66,6 +72,12 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         service.deleteUser(id);
+    }
+
+    // NOVO Endpoint: Atualizar perfil do usuário autenticado
+    @PutMapping("/profile")
+    public void updateProfile(@RequestBody @Valid CreateUser data) {
+        service.updateProfile(data);
     }
 
 

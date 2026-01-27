@@ -64,4 +64,11 @@ public class LogAuditoriaController {
         List<LogAuditoriaResponse> logs = logAuditoriaService.buscarLogsPorStatus(status);
         return ResponseEntity.ok(logs);
     }
+
+    // NOVO Endpoint: Buscar logs do usuário autenticado
+    @GetMapping("/me/logs")
+    public ResponseEntity<List<LogAuditoriaResponse>> buscarLogsPorMe() {
+        List<LogAuditoriaResponse> logs = logAuditoriaService.buscarLogsPorMe();
+        return ResponseEntity.ok(logs);
+    }
 }

@@ -50,6 +50,13 @@ public class FolgaController {
         return ResponseEntity.ok(folgas);
     }
 
+    // NOVO Endpoint: Listar folgas do usuário autenticado
+    @GetMapping("/me")
+    public ResponseEntity<List<FolgaResponse>> getFolgasByMe() {
+        List<FolgaResponse> folgas = folgaService.findByMe();
+        return ResponseEntity.ok(folgas);
+    }
+
     // --- Endpoints de Modificação (requerem ROLE_ADMIN) ---
 
     // POST /api/folgas - Criar uma nova folga
