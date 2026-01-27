@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Elementos DOM
     const clockElement = document.getElementById('digitalClock');
     const dateElement = document.getElementById('currentDate');
     const statusElement = document.getElementById('currentStatus');
@@ -6,6 +7,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const punchButtons = document.querySelectorAll('.punch-btn');
     const usernameTag = document.getElementById("username");
     const auth = JSON.parse(localStorage.getItem("auth"));
+    
+    // Verificar autenticação
+    if (!auth) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Verificar se é um usuário válido (não admin)
+    if (auth.role === 'ADMIN') {
+        // Se for admin, redirecionar para a página de admin
+        window.location.href = 'admin.html';
+        return;
+    }
+
+    // Verificar se os elementos críticos existem
+    if (!clockElement || !dateElement || !statusElement || !punchList || !usernameTag) {
+        console.error('Elementos críticos não encontrados no DOM');
+        return;
+    }
+
     usernameTag.textContent = auth.username;
     // 1. Atualizar Relógio em Tempo Real com animação suave
     function updateTime() {
@@ -54,6 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function registerPunch(type, time, value) {
+        // Validar token JWT
+        if (!auth.token || auth.token.trim() === '') {
+            showToast('Token de autenticação inválido. Por favor, faça login novamente.', 'error');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+            return;
+        }
+
+        // Validar tipo de registro
+        const validTypes = ['ENTRADA', 'INICIO_DESCANSO', 'FIM_DESCANSO', 'SAIDA'];
+        if (!validTypes.includes(value)) {
+            showToast('Tipo de registro inválido.', 'error');
+            return;
+        }
+
+        console.log('Registrando ponto:', { type, value, time });
+        console.log('Token JWT:', auth.token.substring(0, 20) + '...');
 
         /// -- ☻☻☻☻☻ VIA API
         const dados = {
@@ -64,65 +103,87 @@ document.addEventListener('DOMContentLoaded', () => {
             justificativa: "Batendo ponto em dia normal de trabalho"
         }
 
-        const result = await fetch("http://localhost:8080/api/ponto", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${auth.token}`
-            },
-            body: JSON.stringify(dados)
-        });
+        try {
+            const result = await fetch("http://localhost:8080/api/ponto", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${auth.token}`
+                },
+                body: JSON.stringify(dados)
+            });
 
-        if (result.status == 201) {
-            const response = await result.json();
+            console.log('Resposta da API:', result.status);
 
-            // Remover mensagem de lista vazia se for o primeiro item
-            if (punchList.querySelector('.empty-msg')) {
-                punchList.innerHTML = '';
+            if (result.status == 201) {
+                const response = await result.json();
+                console.log('Resposta completa:', response);
+
+                // Remover mensagem de lista vazia se for o primeiro item
+                if (punchList.querySelector('.empty-msg')) {
+                    punchList.innerHTML = '';
+                }
+
+                // Criar novo item na lista com animação
+                const li = document.createElement('li');
+                li.className = 'punch-item';
+                li.style.opacity = '0';
+                li.style.transform = 'translateY(10px)';
+                li.innerHTML = `
+                    <span class="item-type">${type}</span>
+                    <span class="item-time">${time}</span>
+                `;
+
+                // Adicionar ao topo da lista
+                punchList.prepend(li);
+
+                // Animação de entrada
+                setTimeout(() => {
+                    li.style.opacity = '1';
+                    li.style.transform = 'translateY(0)';
+                    li.style.transition = 'all 0.3s ease-out';
+                }, 50);
+
+                // Atualizar Badge de Status com animação
+                statusElement.textContent = `Status: ${type}`;
+                statusElement.style.color = '#2dce89'; // Verde sucesso
+                statusElement.classList.add('loading');
+
+                // Remover animação após 2 segundos
+                setTimeout(() => {
+                    statusElement.classList.remove('loading');
+                }, 2000);
+
+                // Feedback visual moderno (toast notification)
+                showToast(`✅ Ponto registrado: ${type} às ${time}`, 'success');
+
+                // Verificar se há aviso de registro incompleto do dia anterior
+                if (response.hasIncompletePreviousDay && response.warningMessage) {
+                    showIncompleteRecordWarning(response.warningMessage);
+                }
+            } else {
+                // Tratar erros de forma mais detalhada
+                let errorMessage = 'Erro ao registrar ponto';
+                
+                try {
+                    const errorData = await result.json();
+                    errorMessage = errorData.erro || errorData.message || 'Erro desconhecido';
+                } catch (e) {
+                    try {
+                        const errorText = await result.text();
+                        errorMessage = errorText || `Erro HTTP: ${result.status}`;
+                    } catch (e2) {
+                        errorMessage = `Erro HTTP: ${result.status}`;
+                    }
+                }
+                
+                console.error('Erro ao registrar ponto:', errorMessage);
+                showToast(`❌ ${errorMessage}`, 'error');
             }
-
-            // Criar novo item na lista com animação
-            const li = document.createElement('li');
-            li.className = 'punch-item';
-            li.style.opacity = '0';
-            li.style.transform = 'translateY(10px)';
-            li.innerHTML = `
-                <span class="item-type">${type}</span>
-                <span class="item-time">${time}</span>
-            `;
-
-            // Adicionar ao topo da lista
-            punchList.prepend(li);
-
-            // Animação de entrada
-            setTimeout(() => {
-                li.style.opacity = '1';
-                li.style.transform = 'translateY(0)';
-                li.style.transition = 'all 0.3s ease-out';
-            }, 50);
-
-            // Atualizar Badge de Status com animação
-            statusElement.textContent = `Status: ${type}`;
-            statusElement.style.color = '#2dce89'; // Verde sucesso
-            statusElement.classList.add('loading');
-
-            // Remover animação após 2 segundos
-            setTimeout(() => {
-                statusElement.classList.remove('loading');
-            }, 2000);
-
-            // Feedback visual moderno (toast notification)
-            showToast(`✅ Ponto registrado: ${type} às ${time}`, 'success');
-
-            // Verificar se há aviso de registro incompleto do dia anterior
-            if (response.hasIncompletePreviousDay && response.warningMessage) {
-                showIncompleteRecordWarning(response.warningMessage);
-            }
-        } else {
-            const erro = await result.json();
-            alert(erro.erro)
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            showToast('❌ Erro de conexão com o servidor. Verifique sua internet.', 'error');
         }
-
     }
 
     // Função para mostrar aviso de registro incompleto
@@ -255,25 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // 4. Botões Adicionais com feedback melhorado
-    document.getElementById('btnReport').addEventListener('click', () => {
-        showToast('📄 Gerando folha de ponto... Aguarde um momento.', 'info');
 
-        // Simular processo de geração
-        setTimeout(() => {
-            showToast('✅ Folha de ponto gerada com sucesso!', 'success');
-        }, 1500);
-    });
-
-    document.getElementById('btnLogout').addEventListener('click', () => {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            showToast('👋 Saindo do sistema... Até logo!', 'info');
-            setTimeout(() => {
-                localStorage.removeItem("auth");
-                window.location.href = 'login.html';
-            }, 1000);
-        }
-    });
+    // Inicializar logout com a nova função
+    initLogout();
 
     // 5. Animação inicial dos elementos
     function animateOnLoad() {
@@ -291,4 +336,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Iniciar animações após um pequeno delay
     setTimeout(animateOnLoad, 200);
+
+    // 6. Carregar histórico de ponto do dia
+    loadTodayPunches();
 });
+
+// Função para garantir que o logout esteja funcionando corretamente
+function initLogout() {
+    const logoutBtn = document.getElementById('btnLogout');
+    
+    if (logoutBtn) {
+        // Remover event listeners existentes para evitar duplicação
+        logoutBtn.removeEventListener('click', handleLogout);
+        
+        // Adicionar evento de logout
+        logoutBtn.addEventListener('click', handleLogout);
+        console.log('Logout inicializado corretamente');
+    } else {
+        console.error('Botão de logout não encontrado');
+    }
+}
+
+function handleLogout() {
+    if (confirm('Deseja realmente sair do sistema?')) {
+        showToast('👋 Saindo do sistema... Até logo!', 'info');
+        setTimeout(() => {
+            localStorage.removeItem("auth");
+            window.location.href = 'login.html';
+        }, 1000);
+    }
+}
+
+async function loadTodayPunches() {
+    try {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+
+        const response = await fetch(`http://localhost:8080/api/ponto/historico?date=${dateStr}`, {
+            headers: {
+                "Authorization": `Bearer ${auth.token}`
+            }
+        });
+
+        if (response.ok) {
+            const punches = await response.json();
+            renderPunchHistory(punches);
+        } else {
+            console.error('Erro ao carregar histórico de ponto');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar histórico de ponto:', error);
+    }
+}
+
+function renderPunchHistory(punches) {
+    const container = document.getElementById('punchList');
+    container.innerHTML = '';
+
+    if (punches.length === 0) {
+        container.innerHTML = '<li class="empty-msg">Nenhum registro hoje.</li>';
+        return;
+    }
+
+    punches.forEach(punch => {
+        const li = document.createElement('li');
+        li.className = 'punch-item';
+        li.innerHTML = `
+            <span class="item-type">${punch.tipo}</span>
+            <span class="item-time">${punch.horario}</span>
+        `;
+        container.appendChild(li);
+    });
+}
+

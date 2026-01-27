@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Colaborador | MarcWeb</title>
+    <link rel="stylesheet" href="css/custom-styles_admin.css">
     <link rel="stylesheet" href="css/custom-styles_employee.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -39,57 +40,224 @@
         .fade-in {
             animation: fadeIn 0.5s ease-out;
         }
+
+        /* Layout sem sidebar */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Estilos para a seção de ponto */
+        .punch-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .punch-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        /* Estilos para a seção de relatórios */
+        .report-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .report-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .report-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .report-form select,
+        .report-form input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Barra de navegação fixa */
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: var(--petrol-light);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: #087f82;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 147, 150, 0.4);
+        }
+
+        .nav-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--petrol-light);
+            color: var(--petrol-light);
+        }
+
+        .nav-btn.secondary:hover {
+            background: var(--petrol-light);
+            color: white;
+        }
+
+        /* Estilos para cabeçalho de dias no histórico */
+        .punch-day-header {
+            background: rgba(10, 147, 150, 0.1);
+            border-left: 4px solid var(--petrol-light);
+            padding: 10px 15px;
+            margin: 10px 0 5px 0;
+            border-radius: 6px;
+        }
+
+        .day-date {
+            font-weight: 600;
+            color: var(--petrol-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Ajustes responsivos */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .punch-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .report-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .report-form select,
+            .report-form input {
+                min-width: 100%;
+            }
+
+            .nav-bottom {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .nav-btn {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar">
-        <div class="container">
-            <div class="logo">Marc<span>Web</span></div>
-            <div class="user-info">
-                <span>Olá, <strong id="username"></strong></span>
-                <button id="btnLogout" class="btn-logout">Sair</button>
+    <div class="container">
+        <header class="welcome-header">
+            <div class="welcome-content">
+                <h1>Bem-vindo ao MarcWeb</h1>
+                <p>Olá, <strong id="username"></strong>! Marque seu ponto e acompanhe seu histórico.</p>
             </div>
-        </div>
+        </header>
+
+        <section class="punch-section">
+            <header class="section-header">
+                <h1>Registro de Ponto</h1>
+                <p>Marque seu ponto e acompanhe seu status em tempo real.</p>
+            </header>
+
+            <div class="clock-card">
+                <div class="date-display" id="currentDate">-- de -- de ----</div>
+                <div class="digital-clock" id="digitalClock">00:00:00</div>
+                <div class="status-badge" id="currentStatus">Status: Fora de Serviço</div>
+            </div>
+
+            <div class="card">
+                <h3>Marcar Ponto</h3>
+                <div class="punch-grid">
+                    <button value="ENTRADA" class="punch-btn" data-type="Entrada">
+                        <span class="icon">🚀</span>
+                        Entrada
+                    </button>
+                    <button value="INICIO_DESCANSO" class="punch-btn" data-type="Início Descanso">
+                        <span class="icon">☕</span>
+                        Início Descanso
+                    </button>
+                    <button value="FIM_DESCANSO" class="punch-btn" data-type="Fim Descanso">
+                        <span class="icon">⏳</span>
+                        Fim Descanso
+                    </button>
+                    <button value="SAIDA" class="punch-btn" data-type="Saída">
+                        <span class="icon">🏁</span>
+                        Saída
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Barra de navegação fixa no final -->
+    <nav class="nav-bottom">
+        <a href="profile.html" class="nav-btn">
+            <i class="fas fa-user"></i> Meu Perfil
+        </a>
+        <a href="history.html" class="nav-btn secondary">
+            <i class="fas fa-file-alt"></i> Folha de Ponto
+        </a>
+        <button id="btnLogout" class="nav-btn">
+            <i class="fas fa-sign-out-alt"></i> Sair do Sistema
+        </button>
     </nav>
-
-    <main class="dashboard-container">
-        <section class="clock-card">
-            <div class="date-display" id="currentDate">-- de -- de ----</div>
-            <div class="digital-clock" id="digitalClock">00:00:00</div>
-            <div class="status-badge" id="currentStatus">Status: Fora de Serviço</div>
-        </section>
-
-        <section class="actions-grid">
-            <button value="ENTRADA" class="punch-btn" data-type="Entrada">
-                <span class="icon">🚀</span>
-                Entrada
-            </button>
-            <button value="INICIO_DESCANSO" class="punch-btn" data-type="Início Descanso">
-                <span class="icon">☕</span>
-                Início Descanso
-            </button>
-            <button value="FIM_DESCANSO" class="punch-btn" data-type="Fim Descanso">
-                <span class="icon">⏳</span>
-                Fim Descanso
-            </button>
-            <button value="SAIDA" class="punch-btn" data-type="Saída">
-                <span class="icon">🏁</span>
-                Saída
-            </button>
-        </section>
-
-        <section class="history-card">
-            <div class="card-header">
-                <h3>Registros de Hoje</h3>
-                <button id="btnReport" class="btn-secondary">Gerar Folha de Ponto</button>
-            </div>
-            <ul class="punch-list" id="punchList">
-                <li class="empty-msg">Nenhum registro hoje.</li>
-            </ul>
-        </section>
-    </main>
 
     <script src="js/script_employee.js"></script>
 </body>
