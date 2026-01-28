@@ -46,16 +46,22 @@ async function loadUserProfile() {
         if (response.ok) {
             const user = await response.json();
             document.getElementById('userName').textContent = user.nome;
-            document.getElementById('userRole').textContent = user.role;
             document.getElementById('userUsername').textContent = `Usuário: ${user.username}`;
+
+            // Exibir cargo (campo correto) ou role como fallback
+            const cargoDisplay = user.cargo || user.role || 'Não especificado';
+            document.getElementById('userRole').textContent = cargoDisplay;
 
             // Preencher formulário
             document.getElementById('nome').value = user.nome;
             document.getElementById('username').value = user.username;
-            document.getElementById('role').value = user.role;
+            document.getElementById('role').value = user.cargo || user.role || '';
 
-            // Lógica de permissões para edição de cargo
+            // Lógica de permissões para edição de cargo (baseada no role real, não no cargo exibido)
             setupRolePermissions(user.role);
+            
+            // Armazenar o role real do usuário para uso nas validações de permissão
+            document.getElementById('userRole').setAttribute('data-role', user.role);
         } else {
             showToast('Erro ao carregar dados do usuário', 'error');
         }
@@ -180,7 +186,7 @@ async function handleProfileUpdate(e) {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const role = document.getElementById('role').value;
+    const cargo = document.getElementById('role').value;
 
     // Validação de senha
     if (newPassword && newPassword !== confirmPassword) {
@@ -191,15 +197,15 @@ async function handleProfileUpdate(e) {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         
-        // Verificar se o usuário pode editar o cargo
-        const userRole = document.getElementById('userRole').textContent;
+        // Verificar se o usuário pode editar o cargo (baseado no role real armazenado no atributo data-role)
+        const userRole = document.getElementById('userRole').getAttribute('data-role');
         let updateData;
         
         if (userRole === 'ADMIN') {
             // Administrador pode editar tudo
             updateData = { 
                 nome: nome,
-                role: role
+                cargo: cargo
             };
         } else {
             // Usuário comum só pode editar nome e senha
