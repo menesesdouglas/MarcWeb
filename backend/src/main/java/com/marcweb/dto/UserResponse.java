@@ -17,6 +17,7 @@ public class UserResponse {
     private Role role; // Usando o enum Role
     private Boolean ativo;
     private Boolean consentGeoloc;
+    private String cargo;
     private LocalDateTime createdAt;
     // private LocalDateTime updatedAt; // Removido, pois não existe na entidade User
 
@@ -32,6 +33,7 @@ public class UserResponse {
             this.role = user.getRole();
             this.ativo = user.getAtivo();
             this.consentGeoloc = user.getConsentGeoloc();
+            this.cargo = user.getCargo();
             this.createdAt = user.getCreatedAt();
         }
     }

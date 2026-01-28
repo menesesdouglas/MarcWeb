@@ -26,6 +26,8 @@ public class CreateUser {
 
     private Boolean consentGeoloc;
 
+    private String cargo;
+
 
 
 

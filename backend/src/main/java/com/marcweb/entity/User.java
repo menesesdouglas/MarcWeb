@@ -48,6 +48,9 @@ public class User implements UserDetails {
     @Column(name = "consent_geoloc")
     private Boolean consentGeoloc; // true se o usuário consentiu com geoloc
 
+    @Column(length = 100)
+    private String cargo; // Cargo do funcionário
+
     @CreatedDate
     @Column(name = "created_at")
     private LocalDateTime createdAt; // Data de criação

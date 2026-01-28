@@ -48,6 +48,7 @@ public class UserService {
                 .role(data.getRole())
                 .password(encoder.encode(data.getPassword()))
                 .consentGeoloc(consent != null ? consent : false)
+                .cargo(data.getCargo())
                 .build();
         repository.save(user);
         detalhes.setDetalhes("Cadastro de usuário feito por administrador");
@@ -97,6 +98,7 @@ public class UserService {
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
         if (data.getAtivo() != null) user.setAtivo(data.getAtivo());
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
+        if (StringUtils.isNotBlank(data.getCargo())) user.setCargo(data.getCargo());
         detalhes.setDetalhes("Usuário " + user.getUsername() + " teve seus dados alterados pelo administrador");
     }
 

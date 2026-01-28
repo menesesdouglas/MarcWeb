@@ -147,10 +147,12 @@ function renderEmployees(employees) {
     employees.forEach((emp, index) => {
         const status = emp.ativo ? 'Ativo' : 'Inativo';
         const roleName = emp.role ? emp.role : 'N/A';
+        const cargo = emp.cargo || 'Não informado';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${emp.nome}</td>
+            <td>${cargo}</td>
             <td>${roleName}</td>
             <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
             <td>
@@ -229,7 +231,7 @@ function editEmployee(index) {
     document.getElementById('empUsername').value = emp.username;
     document.getElementById('empPassword').required = false; // Senha opcional na edição
     document.getElementById('empPassword').placeholder = 'Deixe em branco para manter a senha atual';
-    document.getElementById('empRole').value = emp.role;
+    document.getElementById('empRole').value = emp.cargo || '';
     document.getElementById('empActive').value = emp.ativo ? 'Ativo' : 'Inativo';
     document.getElementById('empProfile').value = emp.role;
     document.getElementById('editIndex').value = index;
@@ -250,7 +252,8 @@ async function handleEmployeeSubmit(e) {
         nome: document.getElementById('empName').value,
         role: document.getElementById("empProfile").value,
         ativo: document.getElementById("empActive").value === 'Ativo',
-        consentGeoloc: true
+        consentGeoloc: true,
+        cargo: document.getElementById("empRole").value
     }
 
     // Incluir senha apenas se foi preenchida (para edição) ou se é criação
