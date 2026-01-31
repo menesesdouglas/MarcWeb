@@ -99,6 +99,7 @@ public class UserService {
         if (data.getAtivo() != null) user.setAtivo(data.getAtivo());
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
         if (StringUtils.isNotBlank(data.getCargo())) user.setCargo(data.getCargo());
+        if (StringUtils.isNotBlank(data.getCpf())) user.setCpf(data.getCpf());
         detalhes.setDetalhes("Usuário " + user.getUsername() + " teve seus dados alterados pelo administrador");
     }
 
@@ -174,7 +175,7 @@ public class UserService {
         Example<User> example = Example.of(user, matcher);
         var pageEntity = repository.findAll(example, PageRequest.of(pageNumber, 3));
         var pageDTO = pageEntity.stream().map(p -> {
-            return new UserDTO(p.getNome(), "Palhaço", p.getAtivo());
+            return new UserDTO(p.getNome(), "Palhaço", p.getAtivo(), p.getCpf());
         }).toList();
         return new PageUserDTO(pageDTO, pageEntity.getTotalPages());
     }
@@ -207,6 +208,18 @@ public class UserService {
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
         
         detalhes.setDetalhes("Usuário " + user.getUsername() + " atualizou seu perfil");
+    }
+
+    // NOVO Método: Atualizar CPF do usuário
+    @Auditado(
+            acao = "Atualização de CPF do usuário",
+            categoria = CategoriaLog.ADMIN
+    )
+    @Transactional
+    public void updateCpf(Long userId, String cpf) {
+        User user = findById(userId);
+        user.setCpf(cpf);
+        detalhes.setDetalhes("CPF do usuário " + user.getUsername() + " foi atualizado pelo administrador");
     }
 
 

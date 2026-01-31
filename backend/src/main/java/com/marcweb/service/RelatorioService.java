@@ -81,15 +81,21 @@ public class RelatorioService {
             PdfFont font = PdfFontFactory.createFont();
             PdfFont boldFont = PdfFontFactory.createFont();
 
-            // Cabeçalho do PDF
-            adicionarCabecalho(document, user, mes, ano, font);
+            // Cabeçalho moderno do PDF
+            adicionarCabecalhoModerno(document, user, mes, ano, font, boldFont);
+
+            // Seção de resumo executivo
+            adicionarResumoExecutivo(document, folhaPonto, font, boldFont);
 
             // Tabela principal com todos os dias do mês
             Table table = criarTabelaPrincipal(folhaPonto, font, boldFont);
-            document.add(table.setMarginTop(20));
+            document.add(table.setMarginTop(10));
 
             // Totalização
             adicionarTotalizacao(document, folhaPonto, font, boldFont);
+
+            // Espaço para assinatura
+            adicionarEspacoAssinatura(document, user, font, boldFont);
 
             // Rodapé
             adicionarRodape(document, font);
@@ -127,6 +133,184 @@ public class RelatorioService {
         }
     }
 
+    /**
+     * Cabeçalho moderno do PDF com design profissional
+     */
+    private void adicionarCabecalhoModerno(Document document, User user, int mes, int ano, PdfFont font, PdfFont boldFont) {
+        // Linha divisória superior
+        document.add(new Paragraph("").setMarginBottom(5));
+        
+        // Título principal com design moderno
+        Paragraph title = new Paragraph("MarcWeb - TechHub Soluções Tecnológicas")
+                .setFont(boldFont)
+                .setFontSize(22)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(3);
+        document.add(title);
+
+        // Subtítulo
+        Paragraph subtitle = new Paragraph("Folha de Ponto Mensal")
+                .setFont(boldFont)
+                .setFontSize(16)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontColor(ColorConstants.DARK_GRAY)
+                .setMarginBottom(8);
+        document.add(subtitle);
+
+        // Linha divisória decorativa
+        document.add(new Paragraph("").setMarginBottom(5));
+
+        // Informações do funcionário em layout de duas colunas
+        Table infoTable = new Table(2);
+        infoTable.setWidth(520f);
+        
+        // Coluna esquerda - Dados do funcionário
+        Cell cell1 = new Cell().add(new Paragraph("Funcionário:").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setPaddingRight(5);
+        infoTable.addCell(cell1);
+        
+        Cell cell2 = new Cell().add(new Paragraph(user.getNome()).setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+        infoTable.addCell(cell2);
+        
+        Cell cell3 = new Cell().add(new Paragraph("CPF:").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setPaddingRight(5);
+        infoTable.addCell(cell3);
+        
+        Cell cell4 = new Cell().add(new Paragraph(user.getCpf()).setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+        infoTable.addCell(cell4);
+
+        // Coluna direita - Período e cargo
+        Cell cell5 = new Cell().add(new Paragraph("Período:").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setPaddingRight(5);
+        infoTable.addCell(cell5);
+        
+        Cell cell6 = new Cell().add(new Paragraph(String.format("%02d", mes) + "/" + ano).setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+        infoTable.addCell(cell6);
+        
+        Cell cell7 = new Cell().add(new Paragraph("Cargo:").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setPaddingRight(5);
+        infoTable.addCell(cell7);
+        
+        Cell cell8 = new Cell().add(new Paragraph(user.getCargo() != null ? user.getCargo() : "Não informado").setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+        infoTable.addCell(cell8);
+
+        document.add(infoTable.setMarginBottom(10));
+    }
+
+    /**
+     * Seção de resumo executivo com métricas rápidas
+     */
+    private void adicionarResumoExecutivo(Document document, DadosFolhaPonto folhaPonto, PdfFont font, PdfFont boldFont) {
+        // Título da seção
+        Paragraph sectionTitle = new Paragraph("Resumo Executivo")
+                .setFont(boldFont)
+                .setFontSize(16)
+                .setBold()
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(10);
+        document.add(sectionTitle);
+
+        // Tabela de resumo
+        Table resumoTable = new Table(4);
+        resumoTable.setWidth(520f);
+        
+        // Cabeçalho da tabela de resumo
+        Cell headerCell = new Cell(1, 4).add(new Paragraph("Métricas do Período").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setBold();
+        resumoTable.addHeaderCell(headerCell);
+
+        // Linha 1: Horas trabalhadas e horas extras
+        Cell cell1 = new Cell().add(new Paragraph("Horas Trabalhadas").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.GRAY)
+                .setFontColor(ColorConstants.WHITE);
+        resumoTable.addCell(cell1);
+        
+        Cell cell2 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_trabalhadas().toString()).setFont(font));
+        resumoTable.addCell(cell2);
+        
+        Cell cell3 = new Cell().add(new Paragraph("Horas Extras").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.GRAY)
+                .setFontColor(ColorConstants.WHITE);
+        resumoTable.addCell(cell3);
+        
+        Cell cell4 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_extras() + " h").setFont(font));
+        resumoTable.addCell(cell4);
+
+        // Linha 2: Horas débito e saldo
+        Cell cell5 = new Cell().add(new Paragraph("Horas Débito").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.GRAY)
+                .setFontColor(ColorConstants.WHITE);
+        resumoTable.addCell(cell5);
+        
+        Cell cell6 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_debito() + " h").setFont(font));
+        resumoTable.addCell(cell6);
+        
+        Cell cell7 = new Cell().add(new Paragraph("Saldo de Horas").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.GRAY)
+                .setFontColor(ColorConstants.WHITE);
+        resumoTable.addCell(cell7);
+        
+        Cell cell8 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getSaldo_horas() + " h").setFont(font));
+        resumoTable.addCell(cell8);
+
+        document.add(resumoTable.setMarginBottom(10));
+    }
+
+    /**
+     * Espaço para assinatura no final do documento
+     */
+    private void adicionarEspacoAssinatura(Document document, User user, PdfFont font, PdfFont boldFont) {
+        // Linha divisória
+        document.add(new Paragraph("").setMarginTop(30).setMarginBottom(10));
+        
+        // Título da seção de assinatura
+        Paragraph signatureTitle = new Paragraph("Assinatura do Funcionário")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setBold()
+                .setMarginBottom(10);
+        document.add(signatureTitle);
+
+        // Linha para assinatura
+        Table signatureTable = new Table(1);
+        signatureTable.setWidth(520f);
+        
+        Cell signatureCell = new Cell().add(new Paragraph("_________________________________________").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(20);
+        signatureTable.addCell(signatureCell);
+        
+        Cell nameCell = new Cell().add(new Paragraph("Nome: " + user.getNome()).setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(5);
+        signatureTable.addCell(nameCell);
+        
+        Cell dateCell = new Cell().add(new Paragraph("Data: ____/____/________").setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(5);
+        signatureTable.addCell(dateCell);
+
+        document.add(signatureTable.setMarginTop(10));
+    }
+
+    /**
+     * Cabeçalho antigo (mantido para compatibilidade)
+     */
     private void adicionarCabecalho(Document document, User user, int mes, int ano, PdfFont font) {
         // Título principal
         Paragraph title = new Paragraph("MarcWeb - TechHub Soluções Tecnológicas")
@@ -151,7 +335,7 @@ public class RelatorioService {
                 .setFont(font)
                 .setBold()
                 .setMarginBottom(3));
-        document.add(new Paragraph("CPF: " + user.getUsername())
+        document.add(new Paragraph("CPF: " + user.getCpf())
                 .setFont(font)
                 .setMarginBottom(3));
         document.add(new Paragraph("Período: " + String.format("%02d", mes) + "/" + ano)
@@ -186,25 +370,54 @@ public class RelatorioService {
     }
 
     private void adicionarCabecalhoTabela(Table table, PdfFont boldFont) {
-        Cell cell = new Cell().add(new Paragraph("Data").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        // Cabeçalho da tabela com design moderno
+        Cell cell = new Cell().add(new Paragraph("Data").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
         
-        cell = new Cell().add(new Paragraph("Entrada").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph("Entrada").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
         
-        cell = new Cell().add(new Paragraph("Início Descanso").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph("Início\nDescanso").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
         
-        cell = new Cell().add(new Paragraph("Fim Descanso").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph("Fim\nDescanso").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
         
-        cell = new Cell().add(new Paragraph("Saída").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph("Saída").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
         
-        cell = new Cell().add(new Paragraph("Tipo de Dia").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph("Tipo de Dia").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
         
-        cell = new Cell().add(new Paragraph("Observações").setFont(boldFont)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph("Observações").setFont(boldFont)).setBold()
+                .setBackgroundColor(ColorConstants.BLUE)
+                .setFontColor(ColorConstants.WHITE)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(4);
         table.addHeaderCell(cell);
     }
 
@@ -217,45 +430,59 @@ public class RelatorioService {
         Dia diaRegistrado = buscarDiaRegistrado(data, diasRegistrados);
         List<RegistroPontoDTO> registros = (diaRegistrado != null) ? diaRegistrado.getRegistros() : new ArrayList<>();
 
-        // Cria células com formatação
+        // Cria células com formatação moderna
         Cell cell;
 
-        // Coluna Data
+        // Coluna Data com formatação moderna
         String diaSemana = data.getDayOfWeek().getDisplayName(TextStyle.SHORT, new Locale("pt", "BR")).toUpperCase();
-        cell = new Cell().add(new Paragraph(data.format(DateTimeFormatter.ofPattern("dd/MM")) + " - " + diaSemana).setFont(font));
-        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph(data.format(DateTimeFormatter.ofPattern("dd/MM")) + " - " + diaSemana).setFont(font))
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
+        cell.setBackgroundColor(tipoDia.getCor());
         table.addCell(cell);
 
-        // Colunas de horários
+        // Colunas de horários com formatação consistente
         String entrada = getHorarioPorTipo(registros, "ENTRADA");
         String inicioDescanso = getHorarioPorTipo(registros, "INICIO_DESCANSO");
         String fimDescanso = getHorarioPorTipo(registros, "FIM_DESCANSO");
         String saida = getHorarioPorTipo(registros, "SAIDA");
 
-        cell = new Cell().add(new Paragraph(entrada).setFont(font));
-        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
-        table.addCell(cell);
-
-        cell = new Cell().add(new Paragraph(inicioDescanso).setFont(font));
-        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
-        table.addCell(cell);
-
-        cell = new Cell().add(new Paragraph(fimDescanso).setFont(font));
-        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
-        table.addCell(cell);
-
-        cell = new Cell().add(new Paragraph(saida).setFont(font));
-        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
-        table.addCell(cell);
-
-        // Coluna Tipo de Dia
-        cell = new Cell().add(new Paragraph(tipoDia.getDescricao()).setFont(boldFont)).setBold();
+        cell = new Cell().add(new Paragraph(entrada).setFont(font))
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
         cell.setBackgroundColor(tipoDia.getCor());
         table.addCell(cell);
 
-        // Coluna Observações
-        cell = new Cell().add(new Paragraph(observacoes).setFont(font));
-        if (tipoDia == TipoDia.FINAL_DE_SEMANA) cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
+        cell = new Cell().add(new Paragraph(inicioDescanso).setFont(font))
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
+        cell.setBackgroundColor(tipoDia.getCor());
+        table.addCell(cell);
+
+        cell = new Cell().add(new Paragraph(fimDescanso).setFont(font))
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
+        cell.setBackgroundColor(tipoDia.getCor());
+        table.addCell(cell);
+
+        cell = new Cell().add(new Paragraph(saida).setFont(font))
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
+        cell.setBackgroundColor(tipoDia.getCor());
+        table.addCell(cell);
+
+        // Coluna Tipo de Dia com destaque
+        cell = new Cell().add(new Paragraph(tipoDia.getDescricao()).setFont(boldFont)).setBold()
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
+        cell.setBackgroundColor(tipoDia.getCor());
+        table.addCell(cell);
+
+        // Coluna Observações com formatação limpa
+        cell = new Cell().add(new Paragraph(observacoes).setFont(font))
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(3);
+        cell.setBackgroundColor(tipoDia.getCor());
         table.addCell(cell);
     }
 
@@ -347,18 +574,18 @@ public class RelatorioService {
         document.add(new Paragraph("\nTotalização do Período:")
                 .setFont(boldFont)
                 .setBold()
-                .setMarginTop(20)
-                .setMarginBottom(10));
+                .setMarginTop(10)
+                .setMarginBottom(5));
 
         document.add(new Paragraph("Horas Trabalhadas: " + folhaPonto.getTotalizacao().getHoras_trabalhadas())
                 .setFont(font)
-                .setMarginBottom(5));
+                .setMarginBottom(3));
         document.add(new Paragraph("Horas Extras: " + folhaPonto.getTotalizacao().getHoras_extras())
                 .setFont(font)
-                .setMarginBottom(5));
+                .setMarginBottom(3));
         document.add(new Paragraph("Horas Débito: " + folhaPonto.getTotalizacao().getHoras_debito())
                 .setFont(font)
-                .setMarginBottom(10));
+                .setMarginBottom(5));
     }
 
     private void adicionarRodape(Document document, PdfFont font) {
@@ -367,26 +594,26 @@ public class RelatorioService {
                 .setFont(font)
                 .setFontSize(8)
                 .setTextAlignment(TextAlignment.RIGHT)
-                .setMarginTop(30));
+                .setMarginTop(15));
     }
 
     private String criarFolhaPontoVazia(Long userId, int mes, int ano) throws Exception {
         User user = userService.findById(userId);
         DadosFolhaPonto folha = new DadosFolhaPonto();
-        folha.setUsuario(new UsuarioDTO(userId, user.getNome(), user.getUsername()));
+        folha.setUsuario(new UsuarioDTO(userId, user.getNome(), user.getUsername(), user.getCpf()));
         folha.setPeriodo(new Periodo(mes, ano, 0));
         folha.setDias(new ArrayList<>());
         folha.setTotalizacao(new Totalizacao(BigDecimal.ZERO, 0, 0, 0));
         return objectMapper.writeValueAsString(folha);
     }
 
-    // Enum para tipos de dia com cores
+    // Enum para tipos de dia com cores modernas
     private enum TipoDia {
         DIA_UTIL("DIA ÚTIL", ColorConstants.WHITE),
-        FALTA("FALTA", ColorConstants.LIGHT_GRAY),
-        FOLGA("FOLGA", ColorConstants.LIGHT_GRAY),
-        FERIADO("FERIADO", ColorConstants.LIGHT_GRAY),
-        FINAL_DE_SEMANA("FINAL DE SEMANA", ColorConstants.LIGHT_GRAY);
+        FALTA("FALTA", new com.itextpdf.kernel.colors.DeviceRgb(255, 182, 193)), // Rosa claro
+        FOLGA("FOLGA", new com.itextpdf.kernel.colors.DeviceRgb(144, 238, 144)), // Verde claro
+        FERIADO("FERIADO", new com.itextpdf.kernel.colors.DeviceRgb(255, 215, 0)), // Amarelo dourado
+        FINAL_DE_SEMANA("FINAL DE SEMANA", new com.itextpdf.kernel.colors.DeviceRgb(211, 211, 211)); // Cinza claro
 
         private final String descricao;
         private final com.itextpdf.kernel.colors.Color cor;

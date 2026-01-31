@@ -28,6 +28,8 @@ public class CreateUser {
 
     private String cargo;
 
+    private String cpf;
+
 
 
 

@@ -76,7 +76,7 @@ public class FolhaPontoService {
 
         /// GERAR OBJETO QUE SERÁ CONVERTIDO EM JSON
         DadosFolhaPonto dadosFolha = new DadosFolhaPonto();
-        dadosFolha.setUsuario(new UsuarioDTO(userId, userEntity.getNome(), userEntity.getUsername()));
+        dadosFolha.setUsuario(new UsuarioDTO(userId, userEntity.getNome(), userEntity.getUsername(), userEntity.getCpf()));
         periodo.setDias_uteis(getDiasUteis(inicioDoMes));
         periodo.setDias_falta(diasFalta);
         dadosFolha.setPeriodo(periodo);
