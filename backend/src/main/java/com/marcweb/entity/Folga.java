@@ -1,6 +1,7 @@
 package com.marcweb.entity;
 
 import com.marcweb.dto.CreateFolga;
+import com.marcweb.dto.SolicitaFolga;
 import com.marcweb.dto.UpdateFolga;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -42,10 +43,23 @@ public class Folga {
     private TipoFolga tipo; // Tipo da folga (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
 
 
+    private boolean aprovada;
+
+    /// PARA SER USADO QUANDO UM ADMIN CADASTRAR UMA FOLGA
     public Folga(User user, CreateFolga dados) {
         this.user = user;
         BeanUtils.copyProperties(dados, this);
+        this.aprovada = true;
     }
+
+    /// PARA SER USADO QUANDO USUÁRIO SOLICITAR FOLGA
+    public Folga(User user, SolicitaFolga dados) {
+        this.user = user;
+        BeanUtils.copyProperties(dados, this);
+        this.aprovada = false;
+    }
+
+
 
     public void updateFolga(UpdateFolga novosDados) {
         BeanUtils.copyProperties(novosDados, this);

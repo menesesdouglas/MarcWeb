@@ -144,7 +144,7 @@ public class FolhaPontoService {
     }
 
 
-    /// AGRUPANDO REGISTROS POR DIA EM UMA LISTA
+    /// AGRUPANDO REGISTROS DE PONTO POR DIA EM UMA LISTA
     private List<List<RegistroPonto>> agruparRegistrosPorDia(List<RegistroPonto> registros) {
         List<List<RegistroPonto>> listaFinal = new ArrayList<>();
         ///  USADO PARA SEPARAR OS PONTOS BATIDOS DE CADA DIA
@@ -212,7 +212,7 @@ public class FolhaPontoService {
     }
 
 
-    // CALCULANDO DIAS DE FALTA
+    /// CALCULANDO DIAS DE FALTA
     private int getDiasFalta(Long userId, int diasTrabalhados, LocalDate inicioMes, LocalDate finalMes, Periodo periodo) {
         var qtdDiasMes = inicioMes.getMonth().length(inicioMes.isLeapYear());
         int diasFalta = qtdDiasMes - diasTrabalhados;

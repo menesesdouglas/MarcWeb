@@ -36,9 +36,9 @@ public interface FolgaRepository extends JpaRepository<Folga, Long> {
             Long idUser, LocalDate dataInicio, LocalDate dataFim);
 
 
-    // BUSCANDO POR PERIODO ESPECIFICO
-    List<Folga> findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqual(
-            Long idUser, LocalDate dataInicio, LocalDate dataFim);
+    /// BUSCANDO FOLGAS  POR PERIODO ESPECIFICO
+    List<Folga> findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqualAndAprovada(
+            Long idUser, LocalDate dataInicio, LocalDate dataFim, boolean aprovada);
 
     List<Folga> findByUserAndDataInicioBetweenOrUserAndDataFimBetween(
             User user, LocalDate start1, LocalDate end1, User user2, LocalDate start2, LocalDate end2);

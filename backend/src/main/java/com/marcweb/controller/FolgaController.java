@@ -2,6 +2,7 @@ package com.marcweb.controller;
 
 import com.marcweb.dto.CreateFolga;
 import com.marcweb.dto.FolgaResponse;
+import com.marcweb.dto.SolicitaFolga;
 import com.marcweb.dto.UpdateFolga;
 import com.marcweb.service.FolgaService;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -83,5 +85,16 @@ public class FolgaController {
     public ResponseEntity<Void> deleteFolga(@PathVariable Long id) {
         folgaService.deleteById(id);
         return ResponseEntity.noContent().build(); // Retorna 204 No Content
+    }
+
+    @PostMapping("/solicitar")
+    public void solicitarFolga(@RequestBody SolicitaFolga dados, Authentication authentication) {
+        folgaService.solicitarFolga(dados, authentication.getName());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/aprovar/{id}")
+    public void aprovarFolga(@PathVariable Long id) {
+        folgaService.aprovarFolga(id);
     }
 }

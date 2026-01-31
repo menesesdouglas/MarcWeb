@@ -4,6 +4,7 @@ import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.CreateFolga;
 import com.marcweb.dto.FolgaResponse;
+import com.marcweb.dto.SolicitaFolga;
 import com.marcweb.dto.UpdateFolga;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Folga;
@@ -15,11 +16,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,6 +110,20 @@ public class FolgaService {
     }
 
 
+    public void solicitarFolga(SolicitaFolga dados, String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado para o username: " + username));
+
+        // Validação de sobreposição - Usando método que será adicionado ao FolgaRepository
+        if (existeSobreposicao(user, dados.dataInicio(), dados.dataFim(), null)) { // null para ID, pois é um novo registro
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma folga registrada para o usuário " + user.getNome() + " no período de " + dados.dataInicio() + " a " + dados.dataFim() + "."); // Usando CONFLICT para sobreposição
+        }
+
+        Folga folgaSolicitada = new Folga(user, dados);
+
+        folgaRepository.save(folgaSolicitada);
+    }
+
+
     @Auditado(
             acao = "Editando dados de uma folga ",
             categoria = CategoriaLog.ADMIN
@@ -152,10 +169,10 @@ public class FolgaService {
                 (idUser, data, data);
     }
 
-    // BUSCANDO FOLGAS EM UM DETERMINADO PERIODO
+    /// BUSCANDO FOLGAS APROVADAS EM UM DETERMINADO PERIODO
     public List<Folga> findByPeriodo(Long userId, LocalDate start, LocalDate end) {
-        return folgaRepository.findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqual(
-                userId, start, end
+        return folgaRepository.findByUserIdAndDataInicioGreaterThanEqualAndDataFimLessThanEqualAndAprovada(
+                userId, start, end, true
         );
     }
 
@@ -184,5 +201,17 @@ public class FolgaService {
         List<Folga> sobrepostas = folgaRepository.findByUserAndPeriodoSobrepostoExcluindoId(user.getId(), dataInicio, dataFim, folgaId); // Passando ID do usuário, não o objeto
 
         return !sobrepostas.isEmpty();
+    }
+
+
+    @Auditado(
+            acao = "Aprovando folga",
+            categoria = CategoriaLog.ADMIN
+    )
+    @Transactional
+    public void aprovarFolga(Long id) {
+        var folgaSolicitada = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não enontrada"));
+        folgaSolicitada.setAprovada(true);
+        detalhes.setDetalhes("Aprovando folga no dia " + folgaSolicitada.getDataInicio().format(DateTimeFormatter.ofPattern("dd/MM/yy")) + " para " + folgaSolicitada.getUser().getNome());
     }
 }

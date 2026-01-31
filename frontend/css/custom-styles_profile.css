@@ -1,5 +1,18 @@
 /* Perfil do Usuário - Estilos Específicos */
 
+
+.nav-links {
+    display: flex;
+}
+
+a {
+    color: #4a5568;
+    text-decoration: none;
+    display: flex;
+    padding: 5px;
+    border-radius: 10px;
+}
+
 .profile-header {
     display: flex;
     align-items: center;
@@ -291,6 +304,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }

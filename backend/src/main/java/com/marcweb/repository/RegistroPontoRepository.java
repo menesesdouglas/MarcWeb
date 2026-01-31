@@ -25,7 +25,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     // BUSCANDO REGISTROS DE UM USUÁRIO EM UM INTERVALO DE DATA
     @Query("""
             Select r from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
-            order by r.timestamp DESC
+            order by r.timestamp
             """)
     List<RegistroPonto> buscarRegistrosEmIntervaloDeData(User user, LocalDateTime start, LocalDateTime end);
     // Outros métodos específicos, se necessário

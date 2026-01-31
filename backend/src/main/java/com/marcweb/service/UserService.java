@@ -78,7 +78,7 @@ public class UserService {
 
 
     @Auditado(
-            acao = "Edição de dados do usuário",
+            acao = "Alteração de dados do usuário",
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
