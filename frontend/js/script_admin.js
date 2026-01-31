@@ -51,7 +51,7 @@ function setupEventListeners() {
         }
     });
 
-    // ♠♠♠♠♠♠6 FILTRANDO POR NOME
+// ♠♠♠♠♠♠6 FILTRANDO POR NOME
     textField.addEventListener("keypress", (e) => {
         if (e.key !== "Enter") {
             let text = textField.value + e.key;
@@ -64,6 +64,27 @@ function setupEventListeners() {
             renderEmployees(allUsers.filter(item => item.nome.toLowerCase().startsWith(textField.value.trim().toLowerCase())));
         }
     })
+
+    // ♠♠♠♠♠♠7 FORMATANDO CPF
+    const cpfField = document.getElementById('empCpf');
+    if (cpfField) {
+        cpfField.addEventListener('input', (e) => {
+            let value = e.target.value;
+            // Remove tudo que não é número
+            value = value.replace(/\D/g, '');
+            // Limita a 11 dígitos
+            value = value.slice(0, 11);
+            // Formata o CPF
+            if (value.length > 3 && value.length <= 6) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            } else if (value.length > 6 && value.length <= 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d)/, '$1.$2.$3');
+            } else if (value.length > 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+            e.target.value = value;
+        });
+    }
 }
 
 async function loadUsers() {
@@ -232,6 +253,7 @@ function editEmployee(index) {
     document.getElementById('empPassword').required = false; // Senha opcional na edição
     document.getElementById('empPassword').placeholder = 'Deixe em branco para manter a senha atual';
     document.getElementById('empRole').value = emp.cargo || '';
+    document.getElementById('empCpf').value = emp.cpf || '';
     document.getElementById('empActive').value = emp.ativo ? 'Ativo' : 'Inativo';
     document.getElementById('empProfile').value = emp.role;
     document.getElementById('editIndex').value = index;
@@ -253,7 +275,8 @@ async function handleEmployeeSubmit(e) {
         role: document.getElementById("empProfile").value,
         ativo: document.getElementById("empActive").value === 'Ativo',
         consentGeoloc: true,
-        cargo: document.getElementById("empRole").value
+        cargo: document.getElementById("empRole").value,
+        cpf: document.getElementById("empCpf").value
     }
 
     // Incluir senha apenas se foi preenchida (para edição) ou se é criação

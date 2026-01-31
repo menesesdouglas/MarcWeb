@@ -80,6 +80,13 @@ public class UserController {
         service.updateProfile(data);
     }
 
+    // NOVO Endpoint: Atualizar CPF do usuário
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/cpf")
+    public void updateCpf(@PathVariable Long id, @RequestBody String cpf) {
+        service.updateCpf(id, cpf);
+    }
+
 
     /// BUSCA PAGINADA FILTRADA POR NOME
     @PreAuthorize("hasRole('ADMIN')")

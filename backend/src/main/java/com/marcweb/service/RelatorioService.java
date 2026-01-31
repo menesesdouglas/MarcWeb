@@ -151,7 +151,7 @@ public class RelatorioService {
                 .setFont(font)
                 .setBold()
                 .setMarginBottom(3));
-        document.add(new Paragraph("CPF: " + user.getUsername())
+        document.add(new Paragraph("CPF: " + user.getCpf())
                 .setFont(font)
                 .setMarginBottom(3));
         document.add(new Paragraph("Período: " + String.format("%02d", mes) + "/" + ano)
@@ -373,7 +373,7 @@ public class RelatorioService {
     private String criarFolhaPontoVazia(Long userId, int mes, int ano) throws Exception {
         User user = userService.findById(userId);
         DadosFolhaPonto folha = new DadosFolhaPonto();
-        folha.setUsuario(new UsuarioDTO(userId, user.getNome(), user.getUsername()));
+        folha.setUsuario(new UsuarioDTO(userId, user.getNome(), user.getUsername(), user.getCpf()));
         folha.setPeriodo(new Periodo(mes, ano, 0));
         folha.setDias(new ArrayList<>());
         folha.setTotalizacao(new Totalizacao(BigDecimal.ZERO, 0, 0, 0));

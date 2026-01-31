@@ -51,6 +51,9 @@ public class User implements UserDetails {
     @Column(length = 100)
     private String cargo; // Cargo do funcionário
 
+    @Column(nullable = false, length = 14)
+    private String cpf; // CPF do funcionário
+
     @CreatedDate
     @Column(name = "created_at")
     private LocalDateTime createdAt; // Data de criação

@@ -18,6 +18,7 @@ public class UserResponse {
     private Boolean ativo;
     private Boolean consentGeoloc;
     private String cargo;
+    private String cpf;
     private LocalDateTime createdAt;
     // private LocalDateTime updatedAt; // Removido, pois não existe na entidade User
 
@@ -34,6 +35,7 @@ public class UserResponse {
             this.ativo = user.getAtivo();
             this.consentGeoloc = user.getConsentGeoloc();
             this.cargo = user.getCargo();
+            this.cpf = user.getCpf();
             this.createdAt = user.getCreatedAt();
         }
     }
