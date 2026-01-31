@@ -1,7 +1,7 @@
 package com.marcweb.entity;
 
-import com.marcweb.dto.CreateFeriado;
-import com.marcweb.dto.FeriadoNacionalDTO;
+import com.marcweb.dto.feriado.CreateFeriado;
+import com.marcweb.dto.feriado.FeriadoNacionalDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

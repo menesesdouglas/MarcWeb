@@ -2,7 +2,7 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.FeriadoNacionalDTO;
+import com.marcweb.dto.feriado.FeriadoNacionalDTO;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Feriado;
 import lombok.RequiredArgsConstructor;

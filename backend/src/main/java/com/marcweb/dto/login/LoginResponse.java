@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

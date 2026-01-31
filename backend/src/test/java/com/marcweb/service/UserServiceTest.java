@@ -1,6 +1,6 @@
 package com.marcweb.service;
 
-import com.marcweb.dto.CreateUser;
+import com.marcweb.dto.user.CreateUser;
 import com.marcweb.entity.Role;
 import com.marcweb.entity.User;
 import com.marcweb.exceptions.UsernameDuplicatedException;

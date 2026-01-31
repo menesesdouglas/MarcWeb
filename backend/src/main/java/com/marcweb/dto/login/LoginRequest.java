@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.login;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

@@ -1,13 +1,11 @@
 package com.marcweb.dto;
 
+import com.marcweb.dto.user.UserResponse;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.LogAuditoria;
 import com.marcweb.entity.StatusLog;
-import com.marcweb.entity.User;
-import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 

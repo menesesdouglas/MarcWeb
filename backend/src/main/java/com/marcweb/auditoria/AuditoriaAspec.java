@@ -1,7 +1,7 @@
 package com.marcweb.auditoria;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.marcweb.dto.LoginRequest;
+import com.marcweb.dto.login.LoginRequest;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.entity.User;
 import com.marcweb.service.LogAuditoriaService;

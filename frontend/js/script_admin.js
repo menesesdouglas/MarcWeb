@@ -37,10 +37,10 @@ function setupEventListeners() {
         employeeForm.addEventListener('submit', handleEmployeeSubmit);
     }
 
-// Formulário de Ajuste
+    // Formulário de Ajuste
     document.getElementById('adjustmentForm').addEventListener('submit', handleAdjustmentSubmit);
 
-// Carregar histórico de ajustes
+    // Carregar histórico de ajustes
     loadAdjustmentHistory();
 
     // Logout
@@ -51,7 +51,7 @@ function setupEventListeners() {
         }
     });
 
-// ♠♠♠♠♠♠6 FILTRANDO POR NOME
+    // ♠♠♠♠♠♠6 FILTRANDO POR NOME
     textField.addEventListener("keypress", (e) => {
         if (e.key !== "Enter") {
             let text = textField.value + e.key;
@@ -85,6 +85,18 @@ function setupEventListeners() {
             e.target.value = value;
         });
     }
+
+    // LIMITANDO CARACTERS DO INPT DE ANO E MES 
+    const monthYear = document.getElementById('reportMonth');
+    monthYear.addEventListener("keydown", (e) => {
+        const key = e.key.toString();
+        let validKey = "0987654321-BackspaceDeleteArrowLeftArrowRight";
+        if (!validKey.includes(key)) {
+            e.preventDefault();
+        };
+        
+
+    })
 }
 
 async function loadUsers() {
@@ -476,7 +488,7 @@ async function generateReport() {
     const userId = document.getElementById('reportEmployee').value;
     const monthYear = document.getElementById('reportMonth').value;
 
-    if (!userId || !monthYear) {
+    if (!userId || !monthYear || monthYear.length != 6) {
         showToast('Selecione o funcionário e o período', 'error');
         return;
     }

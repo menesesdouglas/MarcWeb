@@ -1,11 +1,8 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.CreateUser;
-import com.marcweb.dto.PageUserDTO;
-import com.marcweb.dto.UserDTO;
-import com.marcweb.dto.UserResponse; // Import necessário
-import com.marcweb.entity.User;
-import com.marcweb.repository.UserRepository;
+import com.marcweb.dto.user.CreateUser;
+import com.marcweb.dto.user.PageUserDTO;
+import com.marcweb.dto.user.UserResponse; // Import necessário
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

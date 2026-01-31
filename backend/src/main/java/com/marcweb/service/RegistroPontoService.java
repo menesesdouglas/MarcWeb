@@ -2,12 +2,12 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.*;
-import com.marcweb.dto.CreateRegistroPonto;
-import com.marcweb.dto.PontosRecentes;
-import com.marcweb.dto.RegistroPontoResponse;
-import com.marcweb.dto.StatusAtualFuncionario;
+import com.marcweb.dto.ponto.CreateRegistroPonto;
+import com.marcweb.dto.ponto.PontosRecentes;
+import com.marcweb.dto.ponto.RegistroPontoResponse;
+import com.marcweb.dto.ponto.StatusAtualFuncionario;
 import com.marcweb.dto.TimeAdjustmentRequest;
+import com.marcweb.dto.ponto.RegistroPontoMe;
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.*;
 import com.marcweb.repository.FeriadoRepository; // Import necessário
@@ -48,7 +48,9 @@ public class RegistroPontoService {
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
-        if (repository.findLastTypeRegistration(user.getId()).equals(TipoRegistro.SAIDA)) throw new RuntimeException("Usuário já concluiu o ciclo diariozs");
+        /// ERRO SE USUÁRIO JA BATEU SAÍDA NO DIA ATUAL
+        if (repository.findLastTypeRegistration(user.getId()).equals(TipoRegistro.SAIDA))
+            throw new CicloPontoFinalizadoException();
         var dataAtual = LocalDate.now();
 
         // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
@@ -338,7 +340,7 @@ public class RegistroPontoService {
         LocalDateTime timestamp = request.date().atTime(request.time());
 
         // Verificar se já existe um registro no mesmo horário para evitar duplicatas
-        boolean exists = repository.existsByUserAndTimestamp(user, timestamp);
+        boolean exists = repository.existsByUserAndTipo(user, tipoRegistro);
         if (exists) {
             throw new IllegalStateException("Já existe um registro de ponto neste horário para este usuário");
         }

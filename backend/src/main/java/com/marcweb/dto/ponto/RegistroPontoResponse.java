@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.ponto;
 
 import com.marcweb.entity.TipoRegistro;
 import lombok.AllArgsConstructor;

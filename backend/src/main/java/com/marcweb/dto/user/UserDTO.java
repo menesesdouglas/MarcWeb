@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.user;
 
 import lombok.Data;
 

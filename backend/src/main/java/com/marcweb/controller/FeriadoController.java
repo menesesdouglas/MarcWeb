@@ -1,6 +1,6 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.CreateFeriado;
+import com.marcweb.dto.feriado.CreateFeriado;
 import com.marcweb.entity.Feriado;
 import com.marcweb.service.BrasilApiService;
 import com.marcweb.service.FeriadoService;

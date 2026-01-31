@@ -1,11 +1,10 @@
 package com.marcweb.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.marcweb.dto.CreateRegistroPonto;
-import com.marcweb.dto.LoginRequest;
-import com.marcweb.dto.LoginResponse;
+import com.marcweb.dto.ponto.CreateRegistroPonto;
+import com.marcweb.dto.login.LoginRequest;
+import com.marcweb.dto.login.LoginResponse;
 import com.marcweb.entity.ConfigEmpresa;
-import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.Role;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;

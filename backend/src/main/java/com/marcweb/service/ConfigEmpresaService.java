@@ -2,7 +2,7 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.DataConfigEmpresa;
+import com.marcweb.dto.config_empresa.DataConfigEmpresa;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.exceptions.ConfigEmpresaNotFoundException;

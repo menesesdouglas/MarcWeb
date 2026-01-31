@@ -1,8 +1,7 @@
 package com.marcweb.authentication;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.marcweb.dto.LoginRequest;
-import com.marcweb.dto.LoginResponse;
+import com.marcweb.dto.login.LoginRequest;
 import com.marcweb.entity.User;
 import com.marcweb.repository.UserRepository;
 import com.marcweb.service.UserService;

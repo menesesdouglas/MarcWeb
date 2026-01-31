@@ -1,18 +1,15 @@
-package com.marcweb.dto;
+package com.marcweb.dto.folga;
 
 import com.marcweb.entity.TipoFolga;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
-public record CreateFolga(
-        @NotNull(message = "O ID do usuário é obrigatório.")
-        Long userId, // ID do usuário associado à folga
 
+public record UpdateFolga(
         @NotNull(message = "A data de início é obrigatória.")
         @FutureOrPresent(message = "A data de início não pode ser no passado.")
         LocalDate dataInicio, // Data de início da folga
@@ -29,7 +26,7 @@ public record CreateFolga(
         String justificativa // Justificativa para a folga
 ) {
     // Validação personalizada: dataInicio deve ser menor ou igual a dataFim
-    public CreateFolga {
+    public UpdateFolga {
         if (dataInicio != null && dataFim != null && dataInicio.isAfter(dataFim)) {
             throw new IllegalArgumentException("A data de início deve ser anterior ou igual à data de fim.");
         }

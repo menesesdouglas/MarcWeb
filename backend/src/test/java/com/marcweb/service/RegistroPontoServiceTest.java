@@ -1,6 +1,7 @@
 package com.marcweb.service;
 
-import com.marcweb.dto.CreateRegistroPonto;
+import com.marcweb.dto.config_empresa.DataConfigEmpresa;
+import com.marcweb.dto.ponto.CreateRegistroPonto;
 import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
@@ -124,7 +125,7 @@ class RegistroPontoServiceTest {
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new com.marcweb.dto.DataConfigEmpresa(configEmpresa));
+        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
 
         createRegistroPonto.setLatitude(null);
         createRegistroPonto.setLongitude(null);
@@ -142,7 +143,7 @@ class RegistroPontoServiceTest {
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new com.marcweb.dto.DataConfigEmpresa(configEmpresa));
+        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
 
         // Coordenadas fora do raio (10km de distância)
         createRegistroPonto.setLatitude(-23.6000);
@@ -161,7 +162,7 @@ class RegistroPontoServiceTest {
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new com.marcweb.dto.DataConfigEmpresa(configEmpresa));
+        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
         when(repository.findLastTypeRegistration(anyLong())).thenReturn(TipoRegistro.SAIDA);
 
         // Tentar registrar ENTRADA depois de SAIDA é válido, mas INICIO_DESCANSO não é
@@ -180,7 +181,7 @@ class RegistroPontoServiceTest {
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new com.marcweb.dto.DataConfigEmpresa(configEmpresa));
+        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
         when(repository.findLastTypeRegistration(anyLong())).thenReturn(null);
         when(repository.save(any(RegistroPonto.class))).thenReturn(new RegistroPonto());
         when(request.getHeader(anyString())).thenReturn("192.168.1.1");

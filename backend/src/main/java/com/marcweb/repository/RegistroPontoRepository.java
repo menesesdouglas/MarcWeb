@@ -1,6 +1,6 @@
 package com.marcweb.repository;
 
-import com.marcweb.dto.RegistroPontoResponse;
+import com.marcweb.dto.ponto.RegistroPontoResponse;
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
@@ -16,7 +16,7 @@ import java.util.List;
 public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Long> {
 
     @Query("""
-            Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
              from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             """)
     List<RegistroPontoResponse> findByUserAndTimestampBetween(User user, LocalDateTime start, LocalDateTime end);
@@ -39,7 +39,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO COM PAGINAÇÃO
     @Query("""
-            Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
             from RegistroPonto r where r.user = :user
             order by r.timestamp Desc
             """)
@@ -47,7 +47,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO POR PERÍODO COM PAGINAÇÃO
     @Query("""
-            Select new com.marcweb.dto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
             from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             order by r.timestamp Desc
             """)
@@ -109,7 +109,8 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     List<Object[]> getStatusAtualFuncionarios();
 
     // Método para verificar se já existe um registro no mesmo horário para evitar duplicatas
-    boolean existsByUserAndTimestamp(User user, LocalDateTime timestamp);
+    /// -> UTILIZEI O TIP DE  REGISTRO COMO REFERENCIA PARA DAR PRECISÃO
+    boolean existsByUserAndTipo(User user, TipoRegistro tipo);
 
     // Método para buscar ajustes administrativos por IP e período
     @Query("SELECT r FROM RegistroPonto r WHERE r.ip = :ip AND r.timestamp BETWEEN :start AND :end ORDER BY r.timestamp DESC")

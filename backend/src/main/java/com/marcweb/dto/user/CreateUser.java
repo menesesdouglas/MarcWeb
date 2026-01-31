@@ -1,11 +1,10 @@
-package com.marcweb.dto;
+package com.marcweb.dto.user;
 
 import com.marcweb.entity.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import org.hibernate.validator.constraints.br.CPF;
 
 @Data
 public class CreateUser {
@@ -28,6 +27,7 @@ public class CreateUser {
 
     private String cargo;
 
+    @CPF(message = "Informe o CPF do funcionário")
     private String cpf;
 
 

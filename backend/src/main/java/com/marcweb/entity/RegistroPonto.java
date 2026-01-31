@@ -1,6 +1,6 @@
 package com.marcweb.entity;
 
-import com.marcweb.dto.CreateRegistroPonto;
+import com.marcweb.dto.ponto.CreateRegistroPonto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "registros_ponto")
 @Data
@@ -34,7 +33,7 @@ public class RegistroPonto {
     @Column(nullable = false)
     private TipoRegistro tipo; // ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
 
-    @CreatedDate
+
     @Column(nullable = false)
     private LocalDateTime timestamp; // Data e hora do registro
 
@@ -58,5 +57,6 @@ public class RegistroPonto {
         BeanUtils.copyProperties(data, this);
         this.user = user;
         this.ip = ip;
+        this.timestamp = LocalDateTime.now();
     }
 }

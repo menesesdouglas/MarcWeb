@@ -1,11 +1,10 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.CreateUser;
-import com.marcweb.dto.LoginRequest;
-import com.marcweb.dto.LoginResponse;
+import com.marcweb.dto.user.CreateUser;
+import com.marcweb.dto.login.LoginRequest;
+import com.marcweb.dto.login.LoginResponse;
 import com.marcweb.entity.User;
 import com.marcweb.security.JwtService;
-import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;

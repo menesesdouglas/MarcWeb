@@ -1,9 +1,9 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.CreateFolga;
-import com.marcweb.dto.FolgaResponse;
-import com.marcweb.dto.SolicitaFolga;
-import com.marcweb.dto.UpdateFolga;
+import com.marcweb.dto.folga.CreateFolga;
+import com.marcweb.dto.folga.FolgaResponse;
+import com.marcweb.dto.folga.SolicitaFolga;
+import com.marcweb.dto.folga.UpdateFolga;
 import com.marcweb.service.FolgaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

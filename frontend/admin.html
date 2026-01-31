@@ -125,8 +125,14 @@
                 <div class="card">
                     <p>Selecione o funcionário e o período para gerar o espelho de ponto.</p>
                     <div class="input-row" style="margin-top: 20px;">
-                        <select id="reportEmployee"></select>
-                        <input type="month" id="reportMonth">
+                        <div style="display: flex; flex-direction: column;">
+                            <label for="reportEmployee">Selecione um funcionário:</label>
+                            <select id="reportEmployee"></select>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label for="reportMonth">Mês-ano (1999-8)</label>
+                            <input type="month" id="reportMonth">
+                        </div>
                         <button class="btn-primary" onclick="generateReport()">Gerar Folha de Ponto (PDF)</button>
                     </div>
                 </div>

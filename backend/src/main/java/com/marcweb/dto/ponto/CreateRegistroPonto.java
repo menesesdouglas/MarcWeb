@@ -1,7 +1,6 @@
-package com.marcweb.dto;
+package com.marcweb.dto.ponto;
 
 import com.marcweb.entity.TipoRegistro;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

@@ -1,10 +1,9 @@
 // src/main/java/com/marcweb/dto/UserResponse.java
-package com.marcweb.dto;
+package com.marcweb.dto.user;
 
 import com.marcweb.entity.Role;
 import com.marcweb.entity.User;
 import lombok.Data;
-import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 

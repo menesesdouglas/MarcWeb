@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.feriado;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

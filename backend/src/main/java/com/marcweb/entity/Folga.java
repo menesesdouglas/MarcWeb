@@ -1,8 +1,8 @@
 package com.marcweb.entity;
 
-import com.marcweb.dto.CreateFolga;
-import com.marcweb.dto.SolicitaFolga;
-import com.marcweb.dto.UpdateFolga;
+import com.marcweb.dto.folga.CreateFolga;
+import com.marcweb.dto.folga.SolicitaFolga;
+import com.marcweb.dto.folga.UpdateFolga;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

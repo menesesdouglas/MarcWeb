@@ -1,6 +1,6 @@
 package com.marcweb.exceptions; // ou o pacote que você usar para handlers/configs
 
-import io.jsonwebtoken.ExpiredJwtException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -48,10 +48,25 @@ public class GlobalExceptionHandler {
         return errorObject(e.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(CicloPontoFinalizadoException.class)
+    public Map<String, Object> handlerCicloPontoFinalizadoException(CicloPontoFinalizadoException e) {
+        log.warn(e.getMessage());
+        return errorObject(e.getMessage());
+    }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(FeriadoAnoInvalidoException.class)
     public Map<String, Object> handlerFeriadoAnoInvalidoException(FeriadoAnoInvalidoException e) {
+        log.warn(e.getMessage());
+        return errorObject(e.getMessage());
+    }
+
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(IllegalStateException.class)
+    public Map<String, Object> handlerIllegalStateException(IllegalStateException e) {
         log.warn(e.getMessage());
         return errorObject(e.getMessage());
     }

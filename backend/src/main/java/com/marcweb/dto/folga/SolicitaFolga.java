@@ -1,11 +1,10 @@
-package com.marcweb.dto;
+package com.marcweb.dto.folga;
 
 import com.marcweb.entity.TipoFolga;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 
 import java.time.LocalDate;
 

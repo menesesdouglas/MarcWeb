@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.config_empresa;
 
 import com.marcweb.entity.ConfigEmpresa;
 import jakarta.validation.constraints.NotBlank;

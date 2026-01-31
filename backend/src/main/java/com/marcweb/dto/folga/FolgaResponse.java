@@ -1,4 +1,4 @@
-package com.marcweb.dto;
+package com.marcweb.dto.folga;
 
 import com.marcweb.entity.TipoFolga;
 

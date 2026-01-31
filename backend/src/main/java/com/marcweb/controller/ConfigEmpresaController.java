@@ -1,8 +1,6 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.DataConfigEmpresa;
-import com.marcweb.entity.ConfigEmpresa;
-import com.marcweb.repository.ConfigEmpresaRepository;
+import com.marcweb.dto.config_empresa.DataConfigEmpresa;
 import com.marcweb.service.ConfigEmpresaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

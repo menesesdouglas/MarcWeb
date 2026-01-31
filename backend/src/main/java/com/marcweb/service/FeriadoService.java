@@ -2,7 +2,7 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.CreateFeriado;
+import com.marcweb.dto.feriado.CreateFeriado;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Feriado;
 import com.marcweb.entity.OrigemFeriado;

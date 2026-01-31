@@ -1,8 +1,8 @@
 package com.marcweb.validation;
 
-import com.marcweb.dto.CreateRegistroPonto;
+import com.marcweb.dto.ponto.CreateRegistroPonto;
 import com.marcweb.entity.ConfigEmpresa;
-import com.marcweb.dto.DataConfigEmpresa;
+import com.marcweb.dto.config_empresa.DataConfigEmpresa;
 import com.marcweb.entity.Role;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
@@ -25,7 +25,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;

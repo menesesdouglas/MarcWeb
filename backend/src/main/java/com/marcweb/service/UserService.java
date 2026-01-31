@@ -2,7 +2,12 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.*;
+import com.marcweb.dto.login.LoginRequest;
+import com.marcweb.dto.login.LoginResponse;
+import com.marcweb.dto.user.CreateUser;
+import com.marcweb.dto.user.PageUserDTO;
+import com.marcweb.dto.user.UserDTO;
+import com.marcweb.dto.user.UserResponse;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.User;
 import com.marcweb.exceptions.UsernameDuplicatedException;
@@ -82,7 +87,7 @@ public class UserService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
-    public void editUser(@PathVariable Long id, @RequestBody CreateUser data) {
+    public void editUser(Long id, CreateUser data) {
         var user = repository.findById(id).orElse(null);
         if (user == null) {
             throw new UsernameNotFoundException("Usuário não encontrado");
