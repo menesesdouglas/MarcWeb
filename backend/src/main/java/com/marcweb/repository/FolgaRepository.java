@@ -13,6 +13,11 @@ import java.util.List;
 @Repository
 public interface FolgaRepository extends JpaRepository<Folga, Long> {
 
+
+
+    @Query(nativeQuery = true , value = "Select * from folgas f where aprovada isNull limit 20")
+    List<Folga> findFolgasPendentes();
+
     // Método para encontrar folgas de um usuário específico usando ID (mais eficiente)
     List<Folga> findByUserId(Long userId);
 

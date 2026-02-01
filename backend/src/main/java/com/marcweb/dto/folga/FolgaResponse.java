@@ -12,7 +12,7 @@ public record FolgaResponse(
         LocalDate dataFim,
         TipoFolga tipo,
         String justificativa,
-        boolean aprovada
+        Boolean aprovada
 ) {
 
     public FolgaResponse(com.marcweb.entity.Folga folga) {
@@ -24,7 +24,7 @@ public record FolgaResponse(
                 folga.getDataFim(),
                 folga.getTipo(),
                 folga.getJustificativa(),
-                folga.isAprovada()
+                folga.getAprovada()
         );
     }
 }

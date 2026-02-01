@@ -14,7 +14,11 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
     font-family: 'Inter', sans-serif;
@@ -52,14 +56,20 @@ body {
     gap: 8px;
 }
 
-.logo span { color: var(--petrol-light); }
+.logo span {
+    color: var(--petrol-light);
+}
+
 small {
     color: var(--text-dim);
     letter-spacing: 2px;
     font-size: 0.75rem;
 }
 
-.sidebar-nav { margin-top: 3rem; flex: 1; }
+.sidebar-nav {
+    margin-top: 3rem;
+    flex: 1;
+}
 
 .nav-link {
     display: block;
@@ -85,11 +95,13 @@ small {
     transition: var(--transition);
 }
 
-.nav-link:hover::before, .nav-link.active::before {
+.nav-link:hover::before,
+.nav-link.active::before {
     transform: scaleY(1);
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
     background: rgba(0, 95, 115, 0.2);
     color: var(--petrol-light);
     transform: translateX(5px);
@@ -123,10 +135,26 @@ small {
     padding: 3rem;
 }
 
-.content-section { display: none; }
-.content-section.active { display: block; animation: fadeIn 0.4s ease; }
+.content-section {
+    display: none;
+}
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.content-section.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 .section-header {
     display: flex;
@@ -193,13 +221,19 @@ small {
     border-collapse: collapse;
 }
 
-.admin-table th, .admin-table td {
+
+
+.admin-table th,
+.admin-table td {
     text-align: left;
     padding: 1rem;
     border-bottom: 1px solid var(--border);
 }
 
-.admin-table th { color: var(--text-dim); font-size: 0.85rem; }
+.admin-table th {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+}
 
 .status-badge {
     padding: 4px 10px;
@@ -207,12 +241,26 @@ small {
     font-size: 0.75rem;
 }
 
-.status-ativo { background: rgba(45, 206, 137, 0.1); color: #2dce89; }
-.status-inativo { background: rgba(255, 77, 77, 0.1); color: #ff4d4d; }
+.status-ativo {
+    background: rgba(45, 206, 137, 0.1);
+    color: #2dce89;
+}
+
+.status-inativo {
+    background: rgba(255, 77, 77, 0.1);
+    color: #ff4d4d;
+}
 
 /* Forms & Buttons */
-.input-group { margin-bottom: 1.2rem; }
-.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.input-group {
+    margin-bottom: 1.2rem;
+}
+
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
 
 label {
     display: block;
@@ -222,7 +270,9 @@ label {
     font-weight: 500;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
     width: 100%;
     padding: 12px 14px;
     background: #0a0e12;
@@ -234,7 +284,9 @@ input, select, textarea {
     font-family: 'Inter', sans-serif;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
     outline: none;
     border-color: var(--petrol-light);
     box-shadow: 0 0 0 2px rgba(10, 147, 150, 0.2);
@@ -291,8 +343,11 @@ textarea::placeholder {
 /* Modal */
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
     display: none;
     justify-content: center;
     align-items: center;
@@ -306,7 +361,9 @@ textarea::placeholder {
     overflow: hidden;
 }
 
-.modal-overlay.active { display: flex; }
+.modal-overlay.active {
+    display: flex;
+}
 
 .modal-footer {
     display: flex;
@@ -407,7 +464,8 @@ textarea::placeholder {
         font-size: 1.5rem;
     }
 
-    .btn-primary, .btn-secondary {
+    .btn-primary,
+    .btn-secondary {
         padding: 10px 16px;
         font-size: 0.9rem;
     }
@@ -423,6 +481,7 @@ textarea::placeholder {
         opacity: 0;
         transform: translateX(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);

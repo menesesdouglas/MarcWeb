@@ -43,7 +43,7 @@ public class Folga {
     private TipoFolga tipo; // Tipo da folga (FERIAS, ATESTADO, FALTA_JUSTIFICADA)
 
 
-    private boolean aprovada;
+    private Boolean aprovada;
 
     /// PARA SER USADO QUANDO UM ADMIN CADASTRAR UMA FOLGA
     public Folga(User user, CreateFolga dados) {
@@ -56,7 +56,6 @@ public class Folga {
     public Folga(User user, SolicitaFolga dados) {
         this.user = user;
         BeanUtils.copyProperties(dados, this);
-        this.aprovada = false;
     }
 
 

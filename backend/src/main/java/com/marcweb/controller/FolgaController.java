@@ -1,9 +1,6 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.folga.CreateFolga;
-import com.marcweb.dto.folga.FolgaResponse;
-import com.marcweb.dto.folga.SolicitaFolga;
-import com.marcweb.dto.folga.UpdateFolga;
+import com.marcweb.dto.folga.*;
 import com.marcweb.service.FolgaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +21,12 @@ public class FolgaController {
 
     // --- Endpoints Públicos (requerem autenticação) ---
 
-    // GET /api/folgas - Listar todas as folgas (requer ROLE_ADMIN)
+    // GET /api/folgas - Listar todas as folgas pendentes (requer ROLE_ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public ResponseEntity<List<FolgaResponse>> getAllFolgas() {
-        List<FolgaResponse> folgas = folgaService.findAll();
-        return ResponseEntity.ok(folgas);
+    @GetMapping("/pendentes")
+    public ResponseEntity<List<FolgaPendente>> getFolgasPendentes() {
+        List<FolgaPendente> folgasPendentes = folgaService.findFolgasPendentes();
+        return ResponseEntity.ok(folgasPendentes);
     }
 
     // GET /api/folgas/{id} - Obter folga específica por ID
@@ -92,9 +89,10 @@ public class FolgaController {
         folgaService.solicitarFolga(dados, authentication.getName());
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/aprovar/{id}")
-    public void aprovarFolga(@PathVariable Long id) {
-        folgaService.aprovarFolga(id);
+    @PutMapping("/solucionar/{id}/{aprovada}")
+    public void aprovarFolga(@PathVariable Long id, @PathVariable boolean aprovada) {
+        folgaService.solucionarFolga(id, aprovada);
     }
 }

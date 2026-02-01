@@ -2,10 +2,7 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.folga.CreateFolga;
-import com.marcweb.dto.folga.FolgaResponse;
-import com.marcweb.dto.folga.SolicitaFolga;
-import com.marcweb.dto.folga.UpdateFolga;
+import com.marcweb.dto.folga.*;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Folga;
 import com.marcweb.entity.Role;
@@ -40,10 +37,10 @@ public class FolgaService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional(readOnly = true)
-    public List<FolgaResponse> findAll() {
+    public List<FolgaPendente> findFolgasPendentes() {
         detalhes.setDetalhes("Administrador realizou consulta por todos os registros de folga");
-        List<Folga> folgas = folgaRepository.findAll();
-        return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
+        List<Folga> folgas = folgaRepository.findFolgasPendentes();
+        return folgas.stream().map(FolgaPendente::new).collect(Collectors.toList());
     }
 
     @Auditado(
@@ -208,9 +205,9 @@ public class FolgaService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
-    public void aprovarFolga(Long id) {
+    public void solucionarFolga(Long id, boolean aprovada) { /// APROVANDO OU NÃO UYA FOLGA
         var folgaSolicitada = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não enontrada"));
-        folgaSolicitada.setAprovada(true);
+        folgaSolicitada.setAprovada(aprovada);
         detalhes.setDetalhes("Aprovando folga no dia " + folgaSolicitada.getDataInicio().format(DateTimeFormatter.ofPattern("dd/MM/yy")) + " para " + folgaSolicitada.getUser().getNome());
     }
 }

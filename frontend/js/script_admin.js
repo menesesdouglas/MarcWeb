@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Carregar dados
     await Promise.all([
         loadUsers(),
-        loadRecentPunches()
+        loadRecentPunches(),
+        loadFolgasPendentes()
     ]);
 
     // Configurar eventos
@@ -94,7 +95,7 @@ function setupEventListeners() {
         if (!validKey.includes(key)) {
             e.preventDefault();
         };
-        
+
 
     })
 }
@@ -125,6 +126,22 @@ async function loadUsers() {
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
         showToast('Erro ao carregar usuários', 'error');
+    }
+}
+
+
+async function loadFolgasPendentes() {
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    const response = await fetch("http://localhost:8080/api/folgas/pendentes", {
+        headers: {
+            'Authorization': `Bearer ${auth.token}`
+        }
+    })
+    if (response.ok) {
+        const folgas = await response.json();
+        renderFolgas(folgas);
+    } else {
+        showToast("Erro ao carregar folgas pendentes", "error")
     }
 }
 
@@ -194,6 +211,52 @@ function renderEmployees(employees) {
         `;
         container.appendChild(tr);
     });
+}
+
+
+// RENDERIZAR LISTA DE FOLGAS PENDENTES
+function renderFolgas(folgas) {
+    const listBody = document.getElementById("folgasListBody");
+    listBody.innerHTML = '';
+    folgas.forEach((folga) => {
+        const idFolga = folga.id;
+        const nomeFuncionario = folga.nomeFuncionario;
+        const datatInicio = folga.dataInicio;
+        const datatFim = folga.dataFim;
+        const tipoFolga = folga.tipo;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${nomeFuncionario}</td>
+            <td>${datatInicio}</td>
+            <td>${datatFim}</td>
+            <td>${tipoFolga}</td>
+            <td>
+                <button onclick="solucionarFolga(${idFolga}, ${true})" style="background:none; border:none; color:#0a9396; cursor:pointer">Aprovar</button>
+                <button onclick="solucionarFolga(${idFolga}, ${false})" style="background:none; border:none; color:#0a9396; cursor:pointer">Recusar</button>
+            </td>
+        `;
+        listBody.appendChild(tr);
+    });
+}
+
+/// APROVANDO OU RECUSANDO FOLGA
+async function solucionarFolga(idFolga, aprovada) {
+    const confimado = confirm(`Confirma a ${aprovada ? "aprovação" : "desaprovação"} desta folga?`);
+    if (!confimado) return;
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    const response = await fetch(`http://localhost:8080/api/folgas/solucionar/${idFolga}/${aprovada}`, {
+        headers: {
+            "Authorization": `Bearer ${auth.token}`
+        },
+        method: 'PUT'
+    })
+    if (response.ok) {
+        showToast("Folga solucionaa com sucesso", "success");
+        //renderFolgas(folgas.filter(item => item.id != idFolga));
+    } else {
+        showToast("Erro ao solucionar folga", "error");
+    }
 }
 
 // Renderizar Dashboard

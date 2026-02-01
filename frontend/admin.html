@@ -23,6 +23,7 @@
                 <a href="#" class="nav-link" data-section="employees"><span>👥 Funcionários</span></a>
                 <a href="#" class="nav-link" data-section="adjustments"><span>⚙️ Ajustes de Ponto</span></a>
                 <a href="#" class="nav-link" data-section="reports"><span>📄 Relatórios</span></a>
+                <a href="#" class="nav-link" data-section="folgas"><span>💀 Folgas</span></a>
             </nav>
             <div class="sidebar-footer">
                 <button id="btnLogout" class="btn-logout">Sair do Sistema</button>
@@ -138,6 +139,29 @@
                 </div>
             </section>
 
+            <section id="folgas" class="content-section ">
+                <header class="section-header">
+                    <h1>Gerenciamento de folgas</h1>
+                </header>
+                <div>
+                    <div class="card">
+
+                        <table id="table-folga" class="admin-table">
+                            <thead >
+                                <tr>
+                                    <th>Funcionário</th>
+                                    <th>Data inicio</th>
+                                    <th>Data fim</th>
+                                    <th>Tipo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="folgasListBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
