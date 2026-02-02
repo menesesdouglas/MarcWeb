@@ -24,8 +24,8 @@ public class FolgaController {
     // GET /api/folgas - Listar todas as folgas pendentes (requer ROLE_ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/pendentes")
-    public ResponseEntity<List<FolgaPendente>> getFolgasPendentes() {
-        List<FolgaPendente> folgasPendentes = folgaService.findFolgasPendentes();
+    public ResponseEntity<List<FolgaPendenteDetalhada>> getFolgasPendentes() {
+        List<FolgaPendenteDetalhada> folgasPendentes = folgaService.findFolgasPendentesDetalhadas();
         return ResponseEntity.ok(folgasPendentes);
     }
 
@@ -94,5 +94,13 @@ public class FolgaController {
     @PutMapping("/solucionar/{id}/{aprovada}")
     public void aprovarFolga(@PathVariable Long id, @PathVariable boolean aprovada) {
         folgaService.solucionarFolga(id, aprovada);
+    }
+
+    // NOVO Endpoint: Detalhes completos de uma folga específica
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}/detalhes")
+    public ResponseEntity<FolgaPendenteDetalhada> getFolgaDetalhes(@PathVariable Long id) {
+        FolgaPendenteDetalhada folgaDetalhes = folgaService.findFolgaDetalhes(id);
+        return ResponseEntity.ok(folgaDetalhes);
     }
 }

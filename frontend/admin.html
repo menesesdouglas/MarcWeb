@@ -213,6 +213,47 @@
         </div>
     </div>
 
+    <div id="modalDetalhes" class="modal-overlay">
+        <div class="modal card">
+            <h2>Detalhes da Folga</h2>
+            <div class="detalhes-content">
+                <div class="detalhe-item">
+                    <strong>Funcionário:</strong>
+                    <span id="detalhe-funcionario"></span>
+                </div>
+                <div class="detalhe-item">
+                    <strong>Data da Solicitação:</strong>
+                    <span id="detalhe-data-solicitacao"></span>
+                </div>
+                <div class="detalhe-item">
+                    <strong>Período Solicitado:</strong>
+                    <span id="detalhe-periodo"></span>
+                </div>
+                <div class="detalhe-item">
+                    <strong>Quantidade de Dias:</strong>
+                    <span id="detalhe-dias"></span>
+                </div>
+                <div class="detalhe-item">
+                    <strong>Tipo de Folga:</strong>
+                    <span id="detalhe-tipo"></span>
+                </div>
+                <div class="detalhe-item">
+                    <strong>Justificativa:</strong>
+                    <p id="detalhe-justificativa"></p>
+                </div>
+                <div class="detalhe-item" id="detalhe-status-container" style="display: none;">
+                    <strong>Status:</strong>
+                    <span id="detalhe-status"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModalDetalhes()">Fechar</button>
+                <button type="button" class="btn-primary" onclick="solucionarFolga(currentFolgaId, true)" id="btn-aprovar">Aprovar</button>
+                <button type="button" class="btn-danger" onclick="solucionarFolga(currentFolgaId, false)" id="btn-recusar">Recusar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/script_admin.js"></script>
 </body>
 
