@@ -59,7 +59,7 @@ public class RegistroPontoController {
             @RequestParam LocalDateTime end
     ) {
         var pontos = service.buscarPontosRegistrados(start, end);
-        return !pontos.getRegistros().isEmpty() ? ResponseEntity.ok(pontos) : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(pontos);
     }
 
     /// CARREGANDO HISTÓRICO RECENTE DO USUÁRIO LOGADO

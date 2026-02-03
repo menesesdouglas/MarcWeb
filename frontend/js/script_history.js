@@ -66,8 +66,8 @@ async function carregarHistorico() {
         }
 
         // Converter para timestamps
-        const inicioTimestamp = new Date(dataInicio + 'T00:00:00').toISOString().replace(".000Z", "");
-        const fimTimestamp = new Date(dataFinal + 'T23:59:59').toISOString().replace(".000Z", "");
+        const inicioTimestamp = dataInicio + "T00:00:00";
+        const fimTimestamp = dataFinal + 'T23:59:59';
         const response = await fetch(`http://localhost:8080/api/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`

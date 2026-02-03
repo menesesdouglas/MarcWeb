@@ -339,21 +339,24 @@ public class RegistroPontoService {
         // Criar o timestamp combinando data e hora
         LocalDateTime timestamp = request.date().atTime(request.time());
 
-        // Verificar se já existe um registro no mesmo horário para evitar duplicatas
-        boolean exists = repository.existsByUserAndTipo(user, tipoRegistro);
-        if (exists) {
-            throw new IllegalStateException("Já existe um registro de ponto neste horário para este usuário");
+        /*
+         * Buscando registro que tenha o mesmo tipo para o dia informado
+         * caso tenha, atualiza, se não, cria um objeto sem argumentos
+         * para ser persistido no banco de dados
+         * */
+        var possivelRegistro = repository.findByUserAndTipoAndTimestampBetween(user, tipoRegistro, request.date().atStartOfDay(), request.date().atTime(LocalTime.MAX))
+                .orElse(new RegistroPonto());
+
+        /// SÓ É NECESSÁRIO CASO SEJA UM NOVO REGISTRO
+        if (possivelRegistro.getId() == null) {
+            possivelRegistro.setUser(user);
+            possivelRegistro.setTipo(tipoRegistro);
         }
+        possivelRegistro.setTimestamp(timestamp);
+        possivelRegistro.setJustificativa(request.justificativa());
+        possivelRegistro.setIp("AJUSTE_ADMIN"); // Marcar como ajuste administrativo
 
-        // Criar e salvar o novo registro de ponto
-        RegistroPonto novoRegistro = new RegistroPonto();
-        novoRegistro.setUser(user);
-        novoRegistro.setTipo(tipoRegistro);
-        novoRegistro.setTimestamp(timestamp);
-        novoRegistro.setJustificativa(request.justificativa());
-        novoRegistro.setIp("AJUSTE_ADMIN"); // Marcar como ajuste administrativo
-
-        repository.save(novoRegistro);
+        repository.save(possivelRegistro);
         detalhes.setDetalhes("Ajuste de ponto realizado para " + user.getNome() + ": " + tipoRegistro.getText() + " em " + timestamp);
     }
 
