@@ -602,7 +602,9 @@ async function generateReport() {
     const userId = document.getElementById('reportEmployee').value;
     const monthYear = document.getElementById('reportMonth').value;
 
-    if (!userId || !monthYear || monthYear.length != 6) {
+    // CORREÇÃO: Removida a validação de length que causava o bug
+    // O input type="month" retorna "YYYY-MM" (7 caracteres), não 6
+    if (!userId || !monthYear) {
         showToast('Selecione o funcionário e o período', 'error');
         return;
     }
