@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Configurar datas padrão (mês atual)
-    configurarDatasPadrao();
+    // Configurar mês-ano padrão (mês atual)
+    configurarMesAnoPadrao();
 
     // Configurar eventos
     setupEventListeners();
@@ -24,27 +24,19 @@ function setupEventListeners() {
         }
     });
 
-    // Enter nos filtros
-    document.getElementById('dataInicio').addEventListener('keypress', (e) => {
+    // Enter no campo de mês-ano
+    document.getElementById('mesAno').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') carregarHistorico();
     });
-    document.getElementById('dataFinal').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') carregarHistorico();
-    });
-    document.getElementById('tipoRegistro').addEventListener('change', carregarHistorico);
 }
 
-function configurarDatasPadrao() {
+function configurarMesAnoPadrao() {
     const hoje = new Date();
-    const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-
-    document.getElementById('dataInicio').value = formatarDataParaInput(primeiroDiaMes);
-    document.getElementById('dataFinal').value = formatarDataParaInput(ultimoDiaMes);
-}
-
-function formatarDataParaInput(data) {
-    return data.toISOString().split('T')[0];
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+    
+    const mesFormatado = mesAtual < 10 ? `0${mesAtual}` : `${mesAtual}`;
+    document.getElementById('mesAno').value = `${anoAtual}-${mesFormatado}`;
 }
 
 async function carregarHistorico() {
@@ -57,17 +49,21 @@ async function carregarHistorico() {
 
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const dataInicio = document.getElementById('dataInicio').value;
-        const dataFinal = document.getElementById('dataFinal').value;
+        const mesAno = document.getElementById('mesAno').value;
 
-        if (!dataInicio || !dataFinal) {
-            showToast('Selecione as datas inicial e final', 'error');
+        if (!mesAno) {
+            showToast('Selecione o mês e ano', 'error');
             return;
         }
 
-        // Converter para timestamps
-        const inicioTimestamp = dataInicio + "T00:00:00";
-        const fimTimestamp = dataFinal + 'T23:59:59';
+        // Converter mês-ano para timestamps (início e fim do mês)
+        const [ano, mes] = mesAno.split('-').map(Number);
+        const primeiroDia = new Date(ano, mes - 1, 1);
+        const ultimoDia = new Date(ano, mes, 0);
+        
+        const inicioTimestamp = primeiroDia.toISOString().split('T')[0] + "T00:00:00";
+        const fimTimestamp = ultimoDia.toISOString().split('T')[0] + 'T23:59:59';
+        
         const response = await fetch(`http://localhost:8080/api/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
@@ -171,46 +167,66 @@ function formatarTipoRegistro(tipo) {
     return tipos[tipo] || tipo;
 }
 
-function exportarCSV() {
-    const historyBody = document.getElementById('historyBody');
-    const rows = historyBody.querySelectorAll('tr');
+async function exportarPDF() {
+    const mesAno = document.getElementById('mesAno').value;
 
-    if (rows.length === 0 || rows[0].classList.contains('empty-state') || rows[0].classList.contains('error-state')) {
-        showToast('Nenhum dado para exportar', 'error');
+    if (!mesAno) {
+        showToast('Selecione o mês e ano para gerar o PDF', 'error');
         return;
     }
 
-    const csvContent = [
-        ['Data', 'Tipo', 'Horário', 'Localização', 'Status'],
-        ...Array.from(rows).map(row => {
-            const cells = row.querySelectorAll('td');
-            return Array.from(cells).map(cell => {
-                // Remover elementos HTML e pegar apenas o texto
-                const badge = cell.querySelector('.tipo-badge, .status-badge');
-                return badge ? badge.textContent.trim() : cell.textContent.trim();
-            });
-        })
-    ];
+    try {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const [ano, mes] = mesAno.split('-').map(Number);
 
-    // Converter para CSV
-    const csvString = csvContent.map(row =>
-        row.map(field => `"${field.replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
+        // Mostrar feedback de carregamento
+        showToast('Gerando relatório PDF...', 'info');
 
-    // Criar e baixar arquivo
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
+        // Gerar o PDF usando o endpoint para funcionários
+        const pdfResponse = await fetch('http://localhost:8080/api/relatorios/pdf/me', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${auth.token}`
+            },
+            body: JSON.stringify({
+                userId: auth.id,
+                mes: parseInt(mes),
+                ano: parseInt(ano)
+            })
+        });
 
-    link.setAttribute('href', url);
-    link.setAttribute('download', `historico_ponto_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+        if (pdfResponse.ok) {
+            const pdfBase64 = await pdfResponse.text();
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+            // Criar link para download
+            const link = document.createElement('a');
+            link.href = `data:application/pdf;base64,${pdfBase64}`;
+            link.download = `folha_ponto_${mesAno}.pdf`;
+            link.click();
 
-    showToast('Arquivo CSV exportado com sucesso!', 'success');
+            showToast('Relatório PDF gerado e baixado com sucesso!', 'success');
+        } else {
+            // Tratar respostas de erro
+            let errorMessage = 'Erro ao gerar PDF';
+            try {
+                const errorData = await pdfResponse.json();
+                errorMessage = errorData.erro || 'Erro ao gerar PDF';
+            } catch (e) {
+                // Se não for JSON, tentar obter texto simples
+                try {
+                    const errorText = await pdfResponse.text();
+                    errorMessage = errorText || 'Erro ao gerar PDF';
+                } catch (e2) {
+                    errorMessage = 'Erro ao gerar PDF';
+                }
+            }
+            showToast(errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao gerar relatório:', error);
+        showToast('Erro ao gerar relatório PDF', 'error');
+    }
 }
 
 function showToast(message, type = 'info') {
