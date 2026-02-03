@@ -1,5 +1,6 @@
 :root {
     --bg-dark: #070a0d;
+    --bg-danger: #ff4d4d;
     --sidebar-bg: #0d1117;
     --bg-card: #141b22;
     --petrol-blue: #005f73;
@@ -116,8 +117,8 @@ small {
     width: 100%;
     padding: 10px;
     background: transparent;
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
+    border: 1px solid var(--bg-danger);
+    color: var(--bg-danger);
     border-radius: 6px;
     cursor: pointer;
     transition: var(--transition);
@@ -307,10 +308,10 @@ textarea::placeholder {
     background: var(--petrol-blue);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 20px 35px;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
+    font-size: 1em;
     transition: var(--transition);
     box-shadow: var(--shadow-sm);
 }
@@ -327,6 +328,8 @@ textarea::placeholder {
 
 .btn-secondary {
     background: transparent;
+    padding: 20px 35px;
+    font-size: 1em;
     color: var(--text-dim);
     border: 1px solid var(--border);
     padding: 10px 20px;
@@ -339,6 +342,20 @@ textarea::placeholder {
     border-color: var(--petrol-light);
     color: var(--petrol-light);
 }
+
+.btn-danger {
+    background-color: var(--bg-dark);
+    color: white;
+    border: 1px solid var(--border);
+    padding: 20px 35px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    cursor: pointer;
+}
+
+
 
 /* Modal */
 .modal-overlay {
@@ -356,19 +373,32 @@ textarea::placeholder {
 
 .modal {
     width: 450px;
-    max-width: 90%;
     border-radius: 12px;
     overflow: hidden;
+}
+
+
+
+.detalhes-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    border: 0px solid white;
+
+    margin: 20px 0;
 }
 
 .modal-overlay.active {
     display: flex;
 }
 
+
 .modal-footer {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: center;
+    border: 0px solid white;
+    gap: 25px;
     margin-top: 1.5rem;
 }
 

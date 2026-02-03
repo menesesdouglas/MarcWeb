@@ -206,9 +206,11 @@ public class FolgaService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
-    public void solucionarFolga(Long id, boolean aprovada) { /// APROVANDO OU NÃO UYA FOLGA
+    public boolean solucionarFolga(Long id, boolean aprovada) { /// APROVANDO OU NÃO UYA FOLGA
         var folgaSolicitada = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não enontrada"));
+        if(folgaSolicitada.getAprovada() != null) return false;
         folgaSolicitada.setAprovada(aprovada);
         detalhes.setDetalhes("Aprovando folga no dia " + folgaSolicitada.getDataInicio().format(DateTimeFormatter.ofPattern("dd/MM/yy")) + " para " + folgaSolicitada.getUser().getNome());
+        return true;
     }
 }
