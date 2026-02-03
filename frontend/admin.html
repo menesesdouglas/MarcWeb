@@ -147,7 +147,7 @@
                     <div class="card">
 
                         <table id="table-folga" class="admin-table">
-                            <thead >
+                            <thead>
                                 <tr>
                                     <th>Funcionário</th>
                                     <th>Data inicio</th>
@@ -222,10 +222,6 @@
                     <span id="detalhe-funcionario"></span>
                 </div>
                 <div class="detalhe-item">
-                    <strong>Data da Solicitação:</strong>
-                    <span id="detalhe-data-solicitacao"></span>
-                </div>
-                <div class="detalhe-item">
                     <strong>Período Solicitado:</strong>
                     <span id="detalhe-periodo"></span>
                 </div>
@@ -241,15 +237,13 @@
                     <strong>Justificativa:</strong>
                     <p id="detalhe-justificativa"></p>
                 </div>
-                <div class="detalhe-item" id="detalhe-status-container" style="display: none;">
-                    <strong>Status:</strong>
-                    <span id="detalhe-status"></span>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeModalDetalhes()">Fechar</button>
-                <button type="button" class="btn-primary" onclick="solucionarFolga(currentFolgaId, true)" id="btn-aprovar">Aprovar</button>
-                <button type="button" class="btn-danger" onclick="solucionarFolga(currentFolgaId, false)" id="btn-recusar">Recusar</button>
+                <button type="button" class="btn-primary" onclick="solucionarFolga(currentFolgaId, true)"
+                    id="btn-aprovar">Aprovar</button>
+                <button type="button" class="btn-danger" onclick="solucionarFolga(currentFolgaId, false)"
+                    id="btn-recusar">Recusar</button>
             </div>
         </div>
     </div>

@@ -96,11 +96,4 @@ public class FolgaController {
         folgaService.solucionarFolga(id, aprovada);
     }
 
-    // NOVO Endpoint: Detalhes completos de uma folga específica
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}/detalhes")
-    public ResponseEntity<FolgaPendenteDetalhada> getFolgaDetalhes(@PathVariable Long id) {
-        FolgaPendenteDetalhada folgaDetalhes = folgaService.findFolgaDetalhes(id);
-        return ResponseEntity.ok(folgaDetalhes);
-    }
 }

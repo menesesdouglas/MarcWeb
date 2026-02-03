@@ -220,29 +220,21 @@ function renderFolgas(folgas) {
     const listBody = document.getElementById("folgasListBody");
     listBody.innerHTML = '';
     folgas.forEach((folga) => {
-        const idFolga = folga.id;
-        const nomeFuncionario = folga.nomeFuncionario;
-        const datatInicio = folga.dataInicio;
-        const datatFim = folga.dataFim;
-        const tipoFolga = folga.tipo;
-        const status = folga.status || 'PENDENTE';
-
-        // Definir cor do status
-        const statusColor = status === 'APROVADA' ? '#28a745' : 
-                           (status === 'RECUSADA' ? '#dc3545' : '#6c757d');
+       
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${nomeFuncionario}</td>
-            <td>${datatInicio}</td>
-            <td>${datatFim}</td>
-            <td>${tipoFolga}</td>
+            <td>${folga.nomeFuncionario}</td>
+            <td>${folga.dataInicio}</td>
+            <td>${folga.dataFim}</td>
+            <td>${folga.tipo}</td>
             <td>
-                <button onclick="verDetalhesFolga(${idFolga})" style="background:none; border:none; color:#0a9396; cursor:pointer; margin-right: 10px;">Ver Detalhes</button>
-                <span style="color: ${statusColor}; font-weight: bold;">${status}</span>
+                <button id="btn-detalhes-folga-${folga.id}"  style="background:none; border:none; color:#0a9396; cursor:pointer; margin-right: 10px;">Ver Detalhes</button>
+                
             </td>
         `;
         listBody.appendChild(tr);
+        document.getElementById(`btn-detalhes-folga-${folga.id}`).addEventListener("click", () => verDetalhesFolga(folga))
     });
 }
 
@@ -269,33 +261,15 @@ async function solucionarFolga(idFolga, aprovada) {
 }
 
 // FUNÇÃO PARA VER DETALHES DA FOLGA
-async function verDetalhesFolga(idFolga) {
-    try {
-        const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`http://localhost:8080/api/folgas/${idFolga}/detalhes`, {
-            headers: {
-                'Authorization': `Bearer ${auth.token}`
-            }
-        });
-
-        if (response.ok) {
-            const folga = await response.json();
-            currentFolgaId = idFolga;
-            abrirModalDetalhes(folga);
-        } else {
-            showToast("Erro ao carregar detalhes da folga", "error");
-        }
-    } catch (error) {
-        console.error('Erro ao carregar detalhes da folga:', error);
-        showToast("Erro ao carregar detalhes da folga", "error");
-    }
+function verDetalhesFolga(folga) {
+    currentFolgaId = folga.id;
+    abrirModalDetalhes(folga);
 }
 
 // FUNÇÃO PARA ABRIR MODAL DE DETALHES
 function abrirModalDetalhes(folga) {
     // Preencher os campos do modal
     document.getElementById('detalhe-funcionario').textContent = folga.nomeFuncionario;
-    document.getElementById('detalhe-data-solicitacao').textContent = formatarData(folga.dataSolicitacao);
     document.getElementById('detalhe-periodo').textContent = `${formatarData(folga.dataInicio)} até ${formatarData(folga.dataFim)}`;
     document.getElementById('detalhe-dias').textContent = `${folga.diasCalculados} dia(s)`;
     document.getElementById('detalhe-tipo').textContent = folga.tipo;
@@ -308,18 +282,10 @@ function abrirModalDetalhes(folga) {
     // Verificar se a folga já foi processada
     if (folga.status !== 'PENDENTE') {
         btnAprovar.style.display = 'none';
-        btnRecusar.style.display = 'none';
-        
-        const statusContainer = document.getElementById('detalhe-status-container');
-        const statusElement = document.getElementById('detalhe-status');
-        statusContainer.style.display = 'block';
-        
-        const statusColor = folga.status === 'APROVADA' ? '#28a745' : '#dc3545';
-        statusElement.innerHTML = `<span style="color: ${statusColor}; font-weight: bold;">${folga.status}</span>`;
+        btnRecusar.style.display = 'none';       
     } else {
         btnAprovar.style.display = 'inline-block';
         btnRecusar.style.display = 'inline-block';
-        document.getElementById('detalhe-status-container').style.display = 'none';
     }
 
     // Abrir modal
