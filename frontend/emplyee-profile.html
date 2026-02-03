@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Perfil do Usuário</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+}
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* PERFIL */
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.photo {
+    width: 100px;
+    height: 100px;
+    background: #ccc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn {
+    background: #0a9396;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+    border: none;
+}
+
+.btn-danger { background: #c53030; }
+.btn-success { background: #2f855a; }
+.btn-warning { background: #dd6b20; }
+
+/* TABELA */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* MODAL */
+input[type=checkbox] {
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 350px;
+}
+
+#modal-cadastro:checked ~ .modal-cadastro,
+#modal-detalhes:checked ~ .modal-detalhes {
+    display: flex;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- PERFIL -->
+    <div class="profile">
+        <div class="photo">FOTO</div>
+        <div>
+            <h2>João da Silva</h2>
+            <span>Desenvolvedor Backend</span><br><br>
+            <label for="modal-cadastro" class="btn">Nova Folga</label>
+        </div>
+    </div>
+
+    <!-- LISTA DE FOLGAS -->
+    <h3>Folgas</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Funcionário</th>
+                <th>Tipo</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>João da Silva</td>
+                <td>Folga</td>
+                <td>01/07/2025</td>
+                <td>02/07/2025</td>
+                <td>
+                    <label for="modal-detalhes" class="btn">Detalhes</label>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<!-- MODAL CADASTRO -->
+<input type="checkbox" id="modal-cadastro">
+<div class="modal modal-cadastro">
+    <div class="modal-content">
+        <label for="modal-cadastro" class="close">✖</label>
+        <h3>Nova Folga</h3>
+        <label>Tipo</label><br>
+        <input type="text"><br><br>
+
+        <label>Data Início</label><br>
+        <input type="date"><br><br>
+
+        <label>Data Fim</label><br>
+        <input type="date"><br><br>
+
+        <button class="btn">Cadastrar</button>
+    </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<input type="checkbox" id="modal-detalhes">
+<div class="modal modal-detalhes">
+    <div class="modal-content">
+        <label for="modal-detalhes" class="close">✖</label>
+        <h3>Detalhes da Folga</h3>
+
+        <p><b>Funcionário:</b> João da Silva</p>
+        <p><b>Tipo:</b> Folga</p>
+        <p><b>Início:</b> 01/07/2025</p>
+        <p><b>Fim:</b> 02/07/2025</p>
+
+        <button class="btn-success btn">Aprovar</button>
+        <button class="btn-warning btn">Reprovar</button>
+        <button class="btn-danger btn">Remover</button>
+    </div>
+</div>
+
+</body>
+</html>

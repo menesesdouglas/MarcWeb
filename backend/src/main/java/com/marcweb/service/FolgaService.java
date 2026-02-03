@@ -27,21 +27,8 @@ import java.util.stream.Collectors;
 public class FolgaService {
 
     private final FolgaRepository folgaRepository;
-    private final UserRepository userRepository; // Para buscar o User pelo ID
+    private final UserRepository userRepository;
     private final Detalhes detalhes;
-
-    // --- CRUD Methods ---
-
-    @Auditado(
-            acao = "Buscando todas as folgas registradas",
-            categoria = CategoriaLog.ADMIN
-    )
-    @Transactional(readOnly = true)
-    public List<FolgaPendente> findFolgasPendentes() {
-        detalhes.setDetalhes("Administrador realizou consulta por todos os registros de folga");
-        List<Folga> folgas = folgaRepository.findFolgasPendentes();
-        return folgas.stream().map(FolgaPendente::new).collect(Collectors.toList());
-    }
 
     @Auditado(
             acao = "Buscando folga especifica por id",
@@ -194,17 +181,7 @@ public class FolgaService {
         return folgas.stream().map(FolgaPendenteDetalhada::new).collect(Collectors.toList());
     }
 
-    // NOVO Método: Buscar detalhes completos de uma folga específica
-    @Auditado(
-            acao = "Buscando detalhes completos de uma folga específica",
-            categoria = CategoriaLog.ADMIN
-    )
-    @Transactional(readOnly = true)
-    public FolgaPendenteDetalhada findFolgaDetalhes(Long id) {
-        detalhes.setDetalhes("Administrador consultou detalhes da folga com ID: " + id);
-        Folga folga = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id));
-        return new FolgaPendenteDetalhada(folga);
-    }
+
 
     // --- Validation Helper ---
 
@@ -229,9 +206,11 @@ public class FolgaService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
-    public void solucionarFolga(Long id, boolean aprovada) { /// APROVANDO OU NÃO UYA FOLGA
+    public boolean solucionarFolga(Long id, boolean aprovada) { /// APROVANDO OU NÃO UYA FOLGA
         var folgaSolicitada = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não enontrada"));
+        if(folgaSolicitada.getAprovada() != null) return false;
         folgaSolicitada.setAprovada(aprovada);
         detalhes.setDetalhes("Aprovando folga no dia " + folgaSolicitada.getDataInicio().format(DateTimeFormatter.ofPattern("dd/MM/yy")) + " para " + folgaSolicitada.getUser().getNome());
+        return true;
     }
 }

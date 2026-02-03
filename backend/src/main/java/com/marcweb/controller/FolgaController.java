@@ -30,10 +30,6 @@ public class FolgaController {
     }
 
     // GET /api/folgas/{id} - Obter folga específica por ID
-    //@PreAuthorize("hasAnyRole('ADMIN', 'USER')") // Admin e o próprio usuário podem ver (Não é necessário, já que inclui as duas Roles)
-    // A lógica de verificação de permissão (se o usuário é o dono) pode ser implementada no service
-    // ou via @PostAuthorize, mas para simplicidade inicial, deixamos ADMIN com acesso total.
-    // Para acesso mais refinado, o service pode verificar o usuário logado.
     @GetMapping("/{id}")
     public ResponseEntity<FolgaResponse> getFolgaById(@PathVariable Long id) {
         FolgaResponse folga = folgaService.findById(id);
@@ -89,18 +85,11 @@ public class FolgaController {
         folgaService.solicitarFolga(dados, authentication.getName());
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/solucionar/{id}/{aprovada}")
-    public void aprovarFolga(@PathVariable Long id, @PathVariable boolean aprovada) {
-        folgaService.solucionarFolga(id, aprovada);
+    public ResponseEntity<String> aprovarFolga(@PathVariable Long id, @PathVariable boolean aprovada) {
+        return folgaService.solucionarFolga(id, aprovada) ?
+                ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.CONFLICT).body("Essa folga já teve uma resolução");
     }
 
-    // NOVO Endpoint: Detalhes completos de uma folga específica
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}/detalhes")
-    public ResponseEntity<FolgaPendenteDetalhada> getFolgaDetalhes(@PathVariable Long id) {
-        FolgaPendenteDetalhada folgaDetalhes = folgaService.findFolgaDetalhes(id);
-        return ResponseEntity.ok(folgaDetalhes);
-    }
 }

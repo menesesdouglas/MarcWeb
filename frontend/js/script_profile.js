@@ -59,7 +59,7 @@ async function loadUserProfile() {
 
             // Lógica de permissões para edição de cargo (baseada no role real, não no cargo exibido)
             setupRolePermissions(user.role);
-            
+
             // Armazenar o role real do usuário para uso nas validações de permissão
             document.getElementById('userRole').setAttribute('data-role', user.role);
         } else {
@@ -73,7 +73,7 @@ async function loadUserProfile() {
 
 function setupRolePermissions(userRole) {
     const roleInput = document.getElementById('role');
-    
+
     // Apenas administradores podem editar o cargo
     if (userRole === 'ADMIN') {
         roleInput.disabled = false;
@@ -142,19 +142,31 @@ function renderFolgas(folgas) {
         <div class="folga-item">
             <div class="folga-header">
                 <span class="folga-type">${formatTipoFolga(folga.tipo)}</span>
-                <span class="folga-status status-${folga.aprovada ? 'approved' : 'pending'}">
-                    ${folga.aprovada ? 'Aprovada' : 'Pendente'}
-                </span>
-            </div>
-            <div class="folga-dates">
-                ${formatDate(folga.dataInicio)} - ${formatDate(folga.dataFim)}
-            </div>
+                <span class="folga-status ${setStatusFolga(folga.aprovada, true)}">
+                    ${setStatusFolga(folga.aprovada, false)}
+                </span >
+            </div >
+    <div class="folga-dates">
+        ${formatDate(folga.dataInicio)} - ${formatDate(folga.dataFim)}
+    </div>
             ${folga.justificativa ? `<div class="folga-justificativa">${folga.justificativa}</div>` : ''}
-        </div>
+        </div >
     `).join('');
 
     container.innerHTML = folgasHtml;
 }
+
+function setStatusFolga(aprovada, isStyle) {
+    switch (aprovada) {
+        case true:
+            return isStyle ? "status-approved" : "Aprovada";
+        case false:
+            return isStyle ? "status-rejected" : "Rejeitada";
+        default:
+            return isStyle ? "status-pending" : "Pendente";
+    }
+}
+
 
 function renderRecentActivity(logs) {
     const container = document.getElementById('recentActivity');
@@ -165,7 +177,7 @@ function renderRecentActivity(logs) {
     }
 
     const activityHtml = logs.map(log => `
-        <div class="activity-item">
+    < div class="activity-item" >
             <div class="activity-icon">
                 <i class="fas fa-${getActivityIcon(log.categoria)}"></i>
             </div>
@@ -173,7 +185,7 @@ function renderRecentActivity(logs) {
                 <div class="activity-action">${log.acao}</div>
                 <div class="activity-time">${formatDateTime(log.timestamp)}</div>
             </div>
-        </div>
+        </ >
     `).join('');
 
     container.innerHTML = activityHtml;
@@ -196,20 +208,20 @@ async function handleProfileUpdate(e) {
 
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        
+
         // Verificar se o usuário pode editar o cargo (baseado no role real armazenado no atributo data-role)
         const userRole = document.getElementById('userRole').getAttribute('data-role');
         let updateData;
-        
+
         if (userRole === 'ADMIN') {
             // Administrador pode editar tudo
-            updateData = { 
+            updateData = {
                 nome: nome,
                 cargo: cargo
             };
         } else {
             // Usuário comum só pode editar nome e senha
-            updateData = { 
+            updateData = {
                 nome: nome
             };
         }
@@ -223,7 +235,7 @@ async function handleProfileUpdate(e) {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
+                'Authorization': `Bearer ${auth.token} `
             },
             body: JSON.stringify(updateData)
         });
@@ -262,7 +274,7 @@ async function handleFolgaSubmit(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
+                'Authorization': `Bearer ${auth.token} `
             },
             body: JSON.stringify(folgaData)
         });
@@ -320,7 +332,7 @@ function getActivityIcon(categoria) {
 
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    toast.className = `toast-notification ${type}`;
+    toast.className = `toast - notification ${type} `;
     toast.textContent = message;
 
     toast.style.position = 'fixed';

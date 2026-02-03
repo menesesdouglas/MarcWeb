@@ -1,6 +1,5 @@
 package com.marcweb.dto.folga;
 
-import com.marcweb.entity.TipoFolga;
 
 import java.time.LocalDate;
 
@@ -12,7 +11,6 @@ public record FolgaPendenteDetalhada(
         String tipo,
         String justificativa,
         Integer diasCalculados,
-        LocalDate dataSolicitacao,
         String status
 ) {
     public FolgaPendenteDetalhada(com.marcweb.entity.Folga folga) {
@@ -24,7 +22,6 @@ public record FolgaPendenteDetalhada(
                 folga.getTipo().getText(),
                 folga.getJustificativa(),
                 calcularDias(folga.getDataInicio(), folga.getDataFim()),
-                folga.getDataInicio(), // Considerando dataInicio como data da solicitação
                 folga.getAprovada() == null ? "PENDENTE" : 
                 (folga.getAprovada() ? "APROVADA" : "RECUSADA")
         );
