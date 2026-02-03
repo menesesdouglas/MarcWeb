@@ -3,6 +3,7 @@ let allUsers = [];
 let recentPunches = [];
 let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
+let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -224,6 +225,11 @@ function renderFolgas(folgas) {
         const datatInicio = folga.dataInicio;
         const datatFim = folga.dataFim;
         const tipoFolga = folga.tipo;
+        const status = folga.status || 'PENDENTE';
+
+        // Definir cor do status
+        const statusColor = status === 'APROVADA' ? '#28a745' : 
+                           (status === 'RECUSADA' ? '#dc3545' : '#6c757d');
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -232,8 +238,8 @@ function renderFolgas(folgas) {
             <td>${datatFim}</td>
             <td>${tipoFolga}</td>
             <td>
-                <button onclick="solucionarFolga(${idFolga}, ${true})" style="background:none; border:none; color:#0a9396; cursor:pointer">Aprovar</button>
-                <button onclick="solucionarFolga(${idFolga}, ${false})" style="background:none; border:none; color:#0a9396; cursor:pointer">Recusar</button>
+                <button onclick="verDetalhesFolga(${idFolga})" style="background:none; border:none; color:#0a9396; cursor:pointer; margin-right: 10px;">Ver Detalhes</button>
+                <span style="color: ${statusColor}; font-weight: bold;">${status}</span>
             </td>
         `;
         listBody.appendChild(tr);
@@ -252,11 +258,90 @@ async function solucionarFolga(idFolga, aprovada) {
         method: 'PUT'
     })
     if (response.ok) {
-        showToast("Folga solucionaa com sucesso", "success");
-        //renderFolgas(folgas.filter(item => item.id != idFolga));
+        showToast("Folga solucionada com sucesso", "success");
+        // Atualizar a lista de folgas
+        await loadFolgasPendentes();
+        // Fechar modal se estiver aberto
+        closeModalDetalhes();
     } else {
         showToast("Erro ao solucionar folga", "error");
     }
+}
+
+// FUNÇÃO PARA VER DETALHES DA FOLGA
+async function verDetalhesFolga(idFolga) {
+    try {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const response = await fetch(`http://localhost:8080/api/folgas/${idFolga}/detalhes`, {
+            headers: {
+                'Authorization': `Bearer ${auth.token}`
+            }
+        });
+
+        if (response.ok) {
+            const folga = await response.json();
+            currentFolgaId = idFolga;
+            abrirModalDetalhes(folga);
+        } else {
+            showToast("Erro ao carregar detalhes da folga", "error");
+        }
+    } catch (error) {
+        console.error('Erro ao carregar detalhes da folga:', error);
+        showToast("Erro ao carregar detalhes da folga", "error");
+    }
+}
+
+// FUNÇÃO PARA ABRIR MODAL DE DETALHES
+function abrirModalDetalhes(folga) {
+    // Preencher os campos do modal
+    document.getElementById('detalhe-funcionario').textContent = folga.nomeFuncionario;
+    document.getElementById('detalhe-data-solicitacao').textContent = formatarData(folga.dataSolicitacao);
+    document.getElementById('detalhe-periodo').textContent = `${formatarData(folga.dataInicio)} até ${formatarData(folga.dataFim)}`;
+    document.getElementById('detalhe-dias').textContent = `${folga.diasCalculados} dia(s)`;
+    document.getElementById('detalhe-tipo').textContent = folga.tipo;
+    document.getElementById('detalhe-justificativa').textContent = folga.justificativa;
+
+    // Configurar botões de aprovar/recusar
+    const btnAprovar = document.getElementById('btn-aprovar');
+    const btnRecusar = document.getElementById('btn-recusar');
+
+    // Verificar se a folga já foi processada
+    if (folga.status !== 'PENDENTE') {
+        btnAprovar.style.display = 'none';
+        btnRecusar.style.display = 'none';
+        
+        const statusContainer = document.getElementById('detalhe-status-container');
+        const statusElement = document.getElementById('detalhe-status');
+        statusContainer.style.display = 'block';
+        
+        const statusColor = folga.status === 'APROVADA' ? '#28a745' : '#dc3545';
+        statusElement.innerHTML = `<span style="color: ${statusColor}; font-weight: bold;">${folga.status}</span>`;
+    } else {
+        btnAprovar.style.display = 'inline-block';
+        btnRecusar.style.display = 'inline-block';
+        document.getElementById('detalhe-status-container').style.display = 'none';
+    }
+
+    // Abrir modal
+    document.getElementById('modalDetalhes').classList.add('active');
+    document.getElementById('modalDetalhes').style.animation = 'fadeIn 0.3s ease';
+}
+
+// FUNÇÃO PARA FECHAR MODAL DE DETALHES
+function closeModalDetalhes() {
+    const overlay = document.getElementById('modalDetalhes');
+    overlay.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        overlay.style.animation = '';
+    }, 300);
+}
+
+// FUNÇÃO PARA FORMATAR DATA
+function formatarData(data) {
+    if (!data) return '';
+    const date = new Date(data);
+    return date.toLocaleDateString('pt-BR');
 }
 
 // Renderizar Dashboard

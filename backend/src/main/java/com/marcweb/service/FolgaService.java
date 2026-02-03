@@ -182,6 +182,30 @@ public class FolgaService {
         return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
     }
 
+    // NOVO Método: Listar folgas pendentes com detalhes completos
+    @Auditado(
+            acao = "Buscando todas as folgas pendentes com detalhes",
+            categoria = CategoriaLog.ADMIN
+    )
+    @Transactional(readOnly = true)
+    public List<FolgaPendenteDetalhada> findFolgasPendentesDetalhadas() {
+        detalhes.setDetalhes("Administrador realizou consulta por todas as folgas pendentes com detalhes");
+        List<Folga> folgas = folgaRepository.findFolgasPendentes();
+        return folgas.stream().map(FolgaPendenteDetalhada::new).collect(Collectors.toList());
+    }
+
+    // NOVO Método: Buscar detalhes completos de uma folga específica
+    @Auditado(
+            acao = "Buscando detalhes completos de uma folga específica",
+            categoria = CategoriaLog.ADMIN
+    )
+    @Transactional(readOnly = true)
+    public FolgaPendenteDetalhada findFolgaDetalhes(Long id) {
+        detalhes.setDetalhes("Administrador consultou detalhes da folga com ID: " + id);
+        Folga folga = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id));
+        return new FolgaPendenteDetalhada(folga);
+    }
+
     // --- Validation Helper ---
 
     /**
