@@ -218,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(animateOnLoad, 200);
     loadTodayPunches();
+    initLogout();  // Inicializar botão de logout
 });
 
 function initLogout() {
