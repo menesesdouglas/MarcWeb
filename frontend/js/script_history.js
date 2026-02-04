@@ -40,13 +40,6 @@ function configurarMesAnoPadrao() {
 }
 
 async function carregarHistorico() {
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    const historyBody = document.getElementById('historyBody');
-
-    // Mostrar loading
-    loadingIndicator.style.display = 'block';
-    historyBody.innerHTML = '<tr><td colspan="5" class="loading-state"><i class="fas fa-spinner fa-spin"></i> Carregando registros...</td></tr>';
-
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const mesAno = document.getElementById('mesAno').value;
@@ -72,57 +65,16 @@ async function carregarHistorico() {
 
         if (response.ok) {
             const resultado = await response.json();
-            renderizarHistorico(resultado.registros);
             calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
-            historyBody.innerHTML = `<tr><td colspan="5" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${error.erro || 'Erro ao carregar registros'}</td></tr>`;
+            showToast(error.erro || 'Erro ao carregar registros', 'error');
         }
     } catch (error) {
         console.error('Erro ao carregar histórico:', error);
-        historyBody.innerHTML = '<tr><td colspan="5" class="error-state"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar registros</td></tr>';
-    } finally {
-        loadingIndicator.style.display = 'none';
+        showToast('Erro ao carregar registros', 'error');
     }
-}
-
-function renderizarHistorico(registros) {
-    const historyBody = document.getElementById('historyBody');
-
-    if (!registros || registros.length === 0) {
-        historyBody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
-                    <i class="fas fa-calendar-times"></i>
-                    <p>Nenhum registro encontrado para o período selecionado.</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    // Ordenar por data/hora decrescente
-    registros.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    const registrosHtml = registros.map(registro => {
-        const data = new Date(registro.timestamp);
-        const tipoFormatado = formatarTipoRegistro(registro.tipo);
-        const localizacao = registro.latitude && registro.longitude ?
-            `${registro.latitude.toFixed(4)}, ${registro.longitude.toFixed(4)}` : 'N/A';
-
-        return `
-            <tr>
-                <td>${data.toLocaleDateString('pt-BR')}</td>
-                <td><span class="tipo-badge tipo-${registro.tipo.toLowerCase()}">${tipoFormatado}</span></td>
-                <td>${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                <td>${localizacao}</td>
-                <td><span class="status-badge status-success">Validado</span></td>
-            </tr>
-        `;
-    }).join('');
-
-    historyBody.innerHTML = registrosHtml;
 }
 
 function calcularEstatisticas(registros, minutosTrabalhados) {
@@ -157,15 +109,6 @@ function calcularEstatisticas(registros, minutosTrabalhados) {
     document.getElementById('horasDebito').textContent = minutosDebito > 0 ? `${Math.floor(Math.abs(minutosDebito) / 60)}:${(Math.abs(minutosDebito) % 60).toString().padStart(2, '0')}` : '00:00';
 }
 
-function formatarTipoRegistro(tipo) {
-    const tipos = {
-        'ENTRADA': 'Entrada',
-        'INICIO_DESCANSO': 'Início Descanso',
-        'FIM_DESCANSO': 'Fim Descanso',
-        'SAIDA': 'Saída'
-    };
-    return tipos[tipo] || tipo;
-}
 
 async function exportarPDF() {
     const mesAno = document.getElementById('mesAno').value;
