@@ -2,15 +2,17 @@ package com.marcweb.service;
 
 import com.marcweb.auditoria.Auditado;
 import com.marcweb.auditoria.Detalhes;
+import com.marcweb.dto.folga.FolgaPendenteDetalhada;
 import com.marcweb.dto.login.LoginRequest;
 import com.marcweb.dto.login.LoginResponse;
 import com.marcweb.dto.user.CreateUser;
-import com.marcweb.dto.user.PageUserDTO;
-import com.marcweb.dto.user.UserDTO;
+import com.marcweb.dto.user.ProfileUser;
 import com.marcweb.dto.user.UserResponse;
 import com.marcweb.entity.CategoriaLog;
+import com.marcweb.entity.Folga;
 import com.marcweb.entity.User;
 import com.marcweb.exceptions.UsernameDuplicatedException;
+import com.marcweb.repository.FolgaRepository;
 import com.marcweb.repository.UserRepository;
 import com.marcweb.security.JwtService;
 import io.micrometer.common.util.StringUtils;
@@ -37,6 +39,7 @@ public class UserService {
     private final UserRepository repository;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
+    private final FolgaRepository folgaRepository;
     private final Detalhes detalhes;
 
     @Auditado(
@@ -169,21 +172,6 @@ public class UserService {
         return repository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
     }
 
-    public PageUserDTO findByNomeLike(String nome, int pageNumber) {
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withIgnoreCase()
-                .withIgnoreNullValues()
-                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
-        User user = User.builder()
-                .nome(nome)
-                .build();
-        Example<User> example = Example.of(user, matcher);
-        var pageEntity = repository.findAll(example, PageRequest.of(pageNumber, 3));
-        var pageDTO = pageEntity.stream().map(p -> {
-            return new UserDTO(p.getNome(), "Palhaço", p.getAtivo(), p.getCpf());
-        }).toList();
-        return new PageUserDTO(pageDTO, pageEntity.getTotalPages());
-    }
 
     // NOVO Método: Obter dados do usuário autenticado
     public UserResponse getMe() {
@@ -201,17 +189,17 @@ public class UserService {
     public void updateProfile(CreateUser data) {
         UserDetails userDetails = getUserDetailsBySecurityContext();
         User user = findByUsername(userDetails.getUsername());
-        
+
         // Apenas administradores podem alterar o cargo
         if (data.getRole() != null && !user.getRole().equals(data.getRole())) {
             throw new RuntimeException("Apenas administradores podem alterar o cargo");
         }
-        
+
         // Atualizar os campos permitidos
         if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
         if (data.getRole() != null) user.setRole(data.getRole());
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
-        
+
         detalhes.setDetalhes("Usuário " + user.getUsername() + " atualizou seu perfil");
     }
 
@@ -227,5 +215,15 @@ public class UserService {
         detalhes.setDetalhes("CPF do usuário " + user.getUsername() + " foi atualizado pelo administrador");
     }
 
+
+    public ProfileUser loadUserProfile(Long id, int pageNumber) {
+        /// TROCAR A EXCEPTION DEPOIS
+        ProfileUser profile = repository.findProfileById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        Page<Folga> folgasPaginadas = folgaRepository.findByUserId(id, PageRequest.of(pageNumber, 20));
+        List<FolgaPendenteDetalhada> folgasDto = folgasPaginadas.stream().map(FolgaPendenteDetalhada::new).toList();
+        profile.setFolgas(folgasDto);
+        profile.setTotalPagesFolgas(folgasPaginadas.getTotalPages());
+        return profile;
+    }
 
 }

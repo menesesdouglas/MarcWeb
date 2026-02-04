@@ -213,4 +213,7 @@ public class FolgaService {
         detalhes.setDetalhes("Aprovando folga no dia " + folgaSolicitada.getDataInicio().format(DateTimeFormatter.ofPattern("dd/MM/yy")) + " para " + folgaSolicitada.getUser().getNome());
         return true;
     }
+
+
+
 }

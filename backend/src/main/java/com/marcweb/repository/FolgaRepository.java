@@ -2,6 +2,8 @@ package com.marcweb.repository;
 
 import com.marcweb.entity.Folga;
 import com.marcweb.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +22,8 @@ public interface FolgaRepository extends JpaRepository<Folga, Long> {
 
     // Método para encontrar folgas de um usuário específico usando ID (mais eficiente)
     List<Folga> findByUserId(Long userId);
+
+    Page<Folga> findByUserId(Long userId, Pageable pageable);
 
     // Método para encontrar folgas de um usuário (objeto) - também pode ser útil
     List<Folga> findByUser(User user);
