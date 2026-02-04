@@ -1,5 +1,6 @@
 package com.marcweb.repository;
 
+import com.marcweb.dto.user.ProfileUser;
 import com.marcweb.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,4 +46,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')) ORDER BY u.nome")
     List<User> findByNomeContainingWithPagination(@Param("nome") String nome, Pageable pageable);
 
+    @Query("Select new com.marcweb.dto.user.ProfileUser(u.nome, u.cargo) from User u where u.id = :id")
+    Optional<ProfileUser> findProfileById(Long id);
 }

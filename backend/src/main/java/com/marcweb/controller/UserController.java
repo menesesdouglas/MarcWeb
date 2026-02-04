@@ -1,7 +1,7 @@
 package com.marcweb.controller;
 
 import com.marcweb.dto.user.CreateUser;
-import com.marcweb.dto.user.PageUserDTO;
+import com.marcweb.dto.user.ProfileUser;
 import com.marcweb.dto.user.UserResponse; // Import necessário
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
@@ -24,15 +24,15 @@ public class UserController {
     // NOVO Endpoint: Listar todos os usuários
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public List<UserResponse> findAllUsers() { // Retorna List<UserResponse> sem paginação
+    public List<UserResponse> findById() { // Retorna List<UserResponse> sem paginação
         return service.findAll();
     }
 
-    // Endpoint alternativo para compatibilidade com frontend
+    ///  CARREGANDO PERFIL DO USUÁRIO PARA GERENCIAMENTO DO ADMIN
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all")
-    public List<UserResponse> findAllUsersAlt() { // Retorna List<UserResponse> sem paginação
-        return service.findAll();
+    @GetMapping("/{id}")
+    public ProfileUser loadUserProfile(@PathVariable Long id, @RequestParam int pageNumber) {
+        return service.loadUserProfile(id, pageNumber);
     }
 
     // NOVO Endpoint: Obter dados do usuário autenticado
@@ -84,12 +84,5 @@ public class UserController {
         service.updateCpf(id, cpf);
     }
 
-
-    /// BUSCA PAGINADA FILTRADA POR NOME
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping(params = {"nome", "pageNumber"})
-    public PageUserDTO findByNomeLike(@RequestParam(required = false) String nome, @RequestParam int pageNumber) {
-        return service.findByNomeLike(nome, pageNumber);
-    }
 
 }
