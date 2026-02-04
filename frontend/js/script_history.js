@@ -65,7 +65,7 @@ async function carregarHistorico() {
 
         if (response.ok) {
             const resultado = await response.json();
-            calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados);
+            calcularEstatisticas(resultado.registros, resultado.MinutosTrabalhados);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
