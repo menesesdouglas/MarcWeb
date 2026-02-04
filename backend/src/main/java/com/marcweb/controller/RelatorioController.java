@@ -26,6 +26,18 @@ public class RelatorioController {
         }
     }
 
+    // Endpoint para funcionários gerarem seus próprios relatórios
+    @PostMapping("/pdf/me")
+    public ResponseEntity<String> gerarRelatorioPDFProprio(
+            @RequestBody RelatorioRequest request) {
+        try {
+            String pdfBase64 = relatorioService.gerarRelatorioPDF(request.getUserId(), request.getMes(), request.getAno());
+            return ResponseEntity.ok(pdfBase64);
+        } catch (RelatorioException e) {
+            return ResponseEntity.internalServerError().body("Falha ao gerar relatório PDF: " + e.getMessage());
+        }
+    }
+
     // Classe interna para o request body
     public static class RelatorioRequest {
         private Long userId;
