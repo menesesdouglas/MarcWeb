@@ -111,20 +111,9 @@ public class GlobalExceptionHandler {
 
     // --- FIM DAS NOVAS EXCEÇÕES ---
 
-    // --- EXCEÇÕES GEOLOCALIZAÇÃO (já implementadas anteriormente) ---
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(GeolocalizacaoObrigatoriaException.class)
-    public Map<String, Object> handlerGeolocalizacaoObrigatoriaException(GeolocalizacaoObrigatoriaException e) {
-        log.warn(e.getMessage());
-        return errorObject(e.getMessage());
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(RegistroForaDoRaioException.class)
-    public Map<String, Object> handlerRegistroForaDoRaioException(RegistroForaDoRaioException e) {
-        log.warn(e.getMessage());
-        return errorObject(e.getMessage());
-    }
+    // --- EXCEÇÕES GEOLOCALIZAÇÃO REMOVIDAS ---
+    // As validações de geolocalização foram desativadas no RegistroPontoService
+    // e as exceções correspondentes foram removidas do projeto
     // --- FIM EXCEÇÕES GEOLOCALIZAÇÃO ---
 
     /// PARA PADRONIZAR A RESPOSTA DE ERRO

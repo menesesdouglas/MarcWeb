@@ -1,8 +1,6 @@
 package com.marcweb.service;
 
-import com.marcweb.dto.config_empresa.DataConfigEmpresa;
 import com.marcweb.dto.ponto.CreateRegistroPonto;
-import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
@@ -52,7 +50,6 @@ class RegistroPontoServiceTest {
 
     private User user;
     private CreateRegistroPonto createRegistroPonto;
-    private ConfigEmpresa configEmpresa;
     private HttpServletRequest request;
 
     @BeforeEach
@@ -64,14 +61,6 @@ class RegistroPontoServiceTest {
 
         createRegistroPonto = new CreateRegistroPonto();
         createRegistroPonto.setTipo(TipoRegistro.ENTRADA);
-        createRegistroPonto.setLatitude(-23.5505);
-        createRegistroPonto.setLongitude(-46.6333);
-
-        configEmpresa = new ConfigEmpresa();
-        configEmpresa.setGeolocAtiva(true);
-        configEmpresa.setLatCentro(-23.5505);
-        configEmpresa.setLongCentro(-46.6333);
-        configEmpresa.setRaioGeoloc(1000);
 
         request = mock(HttpServletRequest.class);
     }
@@ -119,53 +108,15 @@ class RegistroPontoServiceTest {
     }
 
     @Test
-    void registrarPonto_DeveLancarExcecao_QuandoGeolocalizacaoObrigatoriaENaoFornecida() {
-        // Arrange
-        when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
-        when(userService.findByUsername(anyString())).thenReturn(user);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
-
-        createRegistroPonto.setLatitude(null);
-        createRegistroPonto.setLongitude(null);
-
-        // Act & Assert
-        assertThrows(GeolocalizacaoObrigatoriaException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
-    }
-
-    @Test
-    void registrarPonto_DeveLancarExcecao_QuandoForaDoRaio() {
-        // Arrange
-        when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
-        when(userService.findByUsername(anyString())).thenReturn(user);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
-
-        // Coordenadas fora do raio (10km de distância)
-        createRegistroPonto.setLatitude(-23.6000);
-        createRegistroPonto.setLongitude(-46.7000);
-
-        // Act & Assert
-        assertThrows(RegistroForaDoRaioException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
-    }
-
-    @Test
     void registrarPonto_DeveLancarExcecao_QuandoSequenciaInvalida() {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
         when(repository.findLastTypeRegistration(anyLong())).thenReturn(TipoRegistro.SAIDA);
 
-        // Tentar registrar ENTRADA depois de SAIDA é válido, mas INICIO_DESCANSO não é
+        // Tentar registrar INICIO_DESCANSO depois de SAIDA é inválido
         createRegistroPonto.setTipo(TipoRegistro.INICIO_DESCANSO);
 
         // Act & Assert
@@ -181,7 +132,6 @@ class RegistroPontoServiceTest {
         when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
-        when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
         when(repository.findLastTypeRegistration(anyLong())).thenReturn(null);
         when(repository.save(any(RegistroPonto.class))).thenReturn(new RegistroPonto());
         when(request.getHeader(anyString())).thenReturn("192.168.1.1");

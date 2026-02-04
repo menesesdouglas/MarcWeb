@@ -118,6 +118,6 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     List<RegistroPonto> findByIpAndTimestampBetweenOrderByTimestampDesc(@Param("ip") String ip, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // Método para obter o timestamp do último registro de um usuário
-    @Query("SELECT r.timestamp FROM RegistroPonto r WHERE r.user.id = :userId ORDER BY r.timestamp DESC")
+    @Query(nativeQuery = true, value = "SELECT r.timestamp FROM registros_ponto r WHERE r.user_id = :userId AND r.timestamp = (SELECT MAX(r2.timestamp) FROM registros_ponto r2 WHERE r2.user_id = :userId)")
     LocalDateTime findLastTimestamp(@Param("userId") Long userId);
 }

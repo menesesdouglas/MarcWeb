@@ -208,19 +208,4 @@ class RegistroPontoDTOIntegrationTest {
                         .content(objectMapper.writeValueAsString(entrada)))
                 .andExpect(status().isCreated());
     }
-
-    @Test
-    void registroWithGeolocalizacao() throws Exception {
-        CreateRegistroPonto entrada = new CreateRegistroPonto();
-        entrada.setTipo(TipoRegistro.ENTRADA);
-        entrada.setLatitude(-12.2661);
-        entrada.setLongitude(-38.9670);
-        entrada.setPrecisao(10.0);
-
-        mockMvc.perform(post("/api/ponto")
-                        .header("Authorization", "Bearer " + employeeToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(entrada)))
-                .andExpect(status().isCreated());
-    }
 }
