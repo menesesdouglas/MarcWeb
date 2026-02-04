@@ -116,4 +116,8 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     // Método para buscar ajustes administrativos por IP e período
     @Query("SELECT r FROM RegistroPonto r WHERE r.ip = :ip AND r.timestamp BETWEEN :start AND :end ORDER BY r.timestamp DESC")
     List<RegistroPonto> findByIpAndTimestampBetweenOrderByTimestampDesc(@Param("ip") String ip, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // Método para obter o timestamp do último registro de um usuário
+    @Query("SELECT r.timestamp FROM RegistroPonto r WHERE r.user.id = :userId ORDER BY r.timestamp DESC")
+    LocalDateTime findLastTimestamp(@Param("userId") Long userId);
 }

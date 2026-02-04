@@ -37,18 +37,19 @@ public class RegistroPonto {
     @Column(nullable = false)
     private LocalDateTime timestamp; // Data e hora do registro
 
+    // TODO: Campos de geolocalização removidos temporariamente - mantidos para possível reativação futura
     // Campos de geolocalização (opcionais)
-    @Column(name = "latitude", precision = 10)
-    private Double latitude;
-
-    @Column(name = "longitude", precision = 11)
-    private Double longitude;
+    // @Column(name = "latitude", precision = 10)
+    // private Double latitude;
+    //
+    // @Column(name = "longitude", precision = 11)
+    // private Double longitude;
+    //
+    // @Column(name = "precisao", precision = 10)
+    // private Double precisao; // Precisão da geolocalização em metros
 
     @Column(name = "ip")
     private String ip; // IP do cliente que fez o registro
-
-    @Column(name = "precisao", precision = 10)
-    private Double precisao; // Precisão da geolocalização em metros
 
     @Column(name = "justificativa", length = 500) // Para justificar um registro fora do padrão
     private String justificativa;

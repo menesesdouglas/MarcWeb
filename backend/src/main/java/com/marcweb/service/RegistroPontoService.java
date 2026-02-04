@@ -48,9 +48,20 @@ public class RegistroPontoService {
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
-        /// ERRO SE USUÁRIO JA BATEU SAÍDA NO DIA ATUAL
-        if (repository.findLastTypeRegistration(user.getId()).equals(TipoRegistro.SAIDA))
-            throw new CicloPontoFinalizadoException();
+        /// VERIFICAR SE HÁ CICLO ATIVO (último registro não é SAIDA)
+        TipoRegistro ultimoTipo = repository.findLastTypeRegistration(user.getId());
+        if (ultimoTipo != null && ultimoTipo.equals(TipoRegistro.SAIDA)) {
+            // Verificar se a SAIDA foi hoje ou ontem (para turnos noturnos)
+            LocalDateTime ultimoTimestamp = repository.findLastTimestamp(user.getId());
+            LocalDate hoje = LocalDate.now();
+            LocalDate dataUltimoRegistro = ultimoTimestamp.toLocalDate();
+            
+            // Se saída foi hoje OU se saída foi ontem mas antes das 6h (turno noturno)
+            if (dataUltimoRegistro.equals(hoje) || 
+                (dataUltimoRegistro.equals(hoje.minusDays(1)) && ultimoTimestamp.getHour() < 6)) {
+                throw new CicloPontoFinalizadoException();
+            }
+        }
         var dataAtual = LocalDate.now();
 
         // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
@@ -59,10 +70,6 @@ public class RegistroPontoService {
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
         validarDiaUtil(dataAtual); // <-- Valida se é dia útil (não domingo e não feriado)
-
-        // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
-        ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
-        validarGeolocalizacao(data, config); // Chama o método de validação
 
         // VALIDAÇÃO DE REGISTRO (Sequência)
         validarRegistro(data.getTipo(), user.getId());
@@ -94,54 +101,55 @@ public class RegistroPontoService {
     }
 
 
+    // TODO: Métodos de geolocalização removidos temporariamente - mantidos para possível reativação futura
     // VALIDANDO GEOLOCALIZAÇÃO
-    private void validarGeolocalizacao(CreateRegistroPonto data, ConfigEmpresa config) {
-        // Verifica se a geolocalização está ativa nas configurações
-        if (Boolean.TRUE.equals(config.getGeolocAtiva())) { // Usando Boolean.TRUE.equals para evitar NPE se for null
-            Double lat = data.getLatitude();
-            Double lon = data.getLongitude();
-
-            // Verifica se latitude e longitude foram fornecidas
-            if (lat == null || lon == null) {
-                throw new GeolocalizacaoObrigatoriaException("Geolocalização é obrigatória para registrar ponto. Latitude e longitude não fornecidas.");
-            }
-
-            // Verifica se as coordenadas da empresa estão configuradas
-            Double latEmpresa = config.getLatCentro();
-            Double lonEmpresa = config.getLongCentro();
-            if (latEmpresa == null || lonEmpresa == null) {
-                // Poderia lançar uma exceção específica de configuração inválida ou retornar um erro amigável
-                // Para este caso, lançamos uma exceção informando que a configuração está incompleta.
-                throw new IllegalStateException("Coordenadas da empresa não configuradas. Contate o administrador.");
-            }
-
-            // Calcula a distância
-            double distancia = calcularDistanciaHaversine(lat, lon, latEmpresa, lonEmpresa);
-
-            // Verifica se a distância está dentro do raio permitido
-            if (distancia > config.getRaioGeoloc()) {
-                throw new RegistroForaDoRaioException(
-                        String.format("Registro fora do raio permitido. Distância calculada: %.2f metros. Raio permitido: %d metros.",
-                                distancia, config.getRaioGeoloc())
-                );
-            }
-        }
-        // Se geolocAtiva for false (ou null), a validação é ignorada e o método termina aqui.
-    }
-
-
-    // CÁLCULO DE DISTÂNCIA USANDO A FÓRMULA DE HAVERSINE
-    private double calcularDistanciaHaversine(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371; // Raio da Terra em quilômetros
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                   + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                     * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distanceInKm = R * c; // Distância em quilômetros
-        return distanceInKm * 1000; // Converte para metros
-    }
+    // private void validarGeolocalizacao(CreateRegistroPonto data, ConfigEmpresa config) {
+    //     // Verifica se a geolocalização está ativa nas configurações
+    //     if (Boolean.TRUE.equals(config.getGeolocAtiva())) { // Usando Boolean.TRUE.equals para evitar NPE se for null
+    //         Double lat = data.getLatitude();
+    //         Double lon = data.getLongitude();
+    //
+    //         // Verifica se latitude e longitude foram fornecidas
+    //         if (lat == null || lon == null) {
+    //             throw new GeolocalizacaoObrigatoriaException("Geolocalização é obrigatória para registrar ponto. Latitude e longitude não fornecidas.");
+    //         }
+    //
+    //         // Verifica se as coordenadas da empresa estão configuradas
+    //         Double latEmpresa = config.getLatCentro();
+    //         Double lonEmpresa = config.getLongCentro();
+    //         if (latEmpresa == null || lonEmpresa == null) {
+    //             // Poderia lançar uma exceção específica de configuração inválida ou retornar um erro amigável
+    //             // Para este caso, lançamos uma exceção informando que a configuração está incompleta.
+    //             throw new IllegalStateException("Coordenadas da empresa não configuradas. Contate o administrador.");
+    //         }
+    //
+    //         // Calcula a distância
+    //         double distancia = calcularDistanciaHaversine(lat, lon, latEmpresa, lonEmpresa);
+    //
+    //         // Verifica se a distância está dentro do raio permitido
+    //         if (distancia > config.getRaioGeoloc()) {
+    //             throw new RegistroForaDoRaioException(
+    //                     String.format("Registro fora do raio permitido. Distância calculada: %.2f metros. Raio permitido: %d metros.",
+    //                             distancia, config.getRaioGeoloc())
+    //             );
+    //         }
+    //     }
+    //     // Se geolocAtiva for false (ou null), a validação é ignorada e o método termina aqui.
+    // }
+    //
+    //
+    // // CÁLCULO DE DISTÂNCIA USANDO A FÓRMULA DE HAVERSINE
+    // private double calcularDistanciaHaversine(double lat1, double lon1, double lat2, double lon2) {
+    //     final int R = 6371; // Raio da Terra em quilômetros
+    //     double latDistance = Math.toRadians(lat2 - lat1);
+    //     double lonDistance = Math.toRadians(lon2 - lon1);
+    //     double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+    //                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+    //                  * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+    //     double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    //     double distanceInKm = R * c; // Distância em quilômetros
+    //     return distanceInKm * 1000; // Converte para metros
+    // }
 
 
     // VERIFICAR SE EXISTEM REGISTROS INCOMPLETOS DE DIAS ANTERIORES
@@ -186,18 +194,19 @@ public class RegistroPontoService {
             }
         }
 
-        // VALIDAÇÃO DE ORDEM PARA REGISTROS SUBSEQUENTES (código original ajustado)
-        if (ultimoTipoRegistro.equals(TipoRegistro.ENTRADA) && !tipoRegistro.equals(TipoRegistro.INICIO_DESCANSO))
-            throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.INICIO_DESCANSO);
-
-        if (ultimoTipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) && !tipoRegistro.equals(TipoRegistro.FIM_DESCANSO))
+        // VALIDAÇÃO DE ORDEM PARA REGISTROS SUBSEQUENTES (fluxo flexível)
+        if (ultimoTipoRegistro.equals(TipoRegistro.ENTRADA)) {
+            // Permite ENTRADA → SAIDA direto OU ENTRADA → INICIO_DESCANSO
+            if (!tipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) && !tipoRegistro.equals(TipoRegistro.SAIDA)) {
+                throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.INICIO_DESCANSO);
+            }
+        } else if (ultimoTipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) && !tipoRegistro.equals(TipoRegistro.FIM_DESCANSO)) {
             throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.FIM_DESCANSO);
-
-        if (ultimoTipoRegistro.equals(TipoRegistro.FIM_DESCANSO) && !tipoRegistro.equals(TipoRegistro.SAIDA))
+        } else if (ultimoTipoRegistro.equals(TipoRegistro.FIM_DESCANSO) && !tipoRegistro.equals(TipoRegistro.SAIDA)) {
             throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.SAIDA);
-
-        if (ultimoTipoRegistro.equals(TipoRegistro.SAIDA) && !tipoRegistro.equals(TipoRegistro.ENTRADA))
+        } else if (ultimoTipoRegistro.equals(TipoRegistro.SAIDA) && !tipoRegistro.equals(TipoRegistro.ENTRADA)) {
             throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.ENTRADA);
+        }
     }
 
 
@@ -241,15 +250,23 @@ public class RegistroPontoService {
             try {
                 var primeiroRegistro = r.get(0);
                 var segundoRegistro = r.get(1);
+                
+                // Cenário 1: ENTRADA → INICIO_DESCANSO
                 if (primeiroRegistro.getTipo().equals(TipoRegistro.ENTRADA) && segundoRegistro.getTipo().equals(TipoRegistro.INICIO_DESCANSO)) {
+                    minutosTrabalhados += ChronoUnit.MINUTES.between(primeiroRegistro.getTimestamp(), segundoRegistro.getTimestamp());
+                }
+                // Cenário 2: ENTRADA → SAIDA (direto, sem descanso)
+                else if (primeiroRegistro.getTipo().equals(TipoRegistro.ENTRADA) && segundoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
                     minutosTrabalhados += ChronoUnit.MINUTES.between(primeiroRegistro.getTimestamp(), segundoRegistro.getTimestamp());
                 }
             } catch (Exception e) {
                 System.out.println("NÃO FOI POSSÍVEL CALCULAR COM OS REGISTROS ATUAIS");
             }
+            
             try {
                 var terceiroRegistro = r.get(2);
                 var quartoRegistro = r.get(3);
+                // Cenário 3: FIM_DESCANSO → SAIDA (para quem fez descanso)
                 if (terceiroRegistro.getTipo().equals(TipoRegistro.FIM_DESCANSO) && quartoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
                     minutosTrabalhados += ChronoUnit.MINUTES.between(terceiroRegistro.getTimestamp(), quartoRegistro.getTimestamp());
                 }
