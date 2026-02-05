@@ -22,8 +22,8 @@ public record FolgaPendenteDetalhada(
                 folga.getTipo().getText(),
                 folga.getJustificativa(),
                 calcularDias(folga.getDataInicio(), folga.getDataFim()),
-                folga.getAprovada() == null ? "PENDENTE" : 
-                (folga.getAprovada() ? "APROVADA" : "RECUSADA")
+                folga.getAprovada() == null ? "Pendente" :
+                (folga.getAprovada() ? "Aprovada" : "Recusada")
         );
     }
 

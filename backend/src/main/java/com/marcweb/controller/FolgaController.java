@@ -74,10 +74,9 @@ public class FolgaController {
     // DELETE /api/folgas/{id} - Deletar uma folga
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT) // Retorna 204 No Content
     public ResponseEntity<Void> deleteFolga(@PathVariable Long id) {
         folgaService.deleteById(id);
-        return ResponseEntity.noContent().build(); // Retorna 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/solicitar")
