@@ -1,6 +1,4 @@
 
-
-
 const urlBase = "http://localhost:8080/api/user";
 const queryString = window.location.search;
 const params = new URLSearchParams(queryString);
@@ -85,9 +83,11 @@ async function cadastrarFolga() {
 
 function renderFolgas(folgas) {
     const tabela = document.getElementById("table-folgas");
-    folgas.forEach((folga, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
+    if (!folgas.length) mensagemFolgasNotFound();
+    else {
+        folgas.forEach((folga, index) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
             <td class="${folga.status.toLowerCase()}">${folga.status}</td>
             <td>${folga.tipo}</td>
             <td>${folga.dataInicio}</td>
@@ -95,15 +95,20 @@ function renderFolgas(folgas) {
             <td>
             <label id="open-modal${folga.id}" for="modal-detalhes" class="btn">Detalhes</label>
             </td>
-      `;
-        tabela.append(tr);
-        document.getElementById(`open-modal${folga.id}`).addEventListener("click", () => {
-            openModal(folga);
+            `;
+            tabela.append(tr);
+            document.getElementById(`open-modal${folga.id}`).addEventListener("click", () => {
+                openModal(folga, folgas);
+            })
         })
-    })
+    }
 }
 
-function openModal(folga) {
+function mensagemFolgasNotFound() {
+    document.getElementById("table-folgas").innerHTML = "<h3>Nenhuma folga encontrada!</h3>";
+}
+
+function openModal(folga, folgas) {
     document.getElementById("nome-user").textContent = folga.nomeFuncionario;
     document.getElementById("tipo-folga").textContent = folga.tipo;
     document.getElementById("inicio-folga").textContent = folga.dataInicio;
@@ -119,12 +124,14 @@ function openModal(folga) {
                         <button onClick = "resolverFolga(${folga.id}, true)" id="btn-aprovar" class="btn-success btn">Aprovar</button>
                         <button onClick = "resolverFolga(${folga.id}, false)" id="btn-reprovar" class="btn-warning btn">Reprovar</button>
                     </div>
-                    <button onClick="removerFolga(${folga.id})" id="btn-remover" class="btn-danger btn">Remover</button>
+                    <button  id="btn-remover${folga.id}" class="btn-danger btn">Remover</button>
      </section>
-    
     `;
     const container = document.getElementById("buttons");
     container.append(div);
+    document.getElementById(`btn-remover${folga.id}`).addEventListener("click", () => {
+        removerFolga(folga.id, folgas);
+    });
 }
 
 function closeModalDetalhesFolga() {
@@ -155,7 +162,7 @@ async function resolverFolga(idFolga, aprovada) {
 }
 
 /// REMOVER FOLGA ♥♥♥♥♥♥♥♥♥♥♥♥
-async function removerFolga(idFolga) {
+async function removerFolga(idFolga, folgas) {
     const confimacao = confirm("Confirma a exclusão desta folga?");
     if (confimacao) {
 
@@ -168,6 +175,8 @@ async function removerFolga(idFolga) {
         });
         if (response.status == 204) {
             alert("Folga removida com sucesso");
+            const folgasAtualizadas = folgas.filter(item => item.id != idFolga);
+            renderFolgas(folgasAtualizadas);
             closeModalDetalhesFolga();
         }
         else {

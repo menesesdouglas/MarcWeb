@@ -27,6 +27,7 @@ body {
     color: var(--text-main);
 }
 
+
 /* Layout Wrapper */
 .admin-wrapper {
     display: flex;

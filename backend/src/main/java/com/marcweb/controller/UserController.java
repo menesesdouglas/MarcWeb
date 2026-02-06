@@ -24,7 +24,7 @@ public class UserController {
     // NOVO Endpoint: Listar todos os usuários
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public List<UserResponse> findById() { // Retorna List<UserResponse> sem paginação
+    public List<UserResponse> findByAll() { // Retorna List<UserResponse> sem paginação
         return service.findAll();
     }
 

@@ -202,7 +202,9 @@ function renderEmployees(employees) {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${emp.nome}</td>
+            <td>
+              <a style="color: white; text-decoration: none;" href="/employee-profile.html?userId=${emp.id}" target="_blank">${emp.nome}</a>
+            </td>
             <td>${cargo}</td>
             <td>${roleName}</td>
             <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
@@ -220,7 +222,7 @@ function renderFolgas(folgas) {
     const listBody = document.getElementById("folgasListBody");
     listBody.innerHTML = '';
     folgas.forEach((folga) => {
-       
+
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -282,7 +284,7 @@ function abrirModalDetalhes(folga) {
     // Verificar se a folga já foi processada
     if (folga.status !== 'PENDENTE') {
         btnAprovar.style.display = 'none';
-        btnRecusar.style.display = 'none';       
+        btnRecusar.style.display = 'none';
     } else {
         btnAprovar.style.display = 'inline-block';
         btnRecusar.style.display = 'inline-block';
