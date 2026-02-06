@@ -52,15 +52,13 @@ public class FolgaController {
         return ResponseEntity.ok(folgas);
     }
 
-    // --- Endpoints de Modificação (requerem ROLE_ADMIN) ---
-
     // POST /api/folgas - Criar uma nova folga
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) // Retorna 201 Created
-    public ResponseEntity<String> createFolga(@RequestBody @Valid CreateFolga dados) {
-        String resultado = folgaService.create(dados);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<FolgaPendenteDetalhada> createFolga(@RequestBody @Valid CreateFolga dados) {
+        var createdFolga = folgaService.create(dados);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdFolga);
     }
 
     // PUT /api/folgas/{id} - Atualizar uma folga existente

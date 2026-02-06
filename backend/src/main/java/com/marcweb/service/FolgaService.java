@@ -77,7 +77,7 @@ public class FolgaService {
             acao = "Registro de folga para usuário",
             categoria = CategoriaLog.ADMIN)
     @Transactional
-    public String create(CreateFolga dados) {
+    public FolgaPendenteDetalhada create(CreateFolga dados) {
         User user = userRepository.findById(dados.userId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado com ID: " + dados.userId()));
 
         // Validação de sobreposição - Usando método que será adicionado ao FolgaRepository
@@ -89,7 +89,7 @@ public class FolgaService {
 
         Folga savedFolga = folgaRepository.save(folga);
         detalhes.setDetalhes("Administrador registrou folga para o usuário " + user.getUsername() + " de " + dados.dataInicio().toString() + " à " + dados.dataFim().toString());
-        return "Folga registrada para o usuário " + user.getUsername();
+        return new FolgaPendenteDetalhada(savedFolga);
     }
 
 
@@ -182,7 +182,6 @@ public class FolgaService {
     }
 
 
-
     // --- Validation Helper ---
 
     /**
@@ -208,12 +207,11 @@ public class FolgaService {
     @Transactional
     public boolean solucionarFolga(Long id, boolean aprovada) { /// APROVANDO OU NÃO UYA FOLGA
         var folgaSolicitada = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não enontrada"));
-        if(folgaSolicitada.getAprovada() != null) return false;
+        if (folgaSolicitada.getAprovada() != null) return false;
         folgaSolicitada.setAprovada(aprovada);
         detalhes.setDetalhes("Aprovando folga no dia " + folgaSolicitada.getDataInicio().format(DateTimeFormatter.ofPattern("dd/MM/yy")) + " para " + folgaSolicitada.getUser().getNome());
         return true;
     }
-
 
 
 }

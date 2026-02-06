@@ -220,6 +220,7 @@ public class UserService {
         /// TROCAR A EXCEPTION DEPOIS
         ProfileUser profile = repository.findProfileById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         Page<Folga> folgasPaginadas = folgaRepository.findByUserId(id, PageRequest.of(pageNumber, 20));
+        /// USANDO CLASSE DE FOLGA PENDENTE PARA APROVEITAR O MODELO
         List<FolgaPendenteDetalhada> folgasDto = folgasPaginadas.stream().map(FolgaPendenteDetalhada::new).toList();
         profile.setFolgas(folgasDto);
         profile.setTotalPagesFolgas(folgasPaginadas.getTotalPages());
