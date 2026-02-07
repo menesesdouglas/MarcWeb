@@ -34,9 +34,9 @@ function configurarMesAnoPadrao() {
     const hoje = new Date();
     const mesAtual = hoje.getMonth() + 1;
     const anoAtual = hoje.getFullYear();
-    
+
     const mesFormatado = mesAtual < 10 ? `0${mesAtual}` : `${mesAtual}`;
-    document.getElementById('mesAno').value = `${anoAtual}-${mesFormatado}`;
+    //document.getElementById('mesAno').value = `${anoAtual}-${mesFormatado}`;
 }
 
 async function carregarHistorico() {
@@ -53,10 +53,10 @@ async function carregarHistorico() {
         const [ano, mes] = mesAno.split('-').map(Number);
         const primeiroDia = new Date(ano, mes - 1, 1);
         const ultimoDia = new Date(ano, mes, 0);
-        
+
         const inicioTimestamp = primeiroDia.toISOString().split('T')[0] + "T00:00:00";
         const fimTimestamp = ultimoDia.toISOString().split('T')[0] + 'T23:59:59';
-        
+
         const response = await fetch(`http://localhost:8080/api/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
@@ -65,7 +65,7 @@ async function carregarHistorico() {
 
         if (response.ok) {
             const resultado = await response.json();
-            calcularEstatisticas(resultado.registros, resultado.MinutosTrabalhados);
+            calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
@@ -97,8 +97,6 @@ function calcularEstatisticas(registros, minutosTrabalhados) {
     // QUANTIDADE DE MINUTOS QUE O USUÁRIO PRECISA TER TRABALHADO NOS DIAS REGISTRADOS
     const minutosExigidos = 480 * diasUnicos.size;
     const minutosDebito = minutosExigidos - minutosTrabalhados;
-
-
 
     // Para cálculo mais preciso de horas, seria necessário agrupar por dia
     // e calcular diferenças entre entrada/saída
@@ -207,3 +205,5 @@ function showToast(message, type = 'info') {
         }, 300);
     }, 3000);
 }
+
+
