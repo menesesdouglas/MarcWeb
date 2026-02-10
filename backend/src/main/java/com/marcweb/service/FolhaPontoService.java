@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -144,7 +145,7 @@ public class FolhaPontoService {
     }
 
 
-    /// AGRUPANDO REGISTROS DE PONTO POR DIA EM UMA LISTA
+    /// AGRUPANDO REGISTROS DE PONTO POR DIA EM UMA LISTA (A SEPARAÇÃO É DADA PELO ID QUE O SISTEMA GEROU PARA AQUELE TURNO)
     private List<List<RegistroPonto>> agruparRegistrosPorDia(List<RegistroPonto> registros) {
         List<List<RegistroPonto>> listaFinal = new ArrayList<>();
         ///  USADO PARA SEPARAR OS PONTOS BATIDOS DE CADA DIA
@@ -152,15 +153,20 @@ public class FolhaPontoService {
         for (int i = 0; i < registros.size(); i++) {
             var registroAtual = registros.get(i);
             listaPorDia.add(registroAtual);
-            var dataRegistroAtual = registroAtual.getTimestamp().toLocalDate();
+            UUID dataIdAtual = registroAtual.getExpedienteId();
             /// PARANDO O LOOP CASO SEJA O ULTIMO REGISTRO PARA NÃO DAR ERRO
             if (i == registros.size() - 1) {
+                /// BUSSCANDO OS REGISTROS FINAIS , CASO ELES TENHAM CAÍDO NO MÊS SEGUINTE (SE O ULTIMO REGISTRO NAO FOI DE SAÍDA)
+                if (!registroAtual.getTipo().equals(TipoRegistro.SAIDA)) {
+                    List<RegistroPonto> registrosFaltantes = registroPontoService.findByExpedienteIdAndTimestampGreaterThan(registroAtual.getExpedienteId(), registroAtual.getTimestamp());
+                    listaPorDia.addAll(registrosFaltantes);
+                }
                 listaFinal.add(listaPorDia);
                 break;
             }
 
             /// FINALIZANDO A LISTA DO DIA CASO A DATA DO PRÓXIMO REGISTRO SEJA DIFERENTE
-            if (!registros.get(i + 1).getTimestamp().toLocalDate().equals(dataRegistroAtual)) {
+            if (!registros.get(i + 1).getExpedienteId().equals(dataIdAtual)) {
                 listaFinal.add(listaPorDia);
                 listaPorDia = new ArrayList<>();
             }

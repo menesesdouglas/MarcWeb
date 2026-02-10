@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Long> {
@@ -30,14 +31,17 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             order by r.timestamp
             """)
     List<RegistroPonto> buscarRegistrosEmIntervaloDeData(User user, LocalDateTime start, LocalDateTime end);
-    // Outros métodos específicos, se necessário
+
+    /// BUSCANDO REGISTROS QUE FECHAM UM EXPEDIENTE, PORÉM NÃO VIERAM NA PRIMEIRA CONSULTA
+    @Query("Select r from RegistroPonto r where r.expedienteId = :expedienteId and r.timestamp > :lastTimestamp")
+    List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(@Param("expedienteId") UUID expedienteId, @Param("lastTimestamp") LocalDateTime lastTimestamp);
 
     // BUSCANDO ULTIMO TIPO DE REGISTRO DE UM USUÁRIO
     @Query(nativeQuery = true, value = """
-            Select r.tipo from registros_ponto r where r.user_id = :idUsuario
+            Select r.tipo from registros_ponto r where r.user_id = :idUsuario and timestamp between :start and :end
             order by r.timestamp Desc limit 1
             """)
-    TipoRegistro findLastTypeRegistration(@Param("idUsuario") Long idUsuario);
+    Optional<TipoRegistro> findLastTypeRegistration(@Param("idUsuario") Long idUsuario, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO COM PAGINAÇÃO
     @Query("""
@@ -116,4 +120,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     // Método para buscar ajustes administrativos por IP e período
     @Query("SELECT r FROM RegistroPonto r WHERE r.ip = :ip AND r.timestamp BETWEEN :start AND :end ORDER BY r.timestamp DESC")
     List<RegistroPonto> findByIpAndTimestampBetweenOrderByTimestampDesc(@Param("ip") String ip, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query(nativeQuery = true, value = "Select r.expediente_id from registros_ponto r where user_id = :userId order by timestamp desc limit 1")
+    UUID findLastExpedienteIdByUserId(@Param("userId") Long userId);
 }

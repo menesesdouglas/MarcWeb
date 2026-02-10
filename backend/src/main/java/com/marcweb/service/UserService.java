@@ -53,6 +53,7 @@ public class UserService {
                 .ativo(true)
                 .nome(data.getNome())
                 .username(data.getUsername())
+                .cpf(data.getCpf())
                 .role(data.getRole())
                 .password(encoder.encode(data.getPassword()))
                 .consentGeoloc(consent != null ? consent : false)

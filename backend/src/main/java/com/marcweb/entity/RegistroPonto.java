@@ -11,6 +11,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Entity
@@ -53,10 +54,14 @@ public class RegistroPonto {
     @Column(name = "justificativa", length = 500) // Para justificar um registro fora do padrão
     private String justificativa;
 
-    public RegistroPonto(CreateRegistroPonto data, User user, String ip) {
+    @Column(nullable = false, name = "expediente_id")
+    private UUID expedienteId;
+
+    public RegistroPonto(CreateRegistroPonto data, User user, UUID expedienteId, String ip) {
         BeanUtils.copyProperties(data, this);
         this.user = user;
         this.ip = ip;
         this.timestamp = LocalDateTime.now();
+        this.expedienteId = expedienteId;
     }
 }

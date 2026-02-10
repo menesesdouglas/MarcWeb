@@ -24,9 +24,7 @@ import java.time.LocalDateTime; // Import necessário
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -45,16 +43,16 @@ public class RegistroPontoService {
             categoria = CategoriaLog.PONTO)
     @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
+
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
-        /// ERRO SE USUÁRIO JA BATEU SAÍDA NO DIA ATUAL
-        if (repository.findLastTypeRegistration(user.getId()).equals(TipoRegistro.SAIDA))
-            throw new CicloPontoFinalizadoException();
+
         var dataAtual = LocalDate.now();
 
-        // VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
-        if (folgaService.existsByUserAndDate(user.getId(), dataAtual)) throw new RegistroEmFolgaException();
+        /// VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
+        if (data.getTipo().equals(TipoRegistro.ENTRADA) && folgaService.existsByUserAndDate(user.getId(), dataAtual))
+            throw new RegistroEmFolgaException();
 
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
@@ -67,11 +65,22 @@ public class RegistroPontoService {
         // VALIDAÇÃO DE REGISTRO (Sequência)
         validarRegistro(data.getTipo(), user.getId());
 
+
+        ///  CAMPO QUE FICARÁ RESPONSÁVEL POR IDENTIFICAR UM DIA DE TRABALHO DE FOMRA INDIVIDUAL
+        UUID expedienteId;
+
+        /// GERANDO UM NOVO CAO SEJA PONTO DE ENTRADO
+        if (data.getTipo().equals(TipoRegistro.ENTRADA)) {
+            expedienteId = UUID.randomUUID();
+        } else { /// PEGANDO O 'dataId' DO ULTIMO REGISTRO CASO CONTRÁRIO
+            expedienteId = repository.findLastExpedienteIdByUserId(user.getId());
+        }
         // SALVANDO CASO PASSE NAS VALIDAÇÕES
         // O RegistroPonto deve receber os dados do DTO e o usuário, o timestamp é definido internamente
-        repository.save(new RegistroPonto(data, user, getIpUser(request))); // Assumindo que o construtor da entidade ou o JPA lida com o timestamp
+        repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request))); // Assumindo que o construtor da entidade ou o JPA lida com o timestamp
         detalhes.setDetalhes("Usuário registrou ponto de " + data.getTipo().getText());
     }
+
 
     // VALIDANDO DIA ÚTIL
     private void validarDiaUtil(LocalDate momentoRegistro) { // Recebe LocalDateTime
@@ -157,11 +166,11 @@ public class RegistroPontoService {
 
     // VALIDANDO ORDEM DE TIPO DE REGISTRO DE PONTO
     private void validarRegistro(TipoRegistro tipoRegistro, Long idUsuario) {
-        // BUSCANDO ULTIMO REGISTRO NO BANCO DE DADOS
-        TipoRegistro ultimoTipoRegistro = repository.findLastTypeRegistration(idUsuario);
+        /// BUSCANDO ULTIMO REGISTRO DO DIA NO BANCO DE DADOS
+        Optional<TipoRegistro> possivelUltimoTipoRegistro = repository.findLastTypeRegistration(idUsuario, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX));
 
         // VERIFICAÇÃO PARA O PRIMEIRO REGISTRO DO USUÁRIO
-        if (ultimoTipoRegistro == null) {
+        if (possivelUltimoTipoRegistro.isEmpty()) {
             // O primeiro registro DEVE ser uma ENTRADA
             if (tipoRegistro != TipoRegistro.ENTRADA) {
                 // Lança exceção informando que o primeiro registro deve ser uma entrada
@@ -170,6 +179,12 @@ public class RegistroPontoService {
             // Se for ENTRADA, é um registro válido, não precisa validar regras subsequentes
             return;
         }
+
+        TipoRegistro ultimoTipoRegistro = possivelUltimoTipoRegistro.get();
+
+        /* SE O ULTIMO REGISTRO DAQUELE DIA FOI O DE SAÍDA, CONSIDERA QYE O CICLO FOI FINALIZADO (PRECISA DE CORREÇÃO)
+        if (ultimoTipoRegistro.equals(TipoRegistro.SAIDA))
+            throw new CicloPontoFinalizadoException();*/
 
         // NOVA LÓGICA: VERIFICAR SE O ÚLTIMO REGISTRO É DE UM DIA ANTERIOR E NÃO FOI FINALIZADO (SAÍDA)
         if (tipoRegistro == TipoRegistro.ENTRADA && !ultimoTipoRegistro.equals(TipoRegistro.SAIDA)) {
@@ -270,7 +285,7 @@ public class RegistroPontoService {
     }
 
 
-    // BSCANDO PONTOS DE UM USUÁRIO BATIDOS EM UM MES DE UM ANO ESPECIFICO
+    /// BSCANDO PONTOS DE UM USUÁRIO BATIDOS EM UM MES DE UM ANO ESPECIFICO
     public List<RegistroPonto> findByMesAno(Long userId, int mes, int ano) {
         // PRIMEIRO DIA DO MÊS                      ANO - MES - DIA DO MES - HORA - MINUTO
         LocalDateTime inicioMes = LocalDateTime.of(ano, mes, 1, 0, 0);
@@ -369,5 +384,9 @@ public class RegistroPontoService {
             case "saída" -> TipoRegistro.SAIDA;
             default -> throw new IllegalArgumentException("Tipo de registro inválido: " + tipoString);
         };
+    }
+
+    public List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(UUID expedienteId, LocalDateTime timestamp) {
+        return repository.findByExpedienteIdAndTimestampGreaterThan(expedienteId, timestamp);
     }
 }
