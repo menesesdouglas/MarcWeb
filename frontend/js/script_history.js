@@ -65,6 +65,7 @@ async function carregarHistorico() {
 
         if (response.ok) {
             const resultado = await response.json();
+            console.log((resultado));
             calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados);
         } else {
             if (response.status == 403) window.location.href = "login.html";
@@ -90,8 +91,8 @@ function calcularEstatisticas(registros, minutosTrabalhados) {
     const diasUnicos = new Set();
 
     registros.forEach(registro => {
-        const data = new Date(registro.timestamp);
-        diasUnicos.add(data.toDateString());
+        /// USANDO O ID DO EXPEDINETE COMO REFERENCIA
+        diasUnicos.add(registro.idExpediente);
     });
 
     // QUANTIDADE DE MINUTOS QUE O USUÁRIO PRECISA TER TRABALHADO NOS DIAS REGISTRADOS

@@ -19,7 +19,7 @@ import java.util.UUID;
 public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Long> {
 
     @Query("""
-            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
              from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             """)
     List<RegistroPontoResponse> findByUserAndTimestampBetween(User user, LocalDateTime start, LocalDateTime end);
@@ -45,7 +45,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO COM PAGINAÇÃO
     @Query("""
-            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
             from RegistroPonto r where r.user = :user
             order by r.timestamp Desc
             """)
@@ -53,7 +53,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO POR PERÍODO COM PAGINAÇÃO
     @Query("""
-            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
             from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             order by r.timestamp Desc
             """)

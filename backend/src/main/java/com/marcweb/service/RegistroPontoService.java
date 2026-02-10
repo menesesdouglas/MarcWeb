@@ -145,8 +145,8 @@ public class RegistroPontoService {
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                   + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                     * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distanceInKm = R * c; // Distância em quilômetros
         return distanceInKm * 1000; // Converte para metros
@@ -219,14 +219,37 @@ public class RegistroPontoService {
     @Auditado(
             acao = "Buscando registros de ponto",
             categoria = CategoriaLog.ADMIN)
+    @Transactional
     public RegistroPontoMe buscarPontosRegistrados(LocalDateTime start, LocalDateTime end) {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
         detalhes.setDetalhes("Usuário realizou a busca dos seus pontos batidos entre " + start.toLocalDate().toString() + " e " + end.toLocalDate().toString());
         List<RegistroPontoResponse> registros = repository.findByUserAndTimestampBetween(user, start, end);
+        var test = completarLista(registros);
+        registros.addAll(test);
+        /// REMOVENDO OS PRIMEIROS REGISTROS ATÉ ENCONTRAR O PRIMEIRO PONTO DE 'ENTRADA' ENCONTRADO
+        for (int i = 0; i < 3; i++) {
+            if (!registros.isEmpty() && !registros.get(0).getTipo().equals(TipoRegistro.ENTRADA)) registros.remove(0);
+            else break;
+
+        }
         registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
         RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros));
         return meusRegistros;
+    }
+
+    /// USADO PARA BUSCAR REGISTROS QUE NÃO VIERAM NA PRIMEIRA CONSULTA
+    /// POR CONTA DO EXPEDIENTE TER SIDO FINALIZADO NO MÊS SEGUINTE
+    private List<RegistroPontoResponse> completarLista(List<RegistroPontoResponse> registros) {
+        var ultimoRegistro = registros.get(registros.size() - 1);
+        if (ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
+            List<RegistroPonto> registrosFaltantes = findByExpedienteIdAndTimestampGreaterThan(ultimoRegistro.getIdExpediente(), ultimoRegistro.getTimestamp());
+            List<RegistroPontoResponse> resgistrosResponse = registrosFaltantes.stream().map(r ->
+                            new RegistroPontoResponse(r.getTipo(), r.getUser().getNome(), r.getUser().getUsername(), r.getIp(), r.getJustificativa(), r.getTimestamp(), r.getExpedienteId()))
+                    .toList();
+            return resgistrosResponse;
+        }
+        return new ArrayList<>();
     }
 
     private long calcularHoras(List<RegistroPontoResponse> registros) {
@@ -245,8 +268,8 @@ public class RegistroPontoService {
                 break;
             }
 
-            /// FINALIZANDO A LISTA DO DIA CASO A DATA DO PRÓXIMO REGISTRO SEJA DIFERENTE
-            if (!registros.get(i + 1).getTimestamp().toLocalDate().equals(dataRegistroAtual)) {
+            /// FINALIZANDO A LISTA DO DIA CASO O ID_EXPEDIENTE DO PRÓXIMO REGISTRO SEJA DIFERENTE
+            if (!registros.get(i + 1).getIdExpediente().equals(registroAtual.getIdExpediente())) {
                 registrosSeparados.add(listaAux);
                 listaAux = new ArrayList<>();
             }
@@ -334,8 +357,8 @@ public class RegistroPontoService {
                     r.getUser().getUsername(),
                     r.getIp(),
                     r.getJustificativa(),
-                    r.getTimestamp()
-            );
+                    r.getTimestamp(),
+                    r.getExpedienteId());
         }).toList();
     }
 
