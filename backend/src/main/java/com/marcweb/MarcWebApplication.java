@@ -26,8 +26,8 @@ import java.util.List; // Import necessário
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
 
     public static void main(String[] args) {
-        /*Dotenv dotenv = Dotenv.configure().load();
-        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));*/
+        Dotenv dotenv = Dotenv.configure().load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
         SpringApplication.run(MarcWebApplication.class, args);
     }
 
@@ -46,8 +46,10 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
                     .role(Role.ADMIN) // Papel ADMIN
                     .ativo(true) // Usuário ativo
                     .consentGeoloc(false) // Exemplo de consentimento geoloc
+                    .cpf("000.000.000-00") // CPF placeholder para admin padrão
                     .createdAt(LocalDateTime.now()) // Data de criação atual
                     .build();
+
             userRepository.save(admin); // Salva o usuário no banco
             System.out.println("Usuário admin padrão criado: username='admin', password='admin123' (codificada)");
         }
