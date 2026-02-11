@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,11 @@ public class FolhaPontoService {
 
     @Transactional
     public String gerarFolhaPonto(Long userId, int mes, int ano) throws JsonProcessingException {
+
+        ///  ULTIMO DDIA DO MÊS SOLICITADO PELO USUÁRIO
+        var periodoSolicitado = LocalDate.of(ano, mes, 1);
+
+        validarPeriodoSolicitado(periodoSolicitado);
 
         var userEntity = userService.findById(userId);
         detalhes.setDetalhes("Folha de ponto do periódo " + mes + "-" + ano + " gerada para o usuário " + userEntity.getUsername());
@@ -190,7 +196,7 @@ public class FolhaPontoService {
                 var timesSaida = registros.get(3).getTimestamp();
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
                 minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
-                                     (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
+                        (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
 
                 // CASO O USUÁRIO TENHA BATIDO APENAS OS PONTOS DE ENTRADA E SAÍDA
             } else if (registros.size() == 2) {
@@ -322,5 +328,14 @@ public class FolhaPontoService {
             }
         }
         return horasDebito;
+    }
+
+    private void validarPeriodoSolicitado(LocalDate dataSolicitada) {
+        LocalDate dataAtual = LocalDate.now();
+        if (dataSolicitada.getYear() > dataAtual.getYear()) {
+            throw new RuntimeException("Ano ainda nem comessou");
+        } else if (dataAtual.getMonthValue() <= dataSolicitada.getMonthValue()) {
+            throw new RuntimeException("O mês ainda não terminou");
+        }
     }
 }

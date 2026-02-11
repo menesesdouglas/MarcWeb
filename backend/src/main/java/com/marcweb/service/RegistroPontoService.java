@@ -224,25 +224,28 @@ public class RegistroPontoService {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userService.findByUsername(userDetails.getUsername());
         detalhes.setDetalhes("Usuário realizou a busca dos seus pontos batidos entre " + start.toLocalDate().toString() + " e " + end.toLocalDate().toString());
+        /// REGISTROS QUE FAZEM PARTE DO ULTIMO EXPEDIENTE ENCONTRADO
+        ///  QUE PORÉM NÃO VIERAM NA QUERY POR TEREM SIDO FINALIZADAS NO MÊS SEGUINTE
         List<RegistroPontoResponse> registros = repository.findByUserAndTimestampBetween(user, start, end);
-        var test = completarLista(registros);
-        registros.addAll(test);
-        /// REMOVENDO OS PRIMEIROS REGISTROS ATÉ ENCONTRAR O PRIMEIRO PONTO DE 'ENTRADA' ENCONTRADO
-        for (int i = 0; i < 3; i++) {
-            if (!registros.isEmpty() && !registros.get(0).getTipo().equals(TipoRegistro.ENTRADA)) registros.remove(0);
-            else break;
-
+        if (!registros.isEmpty()) {
+            var registrosFaltantes = completarLista(registros.get(registros.size() - 1));
+            registros.addAll(registrosFaltantes);
+            /// REMOVENDO OS PRIMEIROS REGISTROS ATÉ ENCONTRAR O PRIMEIRO PONTO DE 'ENTRADA' ENCONTRADO
+            for (int i = 0; i < 3; i++) {
+                if (!registros.isEmpty() && !registros.get(0).getTipo().equals(TipoRegistro.ENTRADA))
+                    registros.remove(0);
+                else break;
+            }
+            registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
         }
-        registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
         RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros));
         return meusRegistros;
     }
 
     /// USADO PARA BUSCAR REGISTROS QUE NÃO VIERAM NA PRIMEIRA CONSULTA
     /// POR CONTA DO EXPEDIENTE TER SIDO FINALIZADO NO MÊS SEGUINTE
-    private List<RegistroPontoResponse> completarLista(List<RegistroPontoResponse> registros) {
-        var ultimoRegistro = registros.get(registros.size() - 1);
-        if (ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
+    private List<RegistroPontoResponse> completarLista(RegistroPontoResponse ultimoRegistro) {
+        if (!ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
             List<RegistroPonto> registrosFaltantes = findByExpedienteIdAndTimestampGreaterThan(ultimoRegistro.getIdExpediente(), ultimoRegistro.getTimestamp());
             List<RegistroPontoResponse> resgistrosResponse = registrosFaltantes.stream().map(r ->
                             new RegistroPontoResponse(r.getTipo(), r.getUser().getNome(), r.getUser().getUsername(), r.getIp(), r.getJustificativa(), r.getTimestamp(), r.getExpedienteId()))
