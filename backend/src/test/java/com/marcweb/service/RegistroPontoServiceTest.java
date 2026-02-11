@@ -1,5 +1,6 @@
 package com.marcweb.service;
 
+import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.config_empresa.DataConfigEmpresa;
 import com.marcweb.dto.ponto.CreateRegistroPonto;
 import com.marcweb.entity.ConfigEmpresa;
@@ -15,7 +16,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
@@ -46,6 +50,9 @@ class RegistroPontoServiceTest {
 
     @Mock
     private LogAuditoriaService logAuditoriaService;
+
+    @Mock
+    private Detalhes detalhes;
 
     @InjectMocks
     private RegistroPontoService registroPontoService;
@@ -91,38 +98,51 @@ class RegistroPontoServiceTest {
     void registrarPonto_DeveLancarExcecao_QuandoDomingo() {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
 
         // Simular domingo
         LocalDate domingo = LocalDate.of(2023, 1, 1); // 01/01/2023 foi um domingo
-        when(LocalDate.now()).thenReturn(domingo);
+        
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
 
-        // Act & Assert
-        assertThrows(RegistroEmDomingoException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class);
+             MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+            
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            mockedLocalDate.when(LocalDate::now).thenReturn(domingo);
+
+            // Act & Assert
+            assertThrows(RegistroEmDomingoException.class, () ->
+                registroPontoService.registrarPonto(createRegistroPonto, request)
+            );
+        }
     }
 
     @Test
     void registrarPonto_DeveLancarExcecao_QuandoFeriado() {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.singletonList(new com.marcweb.entity.Feriado()));
 
-        // Act & Assert
-        assertThrows(RegistroEmFeriadoException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+
+            // Act & Assert
+            assertThrows(RegistroEmFeriadoException.class, () ->
+                registroPontoService.registrarPonto(createRegistroPonto, request)
+            );
+        }
     }
 
     @Test
     void registrarPonto_DeveLancarExcecao_QuandoGeolocalizacaoObrigatoriaENaoFornecida() {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
@@ -130,17 +150,23 @@ class RegistroPontoServiceTest {
         createRegistroPonto.setLatitude(null);
         createRegistroPonto.setLongitude(null);
 
-        // Act & Assert
-        assertThrows(GeolocalizacaoObrigatoriaException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+
+            // Act & Assert
+            assertThrows(GeolocalizacaoObrigatoriaException.class, () ->
+                registroPontoService.registrarPonto(createRegistroPonto, request)
+            );
+        }
     }
 
     @Test
     void registrarPonto_DeveLancarExcecao_QuandoForaDoRaio() {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
@@ -149,63 +175,88 @@ class RegistroPontoServiceTest {
         createRegistroPonto.setLatitude(-23.6000);
         createRegistroPonto.setLongitude(-46.7000);
 
-        // Act & Assert
-        assertThrows(RegistroForaDoRaioException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+
+            // Act & Assert
+            assertThrows(RegistroForaDoRaioException.class, () ->
+                registroPontoService.registrarPonto(createRegistroPonto, request)
+            );
+        }
     }
 
     @Test
     void registrarPonto_DeveLancarExcecao_QuandoSequenciaInvalida() {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
-        when(repository.findLastTypeRegistration(anyLong())).thenReturn(TipoRegistro.SAIDA);
+        lenient().when(repository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.of(TipoRegistro.SAIDA));
 
         // Tentar registrar ENTRADA depois de SAIDA é válido, mas INICIO_DESCANSO não é
         createRegistroPonto.setTipo(TipoRegistro.INICIO_DESCANSO);
 
-        // Act & Assert
-        assertThrows(RegistroPontoSequenciaInvalidaException.class, () ->
-            registroPontoService.registrarPonto(createRegistroPonto, request)
-        );
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+
+            // Act & Assert
+            assertThrows(RegistroPontoSequenciaInvalidaException.class, () ->
+                registroPontoService.registrarPonto(createRegistroPonto, request)
+            );
+        }
     }
 
     @Test
     void registrarPonto_DeveRegistrarComSucesso_QuandoTudoValido() throws Exception {
         // Arrange
         when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(Collections.emptyList());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(configEmpresa));
-        when(repository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(repository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(repository.save(any(RegistroPonto.class))).thenReturn(new RegistroPonto());
         when(request.getHeader(anyString())).thenReturn("192.168.1.1");
 
-        // Act
-        registroPontoService.registrarPonto(createRegistroPonto, request);
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
 
-        // Assert
-        verify(repository, times(1)).save(any(RegistroPonto.class));
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+
+            // Act
+            registroPontoService.registrarPonto(createRegistroPonto, request);
+
+            // Assert
+            verify(repository, times(1)).save(any(RegistroPonto.class));
+        }
     }
 
     @Test
     void buscarPontosRegistrados_DeveRetornarListaVazia_QuandoNaoHaRegistros() {
         // Arrange
-        when(UserService.getUserDetailsBySecurityContext()).thenReturn(mock(UserDetails.class));
         when(userService.findByUsername(anyString())).thenReturn(user);
         when(repository.findByUserAndTimestampBetween(any(User.class), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(Collections.emptyList());
 
-        // Act
-        var resultado = registroPontoService.buscarPontosRegistrados(LocalDateTime.now().minusDays(1), LocalDateTime.now());
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
 
-        // Assert
-        assertTrue(resultado.getRegistros().isEmpty());
+        try (MockedStatic<UserService> mockedUserService = mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+
+            // Act
+            var resultado = registroPontoService.buscarPontosRegistrados(LocalDateTime.now().minusDays(1), LocalDateTime.now());
+
+            // Assert
+            assertTrue(resultado.getRegistros().isEmpty());
+        }
     }
 
     @Test

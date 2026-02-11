@@ -11,6 +11,7 @@ import com.marcweb.repository.FeriadoRepository;
 import com.marcweb.repository.RegistroPontoRepository;
 import com.marcweb.service.ConfigEmpresaService;
 import com.marcweb.service.RegistroPontoService;
+import com.marcweb.service.FolgaService;
 import com.marcweb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,11 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,12 +51,16 @@ class RegistroPontoDTOServiceValidationTest {
     private FeriadoRepository feriadoRepository;
 
     @Mock
+    private FolgaService folgaService;
+
+    @Mock
     private HttpServletRequest request;
 
     @InjectMocks
     private RegistroPontoService registroPontoService;
 
     private User testUser;
+    private UserDetails userDetails;
 
     @BeforeEach
     void setup() {
@@ -66,17 +70,11 @@ class RegistroPontoDTOServiceValidationTest {
         testUser.setRole(Role.EMPLOYEE);
 
         when(userService.findByUsername(anyString())).thenReturn(testUser);
+        when(folgaService.existsByUserAndDate(anyLong(), any(LocalDate.class))).thenReturn(false);
 
-        // Configurar o SecurityContext para os testes
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username("test.user")
-                .password("password")
-                .roles("EMPLOYEE")
-                .build();
-
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        securityContext.setAuthentication(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
-        SecurityContextHolder.setContext(securityContext);
+        // Configurar UserDetails mock
+        userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("test.user");
 
         // Configurar mock padrão para ConfigEmpresaService (geolocalização desativada)
         ConfigEmpresa defaultConfig = ConfigEmpresa.builder()
@@ -85,119 +83,148 @@ class RegistroPontoDTOServiceValidationTest {
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(defaultConfig));
     }
 
+
     @Test
     void validarRegistro_PrimeiroRegistroDeveSerEntrada() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.ENTRADA);
 
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
     }
 
     @Test
     void validarRegistro_PrimeiroRegistroNaoEntradaDeveFalhar() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.INICIO_DESCANSO);
 
-        assertThrows(RegistroPontoSequenciaInvalidaException.class,
-            () -> registroPontoService.registrarPonto(request, this.request));
-    }
-
-    @Test
-    void validarRegistro_SequenciaInvalidaDeveFalhar() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong()))
-            .thenReturn(TipoRegistro.ENTRADA);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
-
-        CreateRegistroPonto request = new CreateRegistroPonto();
-        request.setTipo(TipoRegistro.SAIDA);
-
-        assertThrows(RegistroPontoSequenciaInvalidaException.class,
-            () -> registroPontoService.registrarPonto(request, this.request));
-    }
-
-    @Test
-    void validarRegistro_SequenciaValidaEntradaParaInicioDescanso() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong()))
-            .thenReturn(TipoRegistro.ENTRADA);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
-
-        CreateRegistroPonto request = new CreateRegistroPonto();
-        request.setTipo(TipoRegistro.INICIO_DESCANSO);
-
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
-    }
-
-    @Test
-    void validarRegistro_SequenciaValidaInicioParaFimDescanso() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong()))
-            .thenReturn(TipoRegistro.INICIO_DESCANSO);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
-
-        CreateRegistroPonto request = new CreateRegistroPonto();
-        request.setTipo(TipoRegistro.FIM_DESCANSO);
-
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
-    }
-
-    @Test
-    void validarRegistro_SequenciaValidaFimDescansoParaSaida() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong()))
-            .thenReturn(TipoRegistro.FIM_DESCANSO);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
-
-        CreateRegistroPonto request = new CreateRegistroPonto();
-        request.setTipo(TipoRegistro.SAIDA);
-
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
-    }
-
-    @Test
-    void validarRegistro_SequenciaValidaSaidaParaEntrada() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong()))
-            .thenReturn(TipoRegistro.SAIDA);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
-
-        CreateRegistroPonto request = new CreateRegistroPonto();
-        request.setTipo(TipoRegistro.ENTRADA);
-
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
-    }
-
-    @Test
-    void validarDiaUtil_DomingoDeveFalhar() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
-        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
-
-        // Simular domingo
-        LocalDateTime domingo = LocalDateTime.of(2026, 1, 4, 10, 0); // 04/01/2026 é domingo
-
-        try (MockedStatic<LocalDateTime> mocked = mockStatic(LocalDateTime.class)) {
-            mocked.when(LocalDateTime::now).thenReturn(domingo);
-
-            CreateRegistroPonto request = new CreateRegistroPonto();
-            request.setTipo(TipoRegistro.ENTRADA);
-
-            assertThrows(RegistroEmDomingoException.class,
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertThrows(RegistroPontoSequenciaInvalidaException.class,
                 () -> registroPontoService.registrarPonto(request, this.request));
         }
     }
 
     @Test
+    void validarRegistro_SequenciaInvalidaDeveFalhar() {
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any()))
+            .thenReturn(java.util.Optional.of(TipoRegistro.ENTRADA));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
+
+        CreateRegistroPonto request = new CreateRegistroPonto();
+        request.setTipo(TipoRegistro.SAIDA);
+
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertThrows(RegistroPontoSequenciaInvalidaException.class,
+                () -> registroPontoService.registrarPonto(request, this.request));
+        }
+    }
+
+
+    @Test
+    void validarRegistro_SequenciaValidaEntradaParaInicioDescanso() {
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any()))
+            .thenReturn(java.util.Optional.of(TipoRegistro.ENTRADA));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
+
+        CreateRegistroPonto request = new CreateRegistroPonto();
+        request.setTipo(TipoRegistro.INICIO_DESCANSO);
+
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
+    }
+
+    @Test
+    void validarRegistro_SequenciaValidaInicioParaFimDescanso() {
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any()))
+            .thenReturn(java.util.Optional.of(TipoRegistro.INICIO_DESCANSO));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
+
+        CreateRegistroPonto request = new CreateRegistroPonto();
+        request.setTipo(TipoRegistro.FIM_DESCANSO);
+
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
+    }
+
+    @Test
+    void validarRegistro_SequenciaValidaFimDescansoParaSaida() {
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any()))
+            .thenReturn(java.util.Optional.of(TipoRegistro.FIM_DESCANSO));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
+
+        CreateRegistroPonto request = new CreateRegistroPonto();
+        request.setTipo(TipoRegistro.SAIDA);
+
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
+    }
+
+    @Test
+    void validarRegistro_SequenciaValidaSaidaParaEntrada() {
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any()))
+            .thenReturn(java.util.Optional.of(TipoRegistro.SAIDA));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
+
+        CreateRegistroPonto request = new CreateRegistroPonto();
+        request.setTipo(TipoRegistro.ENTRADA);
+
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
+    }
+
+    @Test
+    void validarDiaUtil_DomingoDeveFalhar() {
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
+
+        // Simular domingo
+        LocalDate domingo = LocalDate.of(2026, 1, 4); // 04/01/2026 é domingo
+
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class);
+             MockedStatic<LocalDate> mockedLocalDate = Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            mockedLocalDate.when(LocalDate::now).thenReturn(domingo);
+
+            CreateRegistroPonto createRequest = new CreateRegistroPonto();
+            createRequest.setTipo(TipoRegistro.ENTRADA);
+
+            assertThrows(RegistroEmDomingoException.class,
+                () -> registroPontoService.registrarPonto(createRequest, this.request));
+        }
+    }
+
+
+
+    @Test
     void validarDiaUtil_SabadoDevePermitir() {
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         // Simular sábado
-        LocalDateTime sabado = LocalDateTime.of(2026, 1, 3, 10, 0); // 03/01/2026 é sábado
+        LocalDate sabado = LocalDate.of(2026, 1, 3); // 03/01/2026 é sábado
 
-        try (MockedStatic<LocalDateTime> mocked = mockStatic(LocalDateTime.class)) {
-            mocked.when(LocalDateTime::now).thenReturn(sabado);
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class);
+             MockedStatic<LocalDate> mockedLocalDate = Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            mockedLocalDate.when(LocalDate::now).thenReturn(sabado);
 
             CreateRegistroPonto request = new CreateRegistroPonto();
             request.setTipo(TipoRegistro.ENTRADA);
@@ -205,6 +232,7 @@ class RegistroPontoDTOServiceValidationTest {
             assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
         }
     }
+
 
     @Test
     void validarGeolocalizacao_ForaDoRaioDeveFalhar() {
@@ -215,8 +243,9 @@ class RegistroPontoDTOServiceValidationTest {
             .raioGeoloc(50)
             .build();
 
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(config));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         // Coordenadas fora do raio (200m de distância)
         CreateRegistroPonto request = new CreateRegistroPonto();
@@ -224,9 +253,13 @@ class RegistroPontoDTOServiceValidationTest {
         request.setLatitude(-12.2678);
         request.setLongitude(-38.9685);
 
-        assertThrows(RegistroForaDoRaioException.class,
-            () -> registroPontoService.registrarPonto(request, this.request));
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertThrows(RegistroForaDoRaioException.class,
+                () -> registroPontoService.registrarPonto(request, this.request));
+        }
     }
+
 
     @Test
     void validarGeolocalizacao_DentroDoRaioDevePermitir() {
@@ -237,8 +270,9 @@ class RegistroPontoDTOServiceValidationTest {
             .raioGeoloc(100)
             .build();
 
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(config));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         // Coordenadas dentro do raio (30m de distância)
         CreateRegistroPonto request = new CreateRegistroPonto();
@@ -246,7 +280,10 @@ class RegistroPontoDTOServiceValidationTest {
         request.setLatitude(-12.2661);
         request.setLongitude(-38.9670);
 
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
     }
 
     @Test
@@ -258,8 +295,9 @@ class RegistroPontoDTOServiceValidationTest {
             .raioGeoloc(50)
             .build();
 
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(config));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         // Coordenadas fora do raio, mas geoloc desativada
         CreateRegistroPonto request = new CreateRegistroPonto();
@@ -267,8 +305,12 @@ class RegistroPontoDTOServiceValidationTest {
         request.setLatitude(-12.2678);
         request.setLongitude(-38.9685);
 
-        assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertDoesNotThrow(() -> registroPontoService.registrarPonto(request, this.request));
+        }
     }
+
 
     @Test
     void validarGeolocalizacao_SemCoordenadasComGeolocAtivaDeveFalhar() {
@@ -279,16 +321,21 @@ class RegistroPontoDTOServiceValidationTest {
             .raioGeoloc(50)
             .build();
 
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(config));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.ENTRADA);
         // Sem latitude e longitude
 
-        assertThrows(GeolocalizacaoObrigatoriaException.class,
-            () -> registroPontoService.registrarPonto(request, this.request));
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertThrows(GeolocalizacaoObrigatoriaException.class,
+                () -> registroPontoService.registrarPonto(request, this.request));
+        }
     }
+
 
     @Test
     void validarGeolocalizacao_SemConfiguracaoDeCoordenadasDeveFalhar() {
@@ -299,15 +346,20 @@ class RegistroPontoDTOServiceValidationTest {
             .raioGeoloc(50)
             .build();
 
-        when(registroPontoRepository.findLastTypeRegistration(anyLong())).thenReturn(null);
+        when(registroPontoRepository.findLastTypeRegistration(anyLong(), any(), any())).thenReturn(java.util.Optional.empty());
         when(configEmpresaService.findConfigsEmpresa()).thenReturn(new DataConfigEmpresa(config));
+        when(feriadoRepository.findByData(any(LocalDate.class))).thenReturn(List.of());
 
         CreateRegistroPonto request = new CreateRegistroPonto();
         request.setTipo(TipoRegistro.ENTRADA);
         request.setLatitude(-12.2661);
         request.setLongitude(-38.9670);
 
-        assertThrows(IllegalStateException.class,
-            () -> registroPontoService.registrarPonto(request, this.request));
+        try (MockedStatic<UserService> mockedUserService = Mockito.mockStatic(UserService.class)) {
+            mockedUserService.when(UserService::getUserDetailsBySecurityContext).thenReturn(userDetails);
+            assertThrows(IllegalStateException.class,
+                () -> registroPontoService.registrarPonto(request, this.request));
+        }
     }
+
 }
