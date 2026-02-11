@@ -55,6 +55,13 @@ public class FolhaPontoService {
         /// --->>> TODAS OS PONTOS BATIDOS NO MES <<< --- ☻☻☻☻☻☻☻☻☻
         var pontosBatidosNoMes = registroPontoService.findByMesAno(userId, mes, ano);
 
+        /// removendo pontos do mês anterior (Dependendo do horário de trabalho, acabam vindo junto)
+        for (int i = 0; i < 3; i++) {
+            if (!pontosBatidosNoMes.isEmpty() && !pontosBatidosNoMes.get(0).getTipo().equals(TipoRegistro.ENTRADA))
+                pontosBatidosNoMes.remove(0);
+            else break;
+        }
+
         var inicioDoMes = LocalDate.of(ano, mes, 1);
         var finalMes = inicioDoMes.withDayOfMonth(inicioDoMes.lengthOfMonth());
 
@@ -97,7 +104,7 @@ public class FolhaPontoService {
 
         /// CALCULANDO HORAS EXTRAS E DÉBITO
         BigDecimal horasExtras = calcularHorasExtras(horasTrabalhadasPorDia, registrosPorDia.size());
-        BigDecimal horasDebito = calcularHorasDebito(horasTrabalhadasPorDia);
+        BigDecimal horasDebito = calcularHorasDebito(horasTrabalhadasPorDia, diasFalta);
         BigDecimal saldoHoras = horasExtras.subtract(horasDebito);
 
         /// TOTALIZAÇÃO DE DIAS E HORAS
@@ -318,7 +325,7 @@ public class FolhaPontoService {
 
     /// CALCULANDO HORAS DÉBITO (HORAS NÃO TRABALHADAS)
     /// CONFORME LEGISLAÇÃO TRABALHISTA: HORAS DÉBITO SÃO AQUELAS QUE FALTAM PARA COMPLETAR A JORNADA
-    private BigDecimal calcularHorasDebito(List<BigDecimal> horasTrabalhadasPorDia) {
+    private BigDecimal calcularHorasDebito(List<BigDecimal> horasTrabalhadasPorDia, int diasFalta) {
         BigDecimal horasDebito = BigDecimal.ZERO;
 
         // CALCULAR HORAS DÉBITO DIÁRIAS (ABAIXO DE 8H POR DIA)
@@ -327,6 +334,9 @@ public class FolhaPontoService {
                 horasDebito = horasDebito.add(BigDecimal.valueOf(8.00).subtract(horasDia));
             }
         }
+        for (int i = 0; i < diasFalta; i++) {
+            horasDebito = horasDebito.add(BigDecimal.valueOf(8.00));
+        }
         return horasDebito;
     }
 
@@ -334,7 +344,7 @@ public class FolhaPontoService {
         LocalDate dataAtual = LocalDate.now();
         if (dataSolicitada.getYear() > dataAtual.getYear()) {
             throw new RuntimeException("Ano ainda nem comessou");
-        } else if (dataAtual.getMonthValue() <= dataSolicitada.getMonthValue()) {
+        } else if (dataSolicitada.getYear() == dataAtual.getYear() && dataAtual.getMonthValue() <= dataSolicitada.getMonthValue()) {
             throw new RuntimeException("O mês ainda não terminou");
         }
     }
