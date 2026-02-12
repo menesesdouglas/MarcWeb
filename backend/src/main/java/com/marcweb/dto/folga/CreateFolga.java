@@ -13,11 +13,9 @@ public record CreateFolga(
         Long userId, // ID do usuário associado à folga
 
         @NotNull(message = "A data de início é obrigatória.")
-        @FutureOrPresent(message = "A data de início não pode ser no passado.")
         LocalDate dataInicio, // Data de início da folga
 
         @NotNull(message = "A data de fim é obrigatória.")
-        @FutureOrPresent(message = "A data de fim não pode ser no passado.")
         LocalDate dataFim, // Data de término da folga
 
         @NotNull(message = "O tipo de folga é obrigatório.")
