@@ -1,5 +1,8 @@
 /* Perfil do Usuário - Estilos Específicos */
 
+main {
+    margin-bottom: 100px;
+}
 
 .nav-links {
     display: flex;
@@ -12,6 +15,8 @@ a {
     padding: 5px;
     border-radius: 10px;
 }
+
+
 
 .profile-header {
     display: flex;
@@ -243,6 +248,12 @@ a {
 }
 
 /* Botões */
+.btn-container {
+    display: flex;
+    justify-content: center;
+
+}
+
 .btn-primary {
     background: #0a9396;
     color: white;

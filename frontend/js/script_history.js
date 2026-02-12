@@ -66,7 +66,7 @@ async function carregarHistorico() {
         if (response.ok) {
             const resultado = await response.json();
             console.log((resultado));
-            calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados);
+            calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados, resultado.monthLength);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
@@ -78,7 +78,7 @@ async function carregarHistorico() {
     }
 }
 
-function calcularEstatisticas(registros, minutosTrabalhados) {
+function calcularEstatisticas(registros, minutosTrabalhados, monthLength) {
     if (!registros || registros.length === 0) {
         document.getElementById('totalHoras').textContent = '--:--';
         document.getElementById('diasTrabalhados').textContent = '--';
@@ -96,7 +96,7 @@ function calcularEstatisticas(registros, minutosTrabalhados) {
     });
 
     // QUANTIDADE DE MINUTOS QUE O USUÁRIO PRECISA TER TRABALHADO NOS DIAS REGISTRADOS
-    const minutosExigidos = 480 * diasUnicos.size;
+    const minutosExigidos = 480 * monthLength;
     const minutosDebito = minutosExigidos - minutosTrabalhados;
 
     // Para cálculo mais preciso de horas, seria necessário agrupar por dia

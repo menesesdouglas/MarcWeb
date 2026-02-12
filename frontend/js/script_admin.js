@@ -3,6 +3,7 @@ let allUsers = [];
 let recentPunches = [];
 let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
+const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -33,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function setupEventListeners() {
+
+    let menuIsOpen = false;
+
     // Formulário de Cadastro/Edição
     const employeeForm = document.getElementById('employeeForm');
     if (employeeForm) {
@@ -99,6 +103,15 @@ function setupEventListeners() {
 
 
     })
+
+}
+
+function openMenu() {
+    sideBar.classList.add("active");
+}
+
+function closeMenu() {
+    sideBar.classList.remove("active");
 }
 
 async function loadUsers() {
@@ -231,7 +244,7 @@ function renderFolgas(folgas) {
             <td>${folga.dataFim}</td>
             <td>${folga.tipo}</td>
             <td>
-                <button id="btn-detalhes-folga-${folga.id}"  style="background:none; border:none; color:#0a9396; cursor:pointer; margin-right: 10px;">Ver Detalhes</button>
+                <button title="Ver detalhes" id="btn-detalhes-folga-${folga.id}"  style="background:none; border:none; scale: 70%; color:#0a9396; cursor:pointer; margin-right: 10px;"><i class="material-symbols">Details</i></button>
                 
             </td>
         `;

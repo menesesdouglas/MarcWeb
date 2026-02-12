@@ -12,24 +12,9 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols" />
     <style>
-        /* Estilos adicionais para ícones modernos */
-        .punch-btn[data-type="Entrada"] .icon::before {
-            content: "🚀";
-        }
-
-        .punch-btn[data-type="Início Descanso"] .icon::before {
-            content: "☕";
-        }
-
-        .punch-btn[data-type="Fim Descanso"] .icon::before {
-            content: "⏳";
-        }
-
-        .punch-btn[data-type="Saída"] .icon::before {
-            content: "🏁";
-        }
-
+        
         /* Animação de loading para o corpo */
         body.loading {
             opacity: 0.8;
@@ -222,22 +207,22 @@
             </div>
 
             <div class="card">
-                <h3>Marcar Ponto</h3>
+                <h3 style="margin-bottom: 20px;">Marcar Ponto</h3>
                 <div class="punch-grid">
                     <button value="ENTRADA" class="punch-btn" data-type="Entrada">
-                        <span class="icon">🚀</span>
+                        <span class="icon material-symbols">login</span>
                         Entrada
                     </button>
                     <button value="INICIO_DESCANSO" class="punch-btn" data-type="Início Descanso">
-                        <span class="icon">☕</span>
+                        <span class="icon material-symbols">Hourglass_top</span>
                         Início Descanso
                     </button>
                     <button value="FIM_DESCANSO" class="punch-btn" data-type="Fim Descanso">
-                        <span class="icon">⏳</span>
+                        <span class="icon material-symbols">Hourglass_bottom</span>
                         Fim Descanso
                     </button>
                     <button value="SAIDA" class="punch-btn" data-type="Saída">
-                        <span class="icon">🏁</span>
+                        <span class="icon material-symbols">logout</span>
                         Saída
                     </button>
                 </div>

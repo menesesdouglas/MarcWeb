@@ -35,8 +35,8 @@
                 </a>
 
 
-                <a style="color: rgb(181, 1, 1);" href="#" id="btnLogout">
-                    <i class="material-symbols">Redo</i>
+                <a href="#" id="btnLogout">
+                    <i class="material-symbols">logout</i>
                     <span>Sair</span>
                 </a>
             </div>
@@ -83,7 +83,9 @@
                         <label>Confirmar Nova Senha</label>
                         <input type="password" id="confirmPassword">
                     </div>
-                    <button type="submit" class="btn-primary">Atualizar Perfil</button>
+                    <div class="btn-container">
+                        <button type="submit" class="btn-primary">Atualizar Perfil</button>
+                    </div>
                 </form>
             </section>
 
@@ -92,7 +94,9 @@
                 <div id="folgasList" class="folgas-container">
                     <p>Carregando folgas...</p>
                 </div>
-                <button class="btn-secondary" onclick="openFolgaModal()">Solicitar Folga</button>
+                <div class="btn-container">
+                    <button class="btn-secondary" onclick="openFolgaModal()">Solicitar Folga</button>
+                </div>
             </section>
 
             <section class="profile-card">

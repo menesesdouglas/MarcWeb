@@ -282,7 +282,7 @@ function pageNotFound() {
    <p style="color: #666; max-width: 400px; line-height: 1.6;">
    O usuário que você está procurando não existe.
    </p>
-   <a href="/" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+   <a href="/admin.html" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
     Voltar para o Início
   </a>
   </div>

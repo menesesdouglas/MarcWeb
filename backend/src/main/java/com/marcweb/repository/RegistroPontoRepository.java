@@ -123,4 +123,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     @Query(nativeQuery = true, value = "Select r.expediente_id from registros_ponto r where user_id = :userId order by timestamp desc limit 1")
     UUID findLastExpedienteIdByUserId(@Param("userId") Long userId);
+
+    @Query(nativeQuery = true, value = "Select * from registros_ponto where user_id = :userId and tipo = 'SAIDA' order by timestamp DESC limit 1 ")
+    RegistroPonto findByUserIdAndTipoOrderByTimestampDesc(@Param("userId") Long userId);
 }
