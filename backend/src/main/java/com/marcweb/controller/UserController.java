@@ -22,7 +22,6 @@ public class UserController {
     private final UserService service;
 
 
-    // NOVO Endpoint: Listar todos os usuários
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<UserResponse> findByAll() { // Retorna List<UserResponse> sem paginação
@@ -36,7 +35,6 @@ public class UserController {
         return service.loadUserProfile(id, pageNumber);
     }
 
-    // NOVO Endpoint: Obter dados do usuário autenticado
     @GetMapping("/me")
     public UserResponse getMe() {
         return service.getMe();

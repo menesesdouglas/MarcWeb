@@ -140,6 +140,10 @@ i {
     border-radius: 6px;
     cursor: pointer;
     transition: var(--transition);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-logout:hover {
@@ -311,6 +315,7 @@ textarea:focus {
     border-color: var(--petrol-light);
     box-shadow: 0 0 0 2px rgba(10, 147, 150, 0.2);
 }
+
 
 textarea {
     min-height: 100px;

@@ -1,5 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
+    let pageNumber = 0;
+
+
     if (!auth) {
         window.location.href = 'login.html';
         return;
@@ -9,13 +12,67 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
 
     // Carregar folgas do usuário
-    loadUserFolgas();
+    loadUserFolgas(pageNumber);
+
 
     // Carregar atividades recentes
     loadRecentActivity();
 
     // Configurar eventos
     setupEventListeners();
+
+    async function loadUserFolgas(pageNumber) {
+        try {
+            const auth = JSON.parse(localStorage.getItem("auth"));
+            const response = await fetch(`http://localhost:8080/api/folgas/me?pageNumber=${pageNumber}`, {
+                headers: {
+                    'Authorization': `Bearer ${auth.token}`
+                }
+            });
+
+            if (response.ok) {
+                const resultado = await response.json();
+                renderFolgas(resultado.folgas);
+                const totalPages = resultado.totalPages;
+                if (totalPages >= 1) {
+                    document.getElementById("pagination").innerHTML = '';
+                    document.getElementById("pagination").innerHTML = `
+                    <i id="previusPage" class="material-symbols">
+                        arrow_left
+                    </i>
+                   <span> ${pageNumber + 1} / ${totalPages}</span>
+                   <i id="nextPage" class="material-symbols">
+                        arrow_right
+                    </i>
+                    
+                    `;
+
+                    document.getElementById("previusPage").addEventListener("click", () => {
+                        if (pageNumber + 1 > 1) {
+                            pageNumber -= 1;
+                            loadUserFolgas(pageNumber);
+                        }
+                    })
+
+                    document.getElementById("nextPage").addEventListener("click", () => {
+                        if (pageNumber + 1 < totalPages) {
+                            pageNumber += 1;
+                            loadUserFolgas(pageNumber);
+                        }
+                    });
+                }
+
+            } else {
+                document.getElementById('folgasList').innerHTML = '<p>Nenhuma folga encontrada.</p>';
+            }
+        } catch (error) {
+            console.error('Erro ao carregar folgas:', error);
+            document.getElementById('folgasList').innerHTML = '<p>Erro ao carregar folgas.</p>';
+        }
+    }
+
+
+
 });
 
 function setupEventListeners() {
@@ -77,35 +134,15 @@ function setupRolePermissions(userRole) {
     // Apenas administradores podem editar o cargo
     if (userRole === 'ADMIN') {
         roleInput.disabled = false;
-        roleInput.style.backgroundColor = '#fff';
+        roleInput.style.backgroundColor = '#003c4a';
         roleInput.style.cursor = 'text';
     } else {
         roleInput.disabled = true;
-        roleInput.style.backgroundColor = '#f5f5f5';
+        roleInput.style.backgroundColor = '#070a0d';
         roleInput.style.cursor = 'not-allowed';
     }
 }
 
-async function loadUserFolgas() {
-    try {
-        const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch('http://localhost:8080/api/folgas/me', {
-            headers: {
-                'Authorization': `Bearer ${auth.token}`
-            }
-        });
-
-        if (response.ok) {
-            const folgas = await response.json();
-            renderFolgas(folgas);
-        } else {
-            document.getElementById('folgasList').innerHTML = '<p>Nenhuma folga encontrada.</p>';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar folgas:', error);
-        document.getElementById('folgasList').innerHTML = '<p>Erro ao carregar folgas.</p>';
-    }
-}
 
 async function loadRecentActivity() {
     try {
@@ -118,7 +155,8 @@ async function loadRecentActivity() {
 
         if (response.ok) {
             const logs = await response.json();
-            renderRecentActivity(logs.slice(0, 10)); // Últimas 10 atividades
+            alert(JSON.stringify(logs));
+            renderRecentActivity(logs.slice(0, 10));
         } else {
             const error = await response.json();
             console.error('Erro ao carregar atividades:', error);
@@ -177,7 +215,7 @@ function renderRecentActivity(logs) {
     }
 
     const activityHtml = logs.map(log => `
-    < div class="activity-item" >
+    <div class="activity-item" >
             <div class="activity-icon">
                 <i class="fas fa-${getActivityIcon(log.categoria)}"></i>
             </div>
@@ -185,7 +223,7 @@ function renderRecentActivity(logs) {
                 <div class="activity-action">${log.acao}</div>
                 <div class="activity-time">${formatDateTime(log.timestamp)}</div>
             </div>
-        </ >
+        </div >
     `).join('');
 
     container.innerHTML = activityHtml;

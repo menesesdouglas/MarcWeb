@@ -54,6 +54,7 @@ class AuthenticationControllerTest {
         userRepository.save(admin);
     }
 
+
     @Test
     void loginAdmin_Success() throws Exception {
         LoginRequest request = new LoginRequest("admin", "admin123");

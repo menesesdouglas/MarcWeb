@@ -189,6 +189,7 @@ function initNavigation() {
 
     links.forEach(link => {
         link.addEventListener('click', (e) => {
+            closeMenu();
             e.preventDefault();
             const target = link.getAttribute('data-section');
 
@@ -243,13 +244,10 @@ function renderFolgas(folgas) {
             <td>${folga.dataInicio}</td>
             <td>${folga.dataFim}</td>
             <td>${folga.tipo}</td>
-            <td>
-                <button title="Ver detalhes" id="btn-detalhes-folga-${folga.id}"  style="background:none; border:none; scale: 70%; color:#0a9396; cursor:pointer; margin-right: 10px;"><i class="material-symbols">Details</i></button>
-                
-            </td>
         `;
         listBody.appendChild(tr);
-        document.getElementById(`btn-detalhes-folga-${folga.id}`).addEventListener("click", () => verDetalhesFolga(folga))
+        tr.style = "cursor: pointer";
+        tr.addEventListener("click", () => verDetalhesFolga(folga))
     });
 }
 
@@ -294,8 +292,9 @@ function abrirModalDetalhes(folga) {
     const btnAprovar = document.getElementById('btn-aprovar');
     const btnRecusar = document.getElementById('btn-recusar');
 
+
     // Verificar se a folga já foi processada
-    if (folga.status !== 'PENDENTE') {
+    if (folga.status !== 'Pendente') {
         btnAprovar.style.display = 'none';
         btnRecusar.style.display = 'none';
     } else {

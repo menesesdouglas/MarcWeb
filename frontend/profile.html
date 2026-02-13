@@ -69,7 +69,7 @@
                     </div>
                     <div class="form-group">
                         <label>Cargo</label>
-                        <input type="text" id="role" readonly>
+                        <input  type="text" id="role" readonly>
                     </div>
                     <div class="form-group">
                         <label>Senha Atual</label>
@@ -91,11 +91,13 @@
 
             <section class="profile-card">
                 <h3>Minhas Folgas</h3>
+                <div class="btn-container">
+                    <button class="btn-secondary" onclick="openFolgaModal()">Solicitar Folga</button>
+                </div>
                 <div id="folgasList" class="folgas-container">
                     <p>Carregando folgas...</p>
                 </div>
-                <div class="btn-container">
-                    <button class="btn-secondary" onclick="openFolgaModal()">Solicitar Folga</button>
+                <div id="pagination">
                 </div>
             </section>
 
@@ -134,8 +136,8 @@
                     <textarea id="justificativa" rows="3" placeholder="Descreva o motivo da folga..."></textarea>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" onclick="closeFolgaModal()" class="btn-secondary">Cancelar</button>
                     <button type="submit" class="btn-primary">Solicitar</button>
+                    <button type="button" onclick="closeFolgaModal()" class="btn-secondary">Cancelar</button>
                 </div>
             </form>
         </div>
