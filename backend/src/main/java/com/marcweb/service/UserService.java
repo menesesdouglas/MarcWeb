@@ -7,6 +7,7 @@ import com.marcweb.dto.login.LoginRequest;
 import com.marcweb.dto.login.LoginResponse;
 import com.marcweb.dto.user.CreateUser;
 import com.marcweb.dto.user.ProfileUser;
+import com.marcweb.dto.user.UpdateProfileRequest;
 import com.marcweb.dto.user.UserResponse;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Folga;
@@ -181,25 +182,42 @@ public class UserService {
         return new UserResponse(user);
     }
 
-    // NOVO Método: Atualizar perfil do usuário autenticado
+// NOVO Método: Atualizar perfil do usuário autenticado
     @Auditado(
             acao = "Atualização de perfil do usuário",
             categoria = CategoriaLog.AUDITORIA
     )
     @Transactional
-    public void updateProfile(CreateUser data) {
+    public void updateProfile(UpdateProfileRequest data) {
         UserDetails userDetails = getUserDetailsBySecurityContext();
         User user = findByUsername(userDetails.getUsername());
 
-        // Apenas administradores podem alterar o cargo
+        // Atualizar o nome
+        if (StringUtils.isNotBlank(data.getNome())) {
+            user.setNome(data.getNome());
+        }
+
+        // Atualizar o cargo (apenas administradores podem alterar o cargo de outros, 
+        // mas usuários podem atualizar o próprio cargo se enviado)
+        if (StringUtils.isNotBlank(data.getCargo())) {
+            user.setCargo(data.getCargo());
+        }
+
+        // Apenas administradores podem alterar o role
         if (data.getRole() != null && !user.getRole().equals(data.getRole())) {
             throw new RuntimeException("Apenas administradores podem alterar o cargo");
         }
 
-        // Atualizar os campos permitidos
-        if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
-        if (data.getRole() != null) user.setRole(data.getRole());
-        if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
+        // Atualizar senha: verificar senha atual antes de definir a nova
+        if (StringUtils.isNotBlank(data.getNewPassword())) {
+            if (StringUtils.isBlank(data.getCurrentPassword())) {
+                throw new RuntimeException("Senha atual é obrigatória para alterar a senha");
+            }
+            if (!encoder.matches(data.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Senha atual incorreta");
+            }
+            user.setPassword(encoder.encode(data.getNewPassword()));
+        }
 
         detalhes.setDetalhes("Usuário " + user.getUsername() + " atualizou seu perfil");
     }

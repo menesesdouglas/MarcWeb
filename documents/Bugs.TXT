@@ -1,0 +1,8 @@
+Bug em layout de tela admin em Gerenciamento de folga. Aparece apenas icone para ver detalhes, mas não para aprovar ou recusar. Visto que o aceite é feito em tela de employee-profile. Implementar dois botões ao lado dos detalhes em tela de admin para aceitar e recusar folgas por lá também.
+
+Divergência em datas: Folga solicitada pelo employee na tela de profile para data 12/02/2026 até 12/02/2026, mas após isso aparece como se fosse solicitado para um dia anterior. Isso só acontece na tela de profile, pois employee-profile e admin está correto. Possível questão no frontend?
+
+Em employee-profile, está removendo a folga em vez de recusar e ficar com status (recusada).
+
+Ajustar layout de popup em tela de Gestão de Funcionário ao criar funcionário ou editar.
+

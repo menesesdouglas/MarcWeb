@@ -2,6 +2,7 @@ package com.marcweb.controller;
 
 import com.marcweb.dto.user.CreateUser;
 import com.marcweb.dto.user.ProfileUser;
+import com.marcweb.dto.user.UpdateProfileRequest;
 import com.marcweb.dto.user.UserResponse; // Import necessário
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
@@ -71,9 +72,9 @@ public class UserController {
         service.deleteUser(id);
     }
 
-    // NOVO Endpoint: Atualizar perfil do usuário autenticado
+// NOVO Endpoint: Atualizar perfil do usuário autenticado
     @PutMapping("/profile")
-    public void updateProfile(@RequestBody @Valid CreateUser data) {
+    public void updateProfile(@RequestBody UpdateProfileRequest data) {
         service.updateProfile(data);
     }
 
