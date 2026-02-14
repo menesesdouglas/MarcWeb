@@ -1,6 +1,6 @@
 class TimeAdjustmentService {
     constructor() {
-        this.baseUrl = 'http://localhost:8080/api/ponto/ajuste';
+        this.baseUrl = '/back/ponto/ajuste';
     }
 
     async getTimeAdjustmentHistory(userId, startDate, endDate) {
@@ -10,7 +10,7 @@ class TimeAdjustmentService {
 
             // This would require a new endpoint to get adjustment history
             // For now, we'll return the recent punches which include adjustments
-            const response = await fetch(`http://localhost:8080/api/ponto/me?start=${startDate}&end=${endDate}`, {
+            const response = await fetch(`/back/ponto/me?start=${startDate}&end=${endDate}`, {
                 headers: {
                     "Authorization": `Bearer ${auth.token}`
                 }

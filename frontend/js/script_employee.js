@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const result = await fetch("http://localhost:8080/api/ponto", {
+            const result = await fetch("/back/ponto", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -375,7 +375,7 @@ async function loadTodayPunches() {
         const today = new Date();
         const dateStr = today.toISOString().split('T')[0];
 
-        const response = await fetch(`http://localhost:8080/api/ponto/historico?date=${dateStr}`, {
+        const response = await fetch(`/back/ponto/historico?date=${dateStr}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -417,7 +417,7 @@ async function loadCurrentStatus() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const statusElement = document.getElementById('currentStatus');
         
-        const response = await fetch("http://localhost:8080/api/ponto/status-atual-me", {
+        const response = await fetch("/back/ponto/status-atual-me", {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -442,4 +442,3 @@ async function loadCurrentStatus() {
         console.error('Erro ao carregar status atual:', error);
     }
 }
-

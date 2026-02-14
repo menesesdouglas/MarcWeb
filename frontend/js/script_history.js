@@ -57,7 +57,7 @@ async function carregarHistorico() {
         const inicioTimestamp = primeiroDia.toISOString().split('T')[0] + "T00:00:00";
         const fimTimestamp = ultimoDia.toISOString().split('T')[0] + 'T23:59:59';
 
-        const response = await fetch(`http://localhost:8080/api/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
+        const response = await fetch(`/back/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -148,7 +148,7 @@ async function exportarPDF() {
         showToast('Gerando relatório PDF...', 'info');
 
         // Gerar o PDF usando o endpoint para funcionários
-        const pdfResponse = await fetch('http://localhost:8080/api/relatorios/pdf/me', {
+        const pdfResponse = await fetch('/back/relatorios/pdf/me', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

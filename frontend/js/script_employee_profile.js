@@ -3,7 +3,7 @@
 const auth = JSON.parse(localStorage.getItem("auth"));
 if (!auth) window.location.href = "/login.html";
 if (auth.role != "ADMIN") window.location.href = "/employee.html";
-const urlBase = "http://localhost:8080/api/user";
+const urlBase = "/back/user";
 const queryString = window.location.search;
 const params = new URLSearchParams(queryString);
 
@@ -103,7 +103,7 @@ async function loadPage() {
             tipo: tipo
         }
 
-        const response = await fetch(`http://localhost:8080/api/folgas`, {
+        const response = await fetch(`/back/folgas`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${auth.token}`,
@@ -214,7 +214,7 @@ async function loadPage() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) window.location.href = "/login.html";
         if (auth.role != "ADMIN") window.location.href = "/employee.html";
-        const response = await fetch(`http://localhost:8080/api/folgas/solucionar/${idFolga}/${aprovada}`, {
+        const response = await fetch(`/back/folgas/solucionar/${idFolga}/${aprovada}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             },
@@ -240,7 +240,7 @@ async function loadPage() {
             const auth = JSON.parse(localStorage.getItem("auth"));
             if (!auth) window.location.href = "/login.html";
             if (auth.role != "ADMIN") window.location.href = "/employee.html";
-            const response = await fetch(`http://localhost:8080/api/folgas/${idFolga}`, {
+            const response = await fetch(`/back/folgas/${idFolga}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${auth.token}`
@@ -289,4 +289,3 @@ function pageNotFound() {
   
    `;
 }
-
