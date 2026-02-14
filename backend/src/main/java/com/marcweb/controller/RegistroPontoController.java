@@ -6,6 +6,7 @@ import com.marcweb.dto.ponto.PontosRecentes;
 import com.marcweb.dto.ponto.RegistroPontoResponse;
 import com.marcweb.dto.ponto.RegistroPontoResponseWithWarning;
 import com.marcweb.dto.ponto.StatusAtualFuncionario;
+import com.marcweb.dto.ponto.StatusAtualResponse;
 import com.marcweb.dto.TimeAdjustmentRequest;
 import com.marcweb.dto.ponto.RegistroPontoMe;
 import com.marcweb.service.LogAuditoriaService;
@@ -74,6 +75,13 @@ public class RegistroPontoController {
     public ResponseEntity<List<StatusAtualFuncionario>> getStatusAtualFuncionarios() {
         var lista = service.getStatusAtualFuncionarios();
         return ResponseEntity.ok(lista);
+    }
+
+    /// CARREGANDO STATUS ATUAL DO USUÁRIO LOGADO
+    @GetMapping("/status-atual-me")
+    public ResponseEntity<StatusAtualResponse> getStatusAtualMe() {
+        var status = service.getStatusAtual();
+        return ResponseEntity.ok(status);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
