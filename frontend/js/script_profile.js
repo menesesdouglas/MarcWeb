@@ -1,6 +1,8 @@
+// Global variable to track current page number for pagination
+let currentPageNumber = 0;
+
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
-    let pageNumber = 0;
 
 
     if (!auth) {
@@ -12,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
 
     // Carregar folgas do usuário
-    loadUserFolgas(pageNumber);
+    loadUserFolgas(currentPageNumber);
 
 
     // Carregar atividades recentes
@@ -21,59 +23,61 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configurar eventos
     setupEventListeners();
 
-    async function loadUserFolgas(pageNumber) {
-        try {
-            const auth = JSON.parse(localStorage.getItem("auth"));
-            const response = await fetch(`http://localhost:8080/api/folgas/me?pageNumber=${pageNumber}`, {
-                headers: {
-                    'Authorization': `Bearer ${auth.token}`
-                }
-            });
-
-            if (response.ok) {
-                const resultado = await response.json();
-                renderFolgas(resultado.folgas);
-                const totalPages = resultado.totalPages;
-                if (totalPages >= 1) {
-                    document.getElementById("pagination").innerHTML = '';
-                    document.getElementById("pagination").innerHTML = `
-                    <i id="previusPage" class="material-symbols">
-                        arrow_left
-                    </i>
-                   <span> ${pageNumber + 1} / ${totalPages}</span>
-                   <i id="nextPage" class="material-symbols">
-                        arrow_right
-                    </i>
-                    
-                    `;
-
-                    document.getElementById("previusPage").addEventListener("click", () => {
-                        if (pageNumber + 1 > 1) {
-                            pageNumber -= 1;
-                            loadUserFolgas(pageNumber);
-                        }
-                    })
-
-                    document.getElementById("nextPage").addEventListener("click", () => {
-                        if (pageNumber + 1 < totalPages) {
-                            pageNumber += 1;
-                            loadUserFolgas(pageNumber);
-                        }
-                    });
-                }
-
-            } else {
-                document.getElementById('folgasList').innerHTML = '<p>Nenhuma folga encontrada.</p>';
-            }
-        } catch (error) {
-            console.error('Erro ao carregar folgas:', error);
-            document.getElementById('folgasList').innerHTML = '<p>Erro ao carregar folgas.</p>';
-        }
-    }
-
 
 
 });
+
+// Global function to load user folgas - moved outside DOMContentLoaded
+async function loadUserFolgas(pageNumber) {
+    currentPageNumber = pageNumber;
+    try {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const response = await fetch(`http://localhost:8080/api/folgas/me?pageNumber=${pageNumber}`, {
+            headers: {
+                'Authorization': `Bearer ${auth.token}`
+            }
+        });
+
+        if (response.ok) {
+            const resultado = await response.json();
+            renderFolgas(resultado.folgas);
+            const totalPages = resultado.totalPages;
+            if (totalPages >= 1) {
+                document.getElementById("pagination").innerHTML = '';
+                document.getElementById("pagination").innerHTML = `
+                <i id="previusPage" class="material-symbols">
+                    arrow_left
+                </i>
+               <span> ${pageNumber + 1} / ${totalPages}</span>
+               <i id="nextPage" class="material-symbols">
+                    arrow_right
+                </i>
+                
+                `;
+
+                document.getElementById("previusPage").addEventListener("click", () => {
+                    if (pageNumber + 1 > 1) {
+                        pageNumber -= 1;
+                        loadUserFolgas(pageNumber);
+                    }
+                })
+
+                document.getElementById("nextPage").addEventListener("click", () => {
+                    if (pageNumber + 1 < totalPages) {
+                        pageNumber += 1;
+                        loadUserFolgas(pageNumber);
+                    }
+                });
+            }
+
+        } else {
+            document.getElementById('folgasList').innerHTML = '<p>Nenhuma folga encontrada.</p>';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar folgas:', error);
+        document.getElementById('folgasList').innerHTML = '<p>Erro ao carregar folgas.</p>';
+    }
+}
 
 function setupEventListeners() {
     // Logout
@@ -155,7 +159,7 @@ async function loadRecentActivity() {
 
         if (response.ok) {
             const logs = await response.json();
-            alert(JSON.stringify(logs));
+            //alert(JSON.stringify(logs));
             renderRecentActivity(logs.slice(0, 10));
         } else {
             const error = await response.json();
@@ -350,7 +354,19 @@ function formatTipoFolga(tipo) {
 }
 
 function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    if (!dateString) return '';
+    
+    // Check if the date is in ISO format (YYYY-MM-DD)
+    // Parse manually to avoid UTC timezone issues
+    if (dateString.includes('-') && !dateString.includes('/')) {
+        const [year, month, day] = dateString.split('-');
+        // Create date using local time (not UTC) - month is 0-indexed
+        const date = new Date(year, month - 1, day);
+        return date.toLocaleDateString('pt-BR');
+    }
+    
+    // If already formatted (contains '/'), return as is
+    return dateString;
 }
 
 function formatDateTime(dateTimeString) {

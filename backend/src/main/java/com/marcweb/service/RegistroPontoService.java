@@ -397,6 +397,7 @@ public class RegistroPontoService {
         if (possivelRegistro.getId() == null) {
             possivelRegistro.setUser(user);
             possivelRegistro.setTipo(tipoRegistro);
+            possivelRegistro.setExpedienteId(UUID.randomUUID());
         }
         possivelRegistro.setTimestamp(timestamp);
         possivelRegistro.setJustificativa(request.justificativa());

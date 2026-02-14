@@ -393,12 +393,16 @@ textarea::placeholder {
     justify-content: center;
     align-items: center;
     z-index: 1001;
+    padding: 20px;
 }
 
 .modal {
     width: 450px;
+    max-width: 90%;
+    max-height: 80vh;
     border-radius: 12px;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 
