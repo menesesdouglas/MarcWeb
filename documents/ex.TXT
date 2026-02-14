@@ -1,0 +1,14 @@
+user_id = 3
+em database, table registros_ponto:
+1	3	"ENTRADA"	"2026-02-11 17:02:57.552765"	-23.5505	-46.6333	"0:0:0:0:0:0:0:1"	10	"Batendo ponto em dia normal de trabalho"	"f9148c50-4450-4f0c-b014-b2f0ccded459"
+2	3	"INICIO_DESCANSO"	"2026-02-11 17:03:05.610687"	-23.5505	-46.6333	"0:0:0:0:0:0:0:1"	10	"Batendo ponto em dia normal de trabalho"	"f9148c50-4450-4f0c-b014-b2f0ccded459"
+3	3	"FIM_DESCANSO"	"2026-02-11 17:03:07.237387"	-23.5505	-46.6333	"0:0:0:0:0:0:0:1"	10	"Batendo ponto em dia normal de trabalho"	"f9148c50-4450-4f0c-b014-b2f0ccded459"
+4	3	"SAIDA"	"2026-02-11 17:03:08.504057"	-23.5505	-46.6333	"0:0:0:0:0:0:0:1"	10	"Batendo ponto em dia normal de trabalho"	"f9148c50-4450-4f0c-b014-b2f0ccded459"
+5	3	"ENTRADA"	"2026-02-13 07:27:54.885313"	-23.5505	-46.6333	"0:0:0:0:0:0:0:1"	10	"Batendo ponto em dia normal de trabalho"	"bb2a0cab-14a2-45dd-97be-4e869b16e66a"
+7	3	"ENTRADA"	"2026-02-14 07:48:38.83459"	-23.5505	-46.6333	"0:0:0:0:0:0:0:1"	10	"Batendo ponto em dia normal de trabalho"	"bf8c5a17-87aa-428a-b389-ee83af89a66e"
+9	3	"INICIO_DESCANSO"	"2026-02-13 12:00:00"			"AJUSTE_ADMIN"		"AJUSTE DE PONTO TESTE"	"f2cb95ec-84bc-4f3c-b4ae-d72e59e08f2f"
+10	3	"FIM_DESCANSO"	"2026-02-13 14:00:00"			"AJUSTE_ADMIN"		"AJUSTE DE PONTO"	"e921cf6f-b70c-4a20-b12d-bb2fa39ffa59"
+11	3	"SAIDA"	"2026-02-13 18:00:00"			"AJUSTE_ADMIN"		"SAIDA CORRETA"	"a5b74305-c064-46bd-aaf9-558c1883a025"
+
+em tela de history.html:
+Total de Horas = 0:00 / Dias Trabalhados = 6 / Horas Extras = 00:00 / Horas Débito = 224:00

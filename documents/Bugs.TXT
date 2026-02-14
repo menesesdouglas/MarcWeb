@@ -1,1 +1,6 @@
 Em tela de employee.html, mesmo estando com ultimo registro do dia sendo entrada, caso saia do sistema/feche o server http e/ou spring-boot e reconecte, ele coloca status: fora de serviço.
+
+Ao apertar em sair na tela de employee.html: script_employee.js:354 Logout inicializado corretamente
+script_employee.js:362 Uncaught ReferenceError: showToast is not defined
+    at HTMLButtonElement.handleLogout (script_employee.js:362:9)
+

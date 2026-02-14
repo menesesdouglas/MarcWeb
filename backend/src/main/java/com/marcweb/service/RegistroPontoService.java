@@ -263,46 +263,57 @@ public class RegistroPontoService {
     private long calcularHoras(List<RegistroPontoResponse> registros) {
         long minutosTrabalhados = 0;
 
-        /// PARA SEPARAR REGISTROS POR DIA
-        List<List<RegistroPontoResponse>> registrosSeparados = new ArrayList<>();
-        List<RegistroPontoResponse> listaAux = new ArrayList<>();
-        for (int i = 0; i < registros.size(); i++) {
-            var registroAtual = registros.get(i);
-            listaAux.add(registroAtual);
-            var dataRegistroAtual = registroAtual.getTimestamp().toLocalDate();
-            /// PARANDO O LOOP CASO SEJA O ULTIMO REGISTRO PARA NÃO DAR ERRO
-            if (i == registros.size() - 1) {
-                registrosSeparados.add(listaAux);
-                break;
-            }
-
-            /// FINALIZANDO A LISTA DO DIA CASO O ID_EXPEDIENTE DO PRÓXIMO REGISTRO SEJA DIFERENTE
-            if (!registros.get(i + 1).getIdExpediente().equals(registroAtual.getIdExpediente())) {
-                registrosSeparados.add(listaAux);
-                listaAux = new ArrayList<>();
-            }
+        if (registros == null || registros.isEmpty()) {
+            return 0;
         }
 
-        for (List<RegistroPontoResponse> r : registrosSeparados) {
-            try {
-                var primeiroRegistro = r.get(0);
-                var segundoRegistro = r.get(1);
-                if (primeiroRegistro.getTipo().equals(TipoRegistro.ENTRADA) && segundoRegistro.getTipo().equals(TipoRegistro.INICIO_DESCANSO)) {
-                    minutosTrabalhados += ChronoUnit.MINUTES.between(primeiroRegistro.getTimestamp(), segundoRegistro.getTimestamp());
+        /// SEPARAR REGISTROS POR idExpediente (cada expediente é um dia de trabalho)
+        Map<UUID, List<RegistroPontoResponse>> registrosPorExpediente = new LinkedHashMap<>();
+        
+        for (RegistroPontoResponse registro : registros) {
+            UUID idExpediente = registro.getIdExpediente();
+            registrosPorExpediente.computeIfAbsent(idExpediente, k -> new ArrayList<>()).add(registro);
+        }
+
+        /// PARA CADA EXPEDIENTE, ORDENAR OS REGISTROS POR TIMESTAMP
+        for (Map.Entry<UUID, List<RegistroPontoResponse>> entry : registrosPorExpediente.entrySet()) {
+            List<RegistroPontoResponse> registrosDoExpediente = entry.getValue();
+            registrosDoExpediente.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
+            
+            // Procurar os pares de entrada/saída
+            for (int i = 0; i < registrosDoExpediente.size(); i++) {
+                var registroAtual = registrosDoExpediente.get(i);
+                
+                // Procurar ENTRADA
+                if (registroAtual.getTipo().equals(TipoRegistro.ENTRADA)) {
+                    // Procurar o próximo registro que seja INICIO_DESCANSO ou SAIDA
+                    for (int j = i + 1; j < registrosDoExpediente.size(); j++) {
+                        var proximo = registrosDoExpediente.get(j);
+                        if (proximo.getTipo().equals(TipoRegistro.INICIO_DESCANSO)) {
+                            minutosTrabalhados += ChronoUnit.MINUTES.between(registroAtual.getTimestamp(), proximo.getTimestamp());
+                            break;
+                        } else if (proximo.getTipo().equals(TipoRegistro.SAIDA)) {
+                            // Caso não tenha intervalo de descanso
+                            minutosTrabalhados += ChronoUnit.MINUTES.between(registroAtual.getTimestamp(), proximo.getTimestamp());
+                            break;
+                        }
+                    }
                 }
-            } catch (Exception e) {
-                System.out.println("NÃO FOI POSSÍVEL CALCULAR COM OS REGISTROS ATUAIS");
-            }
-            try {
-                var terceiroRegistro = r.get(2);
-                var quartoRegistro = r.get(3);
-                if (terceiroRegistro.getTipo().equals(TipoRegistro.FIM_DESCANSO) && quartoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
-                    minutosTrabalhados += ChronoUnit.MINUTES.between(terceiroRegistro.getTimestamp(), quartoRegistro.getTimestamp());
+                
+                // Procurar FIM_DESCANSO
+                if (registroAtual.getTipo().equals(TipoRegistro.FIM_DESCANSO)) {
+                    // Procurar a próxima SAIDA
+                    for (int j = i + 1; j < registrosDoExpediente.size(); j++) {
+                        var proximo = registrosDoExpediente.get(j);
+                        if (proximo.getTipo().equals(TipoRegistro.SAIDA)) {
+                            minutosTrabalhados += ChronoUnit.MINUTES.between(registroAtual.getTimestamp(), proximo.getTimestamp());
+                            break;
+                        }
+                    }
                 }
-            } catch (Exception e) {
-                System.out.println("NÃO FOI POSSÍVEL CALCULAR COM OS REGISTROS ATUAIS");
             }
         }
+        
         return minutosTrabalhados;
     }
 
@@ -397,7 +408,10 @@ public class RegistroPontoService {
         if (possivelRegistro.getId() == null) {
             possivelRegistro.setUser(user);
             possivelRegistro.setTipo(tipoRegistro);
-            possivelRegistro.setExpedienteId(UUID.randomUUID());
+            
+            // CORREÇÃO: Buscar o idExpediente do dia para manter vínculo correto
+            UUID expedienteId = buscarIdExpedienteDoDia(user, request.date());
+            possivelRegistro.setExpedienteId(expedienteId);
         }
         possivelRegistro.setTimestamp(timestamp);
         possivelRegistro.setJustificativa(request.justificativa());
@@ -405,6 +419,24 @@ public class RegistroPontoService {
 
         repository.save(possivelRegistro);
         detalhes.setDetalhes("Ajuste de ponto realizado para " + user.getNome() + ": " + tipoRegistro.getText() + " em " + timestamp);
+    }
+
+    /// MÉTODO AUXILIAR PARA BUSCAR O idExpediente DO DIA
+    /// Se já existir um registro para aquele dia, usa o mesmo idExpediente
+    /// Caso contrário, cria um novo UUID
+    private UUID buscarIdExpedienteDoDia(User user, LocalDate data) {
+        LocalDateTime inicioDia = data.atStartOfDay();
+        LocalDateTime fimDia = data.atTime(LocalTime.MAX);
+        
+        List<RegistroPonto> registrosDoDia = repository.buscarRegistrosEmIntervaloDeData(user, inicioDia, fimDia);
+        
+        if (!registrosDoDia.isEmpty()) {
+            // Retorna o idExpediente do primeiro registro do dia
+            return registrosDoDia.get(0).getExpedienteId();
+        }
+        
+        // Se não houver registros, cria um novo expediente
+        return UUID.randomUUID();
     }
 
     // Método auxiliar para mapear string para TipoRegistro

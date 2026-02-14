@@ -65,8 +65,15 @@ async function carregarHistorico() {
 
         if (response.ok) {
             const resultado = await response.json();
-            console.log((resultado));
-            calcularEstatisticas(resultado.registros, resultado.minutosTrabalhados, resultado.monthLength);
+            console.log('Resultado completo:', resultado);
+            console.log('minutosTrabalhados:', resultado.minutosTrabalhados);
+            console.log('monthLength:', resultado.monthLength);
+            
+            // Verificação defensiva - aceita ambos os formatos de nome de campo
+            const minutosTrabalhados = resultado.minutosTrabalhados || resultado.MinutosTrabalhados || 0;
+            const monthLength = resultado.monthLength || resultado.monthLength;
+            
+            calcularEstatisticas(resultado.registros, minutosTrabalhados, monthLength, primeiroDia, ultimoDia);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
@@ -78,7 +85,7 @@ async function carregarHistorico() {
     }
 }
 
-function calcularEstatisticas(registros, minutosTrabalhados, monthLength) {
+function calcularEstatisticas(registros, minutosTrabalhados, monthLength, primeiroDia, ultimoDia) {
     if (!registros || registros.length === 0) {
         document.getElementById('totalHoras').textContent = '--:--';
         document.getElementById('diasTrabalhados').textContent = '--';
@@ -87,25 +94,41 @@ function calcularEstatisticas(registros, minutosTrabalhados, monthLength) {
         return;
     }
 
-    // Calcular estatísticas básicas
+    // Calcular dias únicos trabalhados (usando o ID do expediente como referência)
     const diasUnicos = new Set();
-
     registros.forEach(registro => {
-        /// USANDO O ID DO EXPEDINETE COMO REFERENCIA
         diasUnicos.add(registro.idExpediente);
     });
 
-    // QUANTIDADE DE MINUTOS QUE O USUÁRIO PRECISA TER TRABALHADO NOS DIAS REGISTRADOS
-    const minutosExigidos = 480 * monthLength;
+    const diasTrabalhados = diasUnicos.size;
+
+    // Quantidade de minutos que o usuário deveria trabalhar nos dias trabalhados
+    // Considerando 8 horas (480 minutos) por dia útil trabalhado
+    const minutosExigidos = 480 * diasTrabalhados;
     const minutosDebito = minutosExigidos - minutosTrabalhados;
 
-    // Para cálculo mais preciso de horas, seria necessário agrupar por dia
-    // e calcular diferenças entre entrada/saída
-    // Por enquanto, vamos mostrar estatísticas básicas
-    document.getElementById('diasTrabalhados').textContent = diasUnicos.size;
+    // Exibir estatísticas
+    document.getElementById('diasTrabalhados').textContent = diasTrabalhados;
     document.getElementById('totalHoras').textContent = `${Math.floor(minutosTrabalhados / 60)}:${(minutosTrabalhados % 60).toString().padStart(2, '0')}`;
     document.getElementById('horasExtras').textContent = minutosDebito < 0 ? `${Math.floor(Math.abs(minutosDebito) / 60)}:${(Math.abs(minutosDebito) % 60).toString().padStart(2, '0')}` : '00:00';
     document.getElementById('horasDebito').textContent = minutosDebito > 0 ? `${Math.floor(Math.abs(minutosDebito) / 60)}:${(Math.abs(minutosDebito) % 60).toString().padStart(2, '0')}` : '00:00';
+}
+
+// Função para calcular dias úteis (segunda a sexta) no período
+function calcularDiasUteis(mesAno, primeiroDia, ultimoDia) {
+    let diasUteis = 0;
+    const currentDate = new Date(primeiroDia);
+    
+    while (currentDate <= ultimoDia) {
+        const dayOfWeek = currentDate.getDay();
+        // 0 = domingo, 6 = sábado
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            diasUteis++;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return diasUteis;
 }
 
 

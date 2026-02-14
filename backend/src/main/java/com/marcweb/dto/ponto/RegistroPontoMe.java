@@ -11,6 +11,6 @@ import java.util.List;
 @Data
 public class RegistroPontoMe {
     List<RegistroPontoResponse> registros;
-    private long MinutosTrabalhados;
+    private long minutosTrabalhados;
     private int monthLength;
 }
