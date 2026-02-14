@@ -4,7 +4,6 @@ import com.marcweb.dto.ponto.RegistroPontoResponse;
 import com.marcweb.entity.RegistroPonto;
 import com.marcweb.entity.TipoRegistro;
 import com.marcweb.entity.User;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,12 +35,21 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     @Query("Select r from RegistroPonto r where r.expedienteId = :expedienteId and r.timestamp > :lastTimestamp")
     List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(@Param("expedienteId") UUID expedienteId, @Param("lastTimestamp") LocalDateTime lastTimestamp);
 
-    // BUSCANDO ULTIMO TIPO DE REGISTRO DE UM USUÁRIO
+    /// EU IA SOBRESCREVER, PORÉM GERAVA ERRO NOS TESTES, ENTÃO APENAS MARQUEI COMO DEPRECIADO
+    /// BUSCANDO ULTIMO TIPO DE REGISTRO DE UM USUÁRIO
+    @Deprecated
     @Query(nativeQuery = true, value = """
             Select r.tipo from registros_ponto r where r.user_id = :idUsuario and timestamp between :start and :end
             order by r.timestamp Desc limit 1
             """)
     Optional<TipoRegistro> findLastTypeRegistration(@Param("idUsuario") Long idUsuario, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+
+    /// BUSCANDO ULTIMO REGISTRO DO USUÁRIO
+    @Query(nativeQuery = true, value = """
+            Select * from registros_ponto r where r.user_id = :idUsuario order by r.timestamp Desc limit 1
+            """)
+    Optional<RegistroPonto> findLastRegistroPonto(@Param("idUsuario") Long idUsuario);
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO COM PAGINAÇÃO
     @Query("""
@@ -126,4 +134,25 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     @Query(nativeQuery = true, value = "Select * from registros_ponto where user_id = :userId and tipo = 'SAIDA' order by timestamp DESC limit 1 ")
     RegistroPonto findByUserIdAndTipoOrderByTimestampDesc(@Param("userId") Long userId);
+
+
+    /// BUSCANDO O ID DO EXPEDIENTE PARA SALVAR EM UM NOVO PONTO EM CASO DE AJUSTE DO ADMINISTRADOR
+    @Query(nativeQuery = true, value = """
+            Select r.expediente_id from registros_ponto r where r.user_id = :userId
+             and timestamp < :timestamp  and tipo = 'ENTRADA' order by timestamp DESC limit 1""")
+    UUID findExperienciaIdOfDay(@Param("userId") Long userId, @Param("timestamp") LocalDateTime timestamp);
+
+    /// BUSCANDO ID DO ULTIMO EXPEDIENTE
+    @Query(nativeQuery = true, value = """
+            Select r.expediente_id from registros_ponto r where r.user_id = :userId
+             and timestamp < CURRENT_DATE  and tipo = 'ENTRADA' order by timestamp DESC limit 1""")
+    UUID findLastExpedienteId(@Param("userId") Long userId);
+
+    boolean existsByExpedienteIdAndTipo(UUID expedienteId, TipoRegistro tipo);
+
+
+
+
+
+
 }

@@ -59,6 +59,7 @@ public class RegistroPontoService {
             validarNovoCiclo(user);
         }
 
+
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
         validarDiaUtil(dataAtual); // <-- Valida se é dia útil (não domingo e não feriado)
@@ -67,11 +68,7 @@ public class RegistroPontoService {
         ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
         validarGeolocalizacao(data, config); // Chama o método de validação
 
-        // VALIDAÇÃO DE REGISTRO (Sequência)
-        validarRegistro(data.getTipo(), user.getId());
-
-
-        ///  CAMPO QUE FICARÁ RESPONSÁVEL POR IDENTIFICAR UM DIA DE TRABALHO DE FOMRA INDIVIDUAL
+        ///  CAMPO QUE FICARÁ RESPONSÁVEL POR IDENTIFICAR UM DIA DE TRABALHO DE FORMA INDIVIDUAL
         UUID expedienteId;
 
         /// GERANDO UM NOVO CAO SEJA PONTO DE ENTRADO
@@ -80,9 +77,14 @@ public class RegistroPontoService {
         } else { /// PEGANDO O 'dataId' DO ULTIMO REGISTRO CASO CONTRÁRIO
             expedienteId = repository.findLastExpedienteIdByUserId(user.getId());
         }
+
+        // VALIDAÇÃO DE REGISTRO (Sequência)
+        validarRegistro(data.getTipo(), user.getId(), expedienteId);
+
+
         // SALVANDO CASO PASSE NAS VALIDAÇÕES
         // O RegistroPonto deve receber os dados do DTO e o usuário, o timestamp é definido internamente
-        repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request))); // Assumindo que o construtor da entidade ou o JPA lida com o timestamp
+        repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request)));
         detalhes.setDetalhes("Usuário registrou ponto de " + data.getTipo().getText());
     }
 
@@ -150,8 +152,8 @@ public class RegistroPontoService {
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+                   + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                     * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distanceInKm = R * c; // Distância em quilômetros
         return distanceInKm * 1000; // Converte para metros
@@ -160,22 +162,21 @@ public class RegistroPontoService {
 
     // VERIFICAR SE EXISTEM REGISTROS INCOMPLETOS DE DIAS ANTERIORES
     public boolean temRegistroIncompletoAnterior(Long userId) {
-        List<RegistroPonto> registrosAnteriores = repository.findLastRecordsFromPreviousDays(userId);
-        if (!registrosAnteriores.isEmpty()) {
-            RegistroPonto ultimoRegistro = registrosAnteriores.get(0);
-            // Verificar se o último registro não é SAIDA (ou seja, o dia não foi finalizado corretamente)
-            return !ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA);
+        UUID lastExpedienteId = repository.findLastExpedienteId(userId);
+        if (lastExpedienteId != null) {
+            /// VERIFICANDO SE O EXPEDIENTE FICOU SEM REGISTRO DE SAÍDA
+            return !repository.existsByExpedienteIdAndTipo(lastExpedienteId, TipoRegistro.SAIDA);
         }
         return false;
     }
 
-    // VALIDANDO ORDEM DE TIPO DE REGISTRO DE PONTO
-    private void validarRegistro(TipoRegistro tipoRegistro, Long idUsuario) {
+    /// VALIDANDO ORDEM DE TIPO DE REGISTRO DE PONTO
+    private void validarRegistro(TipoRegistro tipoRegistro, Long idUsuario, UUID idExpediente) {
         /// BUSCANDO ULTIMO REGISTRO DO DIA NO BANCO DE DADOS
-        Optional<TipoRegistro> possivelUltimoTipoRegistro = repository.findLastTypeRegistration(idUsuario, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX));
+        Optional<RegistroPonto> possivelUltimoRegistro = repository.findLastRegistroPonto(idUsuario);
 
-        // VERIFICAÇÃO PARA O PRIMEIRO REGISTRO DO USUÁRIO
-        if (possivelUltimoTipoRegistro.isEmpty()) {
+        /// VERIFICAÇÃO PARA O PRIMEIRO REGISTRO DO USUÁRIO
+        if (possivelUltimoRegistro.isEmpty()) {
             // O primeiro registro DEVE ser uma ENTRADA
             if (tipoRegistro != TipoRegistro.ENTRADA) {
                 // Lança exceção informando que o primeiro registro deve ser uma entrada
@@ -185,25 +186,23 @@ public class RegistroPontoService {
             return;
         }
 
-        TipoRegistro ultimoTipoRegistro = possivelUltimoTipoRegistro.get();
+        RegistroPonto ultimoRegistro = possivelUltimoRegistro.get();
+        TipoRegistro ultimoTipoRegistro = ultimoRegistro.getTipo();
 
-        /* SE O ULTIMO REGISTRO DAQUELE DIA FOI O DE SAÍDA, CONSIDERA QYE O CICLO FOI FINALIZADO (PRECISA DE CORREÇÃO)
-        if (ultimoTipoRegistro.equals(TipoRegistro.SAIDA))
-            throw new CicloPontoFinalizadoException();*/
+        /// NOVA LÓGICA: VERIFICAR SE O ÚLTIMO REGISTRO É DE UM DIA ANTERIOR E NÃO FOI FINALIZADO (SAÍDA)
+        /// COMPARA O ID DO EXPEDIENTE ATUAL COM O ID_EXPEDIENTE DO ULTIMO REGISTRO
+        if (possivelUltimoRegistro.get().getExpedienteId() != idExpediente) {
+            /// BUSCANDO UM REGISTRO DE ENTRADA PARA O DIA ATUAL
+            var possivelRegistroDeEntrada = repository.findByUserAndTipoAndTimestampBetween(
+                    User.builder().id(idUsuario).build(), TipoRegistro.ENTRADA,
+                    LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX)
+            );
 
-        // NOVA LÓGICA: VERIFICAR SE O ÚLTIMO REGISTRO É DE UM DIA ANTERIOR E NÃO FOI FINALIZADO (SAÍDA)
-        if (tipoRegistro == TipoRegistro.ENTRADA && !ultimoTipoRegistro.equals(TipoRegistro.SAIDA)) {
-            // Verificar se o último registro é de um dia anterior
-            List<RegistroPonto> registrosAnteriores = repository.findLastRecordsFromPreviousDays(idUsuario);
-            if (!registrosAnteriores.isEmpty()) {
-                RegistroPonto ultimoRegistro = registrosAnteriores.get(0);
-                // Se o último registro não é SAIDA e é de um dia anterior, permitir ENTRADA mas com aviso
-                if (!ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
-                    // Permitir o registro de ENTRADA, mas o sistema deverá notificar o usuário
-                    // que ele precisa contatar o supervisor para ajustar o dia anterior
-                    return; // Permite a entrada, o aviso será tratado no frontend
-                }
+            if (!ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA) && tipoRegistro.equals(TipoRegistro.ENTRADA)) {
+                if (possivelRegistroDeEntrada.isEmpty())
+                    return; // Permite a entrada caso não exista uma para o dia atual
             }
+
         }
 
         // VALIDAÇÃO DE ORDEM PARA REGISTROS SUBSEQUENTES (código original ajustado)
@@ -269,7 +268,7 @@ public class RegistroPontoService {
 
         /// SEPARAR REGISTROS POR idExpediente (cada expediente é um dia de trabalho)
         Map<UUID, List<RegistroPontoResponse>> registrosPorExpediente = new LinkedHashMap<>();
-        
+
         for (RegistroPontoResponse registro : registros) {
             UUID idExpediente = registro.getIdExpediente();
             registrosPorExpediente.computeIfAbsent(idExpediente, k -> new ArrayList<>()).add(registro);
@@ -279,11 +278,11 @@ public class RegistroPontoService {
         for (Map.Entry<UUID, List<RegistroPontoResponse>> entry : registrosPorExpediente.entrySet()) {
             List<RegistroPontoResponse> registrosDoExpediente = entry.getValue();
             registrosDoExpediente.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
-            
+
             // Procurar os pares de entrada/saída
             for (int i = 0; i < registrosDoExpediente.size(); i++) {
                 var registroAtual = registrosDoExpediente.get(i);
-                
+
                 // Procurar ENTRADA
                 if (registroAtual.getTipo().equals(TipoRegistro.ENTRADA)) {
                     // Procurar o próximo registro que seja INICIO_DESCANSO ou SAIDA
@@ -299,7 +298,7 @@ public class RegistroPontoService {
                         }
                     }
                 }
-                
+
                 // Procurar FIM_DESCANSO
                 if (registroAtual.getTipo().equals(TipoRegistro.FIM_DESCANSO)) {
                     // Procurar a próxima SAIDA
@@ -313,7 +312,7 @@ public class RegistroPontoService {
                 }
             }
         }
-        
+
         return minutosTrabalhados;
     }
 
@@ -408,35 +407,19 @@ public class RegistroPontoService {
         if (possivelRegistro.getId() == null) {
             possivelRegistro.setUser(user);
             possivelRegistro.setTipo(tipoRegistro);
-            
-            // CORREÇÃO: Buscar o idExpediente do dia para manter vínculo correto
-            UUID expedienteId = buscarIdExpedienteDoDia(user, request.date());
+
+            /// CORREÇÃO: Buscar o idExpediente do dia para manter vínculo correto
+            /// GERA UM NOVO ID CASO SEJA UMA ENTRADA, CASO CONTRÁRIO, BUSCA O ID DA PRIMEIRA ENTRADA MARCADA NA DATA
+            UUID expedienteId = tipoRegistro.equals(TipoRegistro.ENTRADA) ? UUID.randomUUID() :
+                    repository.findExperienciaIdOfDay(user.getId(), timestamp);
             possivelRegistro.setExpedienteId(expedienteId);
         }
         possivelRegistro.setTimestamp(timestamp);
         possivelRegistro.setJustificativa(request.justificativa());
-        possivelRegistro.setIp("AJUSTE_ADMIN"); // Marcar como ajuste administrativo
+        possivelRegistro.setIp("AJUSTE_ADMIN");
 
         repository.save(possivelRegistro);
         detalhes.setDetalhes("Ajuste de ponto realizado para " + user.getNome() + ": " + tipoRegistro.getText() + " em " + timestamp);
-    }
-
-    /// MÉTODO AUXILIAR PARA BUSCAR O idExpediente DO DIA
-    /// Se já existir um registro para aquele dia, usa o mesmo idExpediente
-    /// Caso contrário, cria um novo UUID
-    private UUID buscarIdExpedienteDoDia(User user, LocalDate data) {
-        LocalDateTime inicioDia = data.atStartOfDay();
-        LocalDateTime fimDia = data.atTime(LocalTime.MAX);
-        
-        List<RegistroPonto> registrosDoDia = repository.buscarRegistrosEmIntervaloDeData(user, inicioDia, fimDia);
-        
-        if (!registrosDoDia.isEmpty()) {
-            // Retorna o idExpediente do primeiro registro do dia
-            return registrosDoDia.get(0).getExpedienteId();
-        }
-        
-        // Se não houver registros, cria um novo expediente
-        return UUID.randomUUID();
     }
 
     // Método auxiliar para mapear string para TipoRegistro
