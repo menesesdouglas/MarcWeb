@@ -19,7 +19,7 @@ public class FolgaController {
 
     private final FolgaService folgaService;
 
-    // --- Endpoints Públicos (requerem autenticação) ---
+
 
     // GET /api/folgas - Listar todas as folgas pendentes (requer ROLE_ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
@@ -47,8 +47,8 @@ public class FolgaController {
 
     // NOVO Endpoint: Listar folgas do usuário autenticado
     @GetMapping("/me")
-    public ResponseEntity<List<FolgaResponse>> getFolgasByMe() {
-        List<FolgaResponse> folgas = folgaService.findByMe();
+    public ResponseEntity<PageFolgaResponse> getFolgasByMe(@RequestParam int pageNumber) {
+        PageFolgaResponse folgas = folgaService.findByMe(pageNumber);
         return ResponseEntity.ok(folgas);
     }
 

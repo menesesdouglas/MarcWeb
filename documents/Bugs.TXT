@@ -1,0 +1,1 @@
+Em tela de employee.html, mesmo estando com ultimo registro do dia sendo entrada, caso saia do sistema/feche o server http e/ou spring-boot e reconecte, ele coloca status: fora de serviço.

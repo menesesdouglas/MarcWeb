@@ -3,6 +3,7 @@ let allUsers = [];
 let recentPunches = [];
 let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
+const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -33,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function setupEventListeners() {
+
+    let menuIsOpen = false;
+
     // Formulário de Cadastro/Edição
     const employeeForm = document.getElementById('employeeForm');
     if (employeeForm) {
@@ -99,6 +103,15 @@ function setupEventListeners() {
 
 
     })
+
+}
+
+function openMenu() {
+    sideBar.classList.add("active");
+}
+
+function closeMenu() {
+    sideBar.classList.remove("active");
 }
 
 async function loadUsers() {
@@ -176,6 +189,7 @@ function initNavigation() {
 
     links.forEach(link => {
         link.addEventListener('click', (e) => {
+            closeMenu();
             e.preventDefault();
             const target = link.getAttribute('data-section');
 
@@ -230,13 +244,10 @@ function renderFolgas(folgas) {
             <td>${folga.dataInicio}</td>
             <td>${folga.dataFim}</td>
             <td>${folga.tipo}</td>
-            <td>
-                <button id="btn-detalhes-folga-${folga.id}"  style="background:none; border:none; color:#0a9396; cursor:pointer; margin-right: 10px;">Ver Detalhes</button>
-                
-            </td>
         `;
         listBody.appendChild(tr);
-        document.getElementById(`btn-detalhes-folga-${folga.id}`).addEventListener("click", () => verDetalhesFolga(folga))
+        tr.style = "cursor: pointer";
+        tr.addEventListener("click", () => verDetalhesFolga(folga))
     });
 }
 
@@ -281,8 +292,9 @@ function abrirModalDetalhes(folga) {
     const btnAprovar = document.getElementById('btn-aprovar');
     const btnRecusar = document.getElementById('btn-recusar');
 
+
     // Verificar se a folga já foi processada
-    if (folga.status !== 'PENDENTE') {
+    if (folga.status !== 'Pendente') {
         btnAprovar.style.display = 'none';
         btnRecusar.style.display = 'none';
     } else {

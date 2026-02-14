@@ -10,6 +10,10 @@ import com.marcweb.entity.User;
 import com.marcweb.repository.FolgaRepository;
 import com.marcweb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -159,14 +163,18 @@ public class FolgaService {
         );
     }
 
-    // NOVO Método: Listar folgas do usuário autenticado
-    public List<FolgaResponse> findByMe() {
+    //  Listar folgas do usuário autenticado
+    public PageFolgaResponse findByMe(int pageNumber) {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(
                 () -> new RuntimeException("Usuário não encontrado")
         );
-        List<Folga> folgas = folgaRepository.findByUserId(user.getId());
-        return folgas.stream().map(FolgaResponse::new).collect(Collectors.toList());
+        Page<Folga> folgasPaginadas = folgaRepository.findByUserId(user.getId(), PageRequest.of(pageNumber, 20));
+        PageFolgaResponse pageFolgaResponse = new PageFolgaResponse();
+        pageFolgaResponse.setFolgas(folgasPaginadas.stream().map(FolgaResponse::new).toList());
+        pageFolgaResponse.setTotalPages(folgasPaginadas.getTotalPages());
+        return pageFolgaResponse;
+
     }
 
     // NOVO Método: Listar folgas pendentes com detalhes completos

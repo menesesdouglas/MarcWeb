@@ -32,8 +32,8 @@ public class RegistroPontoService {
 
     private final UserService userService;
     private final RegistroPontoRepository repository;
-    private final ConfigEmpresaService configEmpresaService; // Injetando o serviço de configuração
-    private final FeriadoRepository feriadoRepository; // Injetando o repositório de feriados
+    private final ConfigEmpresaService configEmpresaService;
+    private final FeriadoRepository feriadoRepository;
     private final FolgaService folgaService;
     private final Detalhes detalhes;
 
@@ -50,9 +50,14 @@ public class RegistroPontoService {
 
         var dataAtual = LocalDate.now();
 
-        /// VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
-        if (data.getTipo().equals(TipoRegistro.ENTRADA) && folgaService.existsByUserAndDate(user.getId(), dataAtual))
-            throw new RegistroEmFolgaException();
+
+        if (data.getTipo().equals(TipoRegistro.ENTRADA)) {
+            /// VERIFICANDO SE USUÁRIO ESTÁ DE FOLGA
+            if (folgaService.existsByUserAndDate(user.getId(), dataAtual))
+                throw new RegistroEmFolgaException();
+            ///  BLOQUEANDO NOVO CICLO CASO A ULTIMA SAIDA TENHA SIDO HÁ MENOS DE 8 HORAS
+            validarNovoCiclo(user);
+        }
 
         // VALIDAÇÃO DE DIA ÚTIL (Novo passo - deve vir antes de outras validações)
         // A validação é feita com base no momento atual do servidor
@@ -238,7 +243,7 @@ public class RegistroPontoService {
             }
             registros.sort(Comparator.comparing(RegistroPontoResponse::getTimestamp));
         }
-        RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros));
+        RegistroPontoMe meusRegistros = new RegistroPontoMe(registros, calcularHoras(registros), start.getMonth().length(start.toLocalDate().isLeapYear()));
         return meusRegistros;
     }
 
@@ -392,6 +397,7 @@ public class RegistroPontoService {
         if (possivelRegistro.getId() == null) {
             possivelRegistro.setUser(user);
             possivelRegistro.setTipo(tipoRegistro);
+            possivelRegistro.setExpedienteId(UUID.randomUUID());
         }
         possivelRegistro.setTimestamp(timestamp);
         possivelRegistro.setJustificativa(request.justificativa());
@@ -415,4 +421,14 @@ public class RegistroPontoService {
     public List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(UUID expedienteId, LocalDateTime timestamp) {
         return repository.findByExpedienteIdAndTimestampGreaterThan(expedienteId, timestamp);
     }
+
+
+    /// BLOQUEANDO NOVO REGISTRO CASO UM EXPEDIENTE TENHA SIDO FINALIZADO HÁ MENOS DE 8 HORAS ATRAS
+    private void validarNovoCiclo(User user) {
+        var registro = repository.findByUserIdAndTipoOrderByTimestampDesc(user.getId());
+        var horasPassadas = ChronoUnit.HOURS.between(registro.getTimestamp(), LocalDateTime.now());
+        if (horasPassadas < 8) throw new CicloPontoFinalizadoException();
+
+    }
+
 }

@@ -12,4 +12,5 @@ import java.util.List;
 public class RegistroPontoMe {
     List<RegistroPontoResponse> registros;
     private long MinutosTrabalhados;
+    private int monthLength;
 }

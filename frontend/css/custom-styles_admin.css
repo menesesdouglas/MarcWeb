@@ -97,6 +97,23 @@ small {
     transition: var(--transition);
 }
 
+.content-nav {
+    display: flex;
+    align-items: center;
+}
+
+i#menu, i#close-menu {
+    display: none;
+    padding-left: 5px;
+}
+
+
+
+i {
+    scale: 130%;
+    cursor: pointer;
+}
+
 .nav-link:hover::before,
 .nav-link.active::before {
     transform: scaleY(1);
@@ -123,6 +140,10 @@ small {
     border-radius: 6px;
     cursor: pointer;
     transition: var(--transition);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-logout:hover {
@@ -221,6 +242,7 @@ small {
 .admin-table {
     width: 100%;
     border-collapse: collapse;
+    
 }
 
 
@@ -293,6 +315,7 @@ textarea:focus {
     border-color: var(--petrol-light);
     box-shadow: 0 0 0 2px rgba(10, 147, 150, 0.2);
 }
+
 
 textarea {
     min-height: 100px;
@@ -370,12 +393,16 @@ textarea::placeholder {
     justify-content: center;
     align-items: center;
     z-index: 1001;
+    padding: 20px;
 }
 
 .modal {
     width: 450px;
+    max-width: 90%;
+    max-height: 80vh;
     border-radius: 12px;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 
@@ -475,13 +502,24 @@ textarea::placeholder {
 
 @media (max-width: 480px) {
     .sidebar {
-        width: 60px;
+        display: none;
+    }
+
+    .sidebar.active {
+        display: flex;
     }
 
     .main-content {
-        margin-left: 60px;
-        padding: 1.5rem;
+        margin-left: 0;
+        padding: 0;
     }
+
+    i#menu,
+    i#close-menu {
+        display: inline;
+    }
+
+
 
     .card {
         padding: 1rem;
@@ -535,6 +573,7 @@ textarea::placeholder {
     color: var(--petrol-light);
     position: relative;
     padding-bottom: 8px;
+    padding-left: 5px;
 }
 
 .section-header h1::after {
@@ -551,6 +590,7 @@ textarea::placeholder {
 .section-header p {
     color: var(--text-dim);
     font-size: 0.9rem;
+    padding-left: 5px;
 }
 
 /* Table header styling */

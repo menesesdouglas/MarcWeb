@@ -8,30 +8,61 @@
     <link rel="stylesheet" href="css/custom-styles_admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols" />
+</head>
 </head>
 
 <body>
 
     <div class="admin-wrapper">
-        <aside class="sidebar">
+        <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
+                 <i onclick="closeMenu()" id="close-menu" class="material-symbols">arrow_left_alt</i>
                 <div class="logo">Marc<span>Web</span></div>
                 <small>ADMIN PANEL</small>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-link active" data-section="dashboard"><span>📊 Dashboard</span></a>
-                <a href="#" class="nav-link" data-section="employees"><span>👥 Funcionários</span></a>
-                <a href="#" class="nav-link" data-section="adjustments"><span>⚙️ Ajustes de Ponto</span></a>
-                <a href="#" class="nav-link" data-section="reports"><span>📄 Relatórios</span></a>
-                <a href="#" class="nav-link" data-section="folgas"><span>💀 Folgas</span></a>
+                <a href="#" class="nav-link active" data-section="dashboard">
+                    <div class="content-nav">
+                        <i class="material-symbols">dashboard</i>
+                        <span> Dashboard</span>
+                    </div>
+                </a>
+                <a href="#" class="nav-link" data-section="employees">
+                    <div class="content-nav">
+                        <i class="material-symbols">person</i>
+                        <span>Funcionários</span>
+                    </div>
+                </a>
+                <a href="#" class="nav-link" data-section="adjustments">
+                    <div class="content-nav">
+                        <i class="material-symbols">settings</i>
+                        <span> Ajustes de Ponto</span>
+                    </div>
+                </a>
+                <a href="#" class="nav-link" data-section="reports">
+                    <div class="content-nav">
+                        <i class="material-symbols">stacks</i>
+                        <span>Relatórios</span>
+                    </div>
+                </a>
+                <a href="#" class="nav-link" data-section="folgas">
+                    <div class="content-nav">
+                        <i class="material-symbols">build</i>
+                        <span>Folgas</span>
+                    </div>
+                </a>
             </nav>
             <div class="sidebar-footer">
-                <button id="btnLogout" class="btn-logout">Sair do Sistema</button>
+                <button id="btnLogout" class="btn-logout">
+                    <i style="scale: 100%;" class="material-symbols">logout</i>
+                    <p>Sair</p>
+                </button>
             </div>
         </aside>
 
         <main class="main-content">
-
+            <i onclick="openMenu()" id="menu" class="material-symbols">Menu</i>
             <section id="dashboard" class="content-section active">
                 <header class="section-header">
                     <h1>Dashboard</h1>
@@ -131,7 +162,7 @@
                             <select id="reportEmployee"></select>
                         </div>
                         <div style="display: flex; flex-direction: column;">
-                            <label for="reportMonth">Mês-ano (1999-8)</label>
+                            <label for="reportMonth">Mês-ano (janeiro-2026)</label>
                             <input type="month" id="reportMonth">
                         </div>
                         <button class="btn-primary" onclick="generateReport()">Gerar Folha de Ponto (PDF)</button>
@@ -153,7 +184,7 @@
                                     <th>Data inicio</th>
                                     <th>Data fim</th>
                                     <th>Tipo</th>
-                                    <th>Ações</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody id="folgasListBody">
