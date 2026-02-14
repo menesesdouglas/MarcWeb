@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const result = await fetch("http://localhost:8080/api/ponto", {
+            const result = await fetch("/back/ponto", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -276,47 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     }
 
-    // 3. Sistema de Toast Notifications
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast-notification ${type}`;
-        toast.textContent = message;
-
-        // Estilos inline para o toast
-        toast.style.position = 'fixed';
-        toast.style.bottom = '20px';
-        toast.style.right = '20px';
-        toast.style.padding = '12px 20px';
-        toast.style.borderRadius = '8px';
-        toast.style.backgroundColor = type === 'success' ? 'rgba(45, 206, 137, 0.95)' : 'rgba(10, 147, 150, 0.95)';
-        toast.style.color = 'white';
-        toast.style.fontSize = '0.9rem';
-        toast.style.fontWeight = '600';
-        toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
-        toast.style.zIndex = '1000';
-        toast.style.transform = 'translateY(20px)';
-        toast.style.opacity = '0';
-        toast.style.transition = 'all 0.3s ease-out';
-
-        document.body.appendChild(toast);
-
-        // Animação de entrada
-        setTimeout(() => {
-            toast.style.transform = 'translateY(0)';
-            toast.style.opacity = '1';
-        }, 10);
-
-        // Remover após 3 segundos
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 3000);
-    }
-
-
     // Inicializar logout com a nova função
     initLogout();
 
@@ -339,7 +298,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Carregar histórico de ponto do dia
     loadTodayPunches();
+    
+    // 7. Carregar status atual do usuário
+    loadCurrentStatus();
 });
+
+// Sistema de Toast Notifications (função global)
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+
+    // Estilos inline para o toast
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.right = '20px';
+    toast.style.padding = '12px 20px';
+    toast.style.borderRadius = '8px';
+    toast.style.backgroundColor = type === 'success' ? 'rgba(45, 206, 137, 0.95)' : 'rgba(10, 147, 150, 0.95)';
+    toast.style.color = 'white';
+    toast.style.fontSize = '0.9rem';
+    toast.style.fontWeight = '600';
+    toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    toast.style.zIndex = '1000';
+    toast.style.transform = 'translateY(20px)';
+    toast.style.opacity = '0';
+    toast.style.transition = 'all 0.3s ease-out';
+
+    document.body.appendChild(toast);
+
+    // Animação de entrada
+    setTimeout(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    }, 10);
+
+    // Remover após 3 segundos
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
 
 // Função para garantir que o logout esteja funcionando corretamente
 function initLogout() {
@@ -373,7 +375,7 @@ async function loadTodayPunches() {
         const today = new Date();
         const dateStr = today.toISOString().split('T')[0];
 
-        const response = await fetch(`http://localhost:8080/api/ponto/historico?date=${dateStr}`, {
+        const response = await fetch(`/back/ponto/historico?date=${dateStr}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -409,3 +411,34 @@ function renderPunchHistory(punches) {
     });
 }
 
+// Função para carregar o status atual do usuário
+async function loadCurrentStatus() {
+    try {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const statusElement = document.getElementById('currentStatus');
+        
+        const response = await fetch("/back/ponto/status-atual-me", {
+            headers: {
+                "Authorization": `Bearer ${auth.token}`
+            }
+        });
+        
+        if (response.ok) {
+            const statusData = await response.json();
+            
+            if (statusData.temRegistrosHoje) {
+                // Se tem registros hoje, mostra o status do último registro
+                statusElement.textContent = `Status: ${statusData.status}`;
+                statusElement.style.color = '#2dce89'; // Verde sucesso
+            } else {
+                // Se não tem registros hoje, mantém "Fora de Serviço"
+                statusElement.textContent = 'Status: Fora de Serviço';
+                statusElement.style.color = '#f5365c'; // Vermelho
+            }
+        } else {
+            console.error('Erro ao carregar status atual');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar status atual:', error);
+    }
+}

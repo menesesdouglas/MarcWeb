@@ -6,6 +6,7 @@ import com.marcweb.dto.ponto.CreateRegistroPonto;
 import com.marcweb.dto.ponto.PontosRecentes;
 import com.marcweb.dto.ponto.RegistroPontoResponse;
 import com.marcweb.dto.ponto.StatusAtualFuncionario;
+import com.marcweb.dto.ponto.StatusAtualResponse;
 import com.marcweb.dto.TimeAdjustmentRequest;
 import com.marcweb.dto.ponto.RegistroPontoMe;
 import com.marcweb.entity.*;
@@ -351,6 +352,25 @@ public class RegistroPontoService {
             return new PontosRecentes(r.getTipo().getText(), horario);
         }).toList();
         return pontosRecentesDTO;
+    }
+
+    public StatusAtualResponse getStatusAtual() {
+        var userDetails = UserService.getUserDetailsBySecurityContext();
+        var user = userService.findByUsername(userDetails.getUsername());
+        
+        LocalDate hoje = LocalDate.now();
+        List<RegistroPonto> registrosHoje = repository.buscarRegistrosEmIntervaloDeData(
+            user, hoje.atStartOfDay(), hoje.atTime(LocalTime.MAX));
+        
+        if (registrosHoje.isEmpty()) {
+            return new StatusAtualResponse("Fora de Serviço", null, false);
+        }
+        
+        // Pegar o último registro do dia
+        RegistroPonto ultimoRegistro = registrosHoje.get(registrosHoje.size() - 1);
+        String tipoTexto = ultimoRegistro.getTipo().getText();
+        
+        return new StatusAtualResponse(tipoTexto, tipoTexto, true);
     }
 
     public List<StatusAtualFuncionario> getStatusAtualFuncionarios() {

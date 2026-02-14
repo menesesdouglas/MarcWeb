@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             username: username,
             password: password
         }
-        const loginResponse = await fetch("http://localhost:8080/api/auth/login", {
+        const loginResponse = await fetch("/back/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
