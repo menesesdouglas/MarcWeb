@@ -136,13 +136,13 @@ public class JwtService {
      * Extrai todas as informações (claims) do token JWT usando um SigningKeyResolver
      * que resolve a chave com base no header 'kid'.
      */
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts
                 .parser()
                 .setSigningKeyResolver(getSigningKeyResolver()) // Resolve a chave dinamicamente baseado no kid
                 .build()
                 .parseClaimsJws(token) // Faz o parse do token JWS
-                .getBody(); // Retorna o corpo (claims) do token
+                .getPayload(); // Retorna o corpo (claims) do token
 
     }
 
@@ -228,46 +228,51 @@ public class JwtService {
      * @param userDetails Informações do usuário autenticado
      * @return Token JWT gerado
      */
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateToken(UserDetails userDetails, String tenantId) {
+        return generateToken(tenantId, userDetails);
     }
 
     /**
      * Gera um token JWT para o usuário fornecido com claims extras.
      *
-     * @param extraClaims Claims adicionais a serem incluídos no token
      * @param userDetails Informações do usuário autenticado
      * @return Token JWT gerado
      */
     public String generateToken(
-            Map<String, Object> extraClaims,
+            String tenantId,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+        return buildToken(tenantId, userDetails, jwtExpiration);
     }
 
     /**
      * Método interno para construir o token JWT com todos os parâmetros necessários.
      *
-     * @param extraClaims Claims adicionais
      * @param userDetails Informações do usuário
      * @param expiration  Tempo de expiração em milissegundos
      * @return Token JWT completo e assinado
      */
-    private String buildToken(
-            Map<String, Object> extraClaims,
+     private String buildToken(
+            String tenantId,
             UserDetails userDetails,
             long expiration
     ) {
         return Jwts
                 .builder()
-                .setClaims(extraClaims)
+                .setClaims(generateClaims(tenantId))
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .setHeaderParam("kid", keyId) // Define o identificador da chave atual
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256) // Assina o token com a chave atual
                 .compact(); // Compacta para string
+    }
+
+
+    private Map<String, Object> generateClaims(String tenantId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("tenant_id", tenantId);
+        return claims;
     }
 
     /**

@@ -25,25 +25,28 @@ public class AuthenticationController {
     private final UserService userService;
 
 
-
     @PostMapping("/login") // Mapeia requisições POST para /api/auth/login
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) { // Recebe LoginRequest no body
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        // Recebe LoginRequest no body
         // Cria um token de autenticação com username e password do request
-        LoginResponse loginResponse = userService.logarUsuario(request);
+        String tenantId = request.getHeader("X-Tenant-Id");
+        LoginResponse loginResponse = userService.logarUsuario(loginRequest, tenantId);
         // Retorna o DTO de resposta com status 200 OK
         return ResponseEntity.ok(loginResponse);
     }
 
     /**
      * Endpoint para renovar o token JWT antes da expiração
-     * @param request Objeto HttpServletRequest para acessar o token
+     *
+     * @param request     Objeto HttpServletRequest para acessar o token
      * @param userDetails Detalhes do usuário autenticado
      * @return ResponseEntity com novo token
      */
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refreshToken(HttpServletRequest request,
-                                                       @AuthenticationPrincipal UserDetails userDetails) {
+                                                      @AuthenticationPrincipal UserDetails userDetails) {
         String authHeader = request.getHeader("Authorization");
+        String tenantId = request.getHeader("X-Tenant-Id");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().build();
         }
@@ -57,7 +60,7 @@ public class AuthenticationController {
 
         // Gera novo token para o usuário autenticado
         User user = userService.findByUsername(userDetails.getUsername());
-        String newToken = jwtService.generateToken(user);
+        String newToken = jwtService.generateToken(user, tenantId);
 
         LoginResponse response = LoginResponse.builder()
                 .token(newToken)

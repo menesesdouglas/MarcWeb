@@ -3,7 +3,7 @@
 const auth = JSON.parse(localStorage.getItem("auth"));
 if (!auth) window.location.href = "/login.html";
 if (auth.role != "ADMIN") window.location.href = "/employee.html";
-const urlBase = "/back/user";
+const urlBase = "http://192.168.15.158";
 const queryString = window.location.search;
 const params = new URLSearchParams(queryString);
 
@@ -37,7 +37,7 @@ async function loadPage() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) window.location.href = "/login.html";
         if (auth.role != "ADMIN") window.location.href = "/employee.html";
-        const response = await fetch(`${urlBase}/${userId}?pageNumber=${pageNumber - 1}`, {
+        const response = await fetch(`${urlBase}/back/user/${userId}?pageNumber=${pageNumber - 1}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${auth.token}`
@@ -103,7 +103,7 @@ async function loadPage() {
             tipo: tipo
         }
 
-        const response = await fetch(`/back/folgas`, {
+        const response = await fetch(`${urlBase}/back/folgas`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${auth.token}`,
@@ -214,7 +214,7 @@ async function loadPage() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) window.location.href = "/login.html";
         if (auth.role != "ADMIN") window.location.href = "/employee.html";
-        const response = await fetch(`/back/folgas/solucionar/${idFolga}/${aprovada}`, {
+        const response = await fetch(`${urlBase}/back/folgas/solucionar/${idFolga}/${aprovada}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             },
@@ -240,7 +240,7 @@ async function loadPage() {
             const auth = JSON.parse(localStorage.getItem("auth"));
             if (!auth) window.location.href = "/login.html";
             if (auth.role != "ADMIN") window.location.href = "/employee.html";
-            const response = await fetch(`/back/folgas/${idFolga}`, {
+            const response = await fetch(`${urlBase}/back/folgas/${idFolga}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${auth.token}`

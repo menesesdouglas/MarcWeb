@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const punchButtons = document.querySelectorAll('.punch-btn');
     const usernameTag = document.getElementById("username");
     const auth = JSON.parse(localStorage.getItem("auth"));
+    const urlBase = "http://192.168.15.158";
 
     // Verificar autenticação
     if (!auth) {
@@ -104,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const result = await fetch("/back/ponto", {
+            const result = await fetch(`${urlBase}/back/ponto`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -375,7 +376,7 @@ async function loadTodayPunches() {
         const today = new Date();
         const dateStr = today.toISOString().split('T')[0];
 
-        const response = await fetch(`/back/ponto/historico?date=${dateStr}`, {
+        const response = await fetch(`${urlBase}/back/ponto/historico?date=${dateStr}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -417,7 +418,7 @@ async function loadCurrentStatus() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const statusElement = document.getElementById('currentStatus');
         
-        const response = await fetch("/back/ponto/status-atual-me", {
+        const response = await fetch(`${urlBase}/back/ponto/status-atual-me`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }

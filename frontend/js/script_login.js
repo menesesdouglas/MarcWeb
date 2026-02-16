@@ -1,8 +1,15 @@
+
+const urlBase = "http://192.168.15.158";
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const btn = document.querySelector('.btn-login');
+    const selectCompany = document.getElementById("company");
+    let companysLoaded = false;
+
 
     // Alternar visibilidade da senha
     togglePassword.addEventListener('click', () => {
@@ -21,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const company = document.getElementById('company').value;
         const username = document.getElementById('username').value;
         const password = passwordInput.value;
+        const currentTenant = await JSON.parse(localStorage.getItem("tenant_identification"));
 
         if (!company || !username || !password) {
             alert('Por favor, preencha todos os campos!');
@@ -47,10 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
             username: username,
             password: password
         }
-        const loginResponse = await fetch("/back/auth/login", {
+        const loginResponse = await fetch(`${urlBase}/back/auth/login`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-Tenant-Id": currentTenant.tenant_id
             },
             body: JSON.stringify(dadosLogin)
         });
@@ -63,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 username: resultado.username
             }
             localStorage.setItem("auth", JSON.stringify(auth));
-            window.location.href = auth.role == "ADMIN"? "admin.html" : "employee.html";
+            window.location.href = auth.role == "ADMIN" ? "admin.html" : "employee.html";
         } else {
             alert(resultado.erro);
         }
@@ -107,7 +116,63 @@ document.addEventListener('DOMContentLoaded', () => {
             this.style.boxShadow = '';
         });
     });
+
+    loadTenants(true);
+
+    selectCompany.addEventListener("click", () => {
+        if (!companysLoaded) {
+            loadTenants(false);
+            companysLoaded = true;
+        }
+    })
 });
 
 
+async function loadTenants(isAutomatic) {
 
+    const currentTenantIdentification = localStorage.getItem("tenant_identification");
+    const select = document.getElementById("company");
+    if (currentTenantIdentification && isAutomatic) {
+        const currentTenant = JSON.parse(currentTenantIdentification);
+        const option = document.createElement("option");
+        option.addEventListener("click", (event) => {
+            eventoTest(event);
+        })
+        option.value = currentTenant.tenant_id;
+        option.textContent = currentTenant.nome_empresa;
+        select.appendChild(option);
+        select.value = option.value;
+        return;
+    }
+
+    const response = await fetch(`${urlBase}/back/tenant`);
+
+    if (response.ok) {
+        select.innerHTML = `<option  value="" disabled selected>Selecione sua empresa
+                            </option> `;
+        const tenants = await response.json();
+        tenants.forEach(tenant => {
+            const option = document.createElement("option");
+            option.addEventListener("click", (event) => {
+                eventoTest(event);
+            })
+            option.value = tenant.tenantId;
+            option.textContent = tenant.nomeEmpresa;
+
+            select.appendChild(option);
+        })
+    }
+}
+
+function eventoTest(event) {
+    const currentTenant = {
+        nome_empresa: event.target.textContent,
+        tenant_id: event.target.value
+    };
+    try {
+        localStorage.removeItem("tenant_identification");
+        localStorage.setItem("tenant_identification", JSON.stringify(currentTenant));
+    } catch (error) {
+        alert("Algo deu errado")
+    }
+}

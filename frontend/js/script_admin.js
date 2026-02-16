@@ -5,6 +5,7 @@ let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
 const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
+const urlBase = "http://192.168.15.158";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -117,9 +118,9 @@ function closeMenu() {
 async function loadUsers() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch("/back/user", {
+        const response = await fetch(`${urlBase}/back/user`, {
             headers: {
-                "Authorization": `Bearer ${auth.token}`
+                "Authorization": `Bearer ${auth.token}`,
             }
         });
 
@@ -146,7 +147,7 @@ async function loadUsers() {
 
 async function loadFolgasPendentes() {
     const auth = JSON.parse(localStorage.getItem("auth"));
-    const response = await fetch("/back/folgas/pendentes", {
+    const response = await fetch(`${urlBase}/back/folgas/pendentes`, {
         headers: {
             'Authorization': `Bearer ${auth.token}`
         }
@@ -162,7 +163,7 @@ async function loadFolgasPendentes() {
 async function loadRecentPunches() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch("/back/ponto/status-atual", {
+        const response = await fetch(`${urlBase}/back/ponto/status-atual`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -256,7 +257,7 @@ async function solucionarFolga(idFolga, aprovada) {
     const confimado = confirm(`Confirma a ${aprovada ? "aprovação" : "desaprovação"} desta folga?`);
     if (!confimado) return;
     const auth = JSON.parse(localStorage.getItem("auth"));
-    const response = await fetch(`/back/folgas/solucionar/${idFolga}/${aprovada}`, {
+    const response = await fetch(`${urlBase}/back/folgas/solucionar/${idFolga}/${aprovada}`, {
         headers: {
             "Authorization": `Bearer ${auth.token}`
         },
@@ -426,7 +427,7 @@ async function handleEmployeeSubmit(e) {
     }
 
     const token = JSON.parse(localStorage.getItem("auth")).token;
-    const url = `/back/user${isEdit ? `/${userId}` : ''}`;
+    const url = `${urlBase}/back/user${isEdit ? `/${userId}` : ''}`;
     const method = isEdit ? "PUT" : "POST";
 
     try {
@@ -491,7 +492,7 @@ async function handleAdjustmentSubmit(e) {
             justificativa: justificativa
         };
 
-        const response = await fetch('/back/ponto/ajuste', {
+        const response = await fetch(`${urlBase}/back/ponto/ajuste`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -527,7 +528,7 @@ async function loadAdjustmentHistory() {
             return date.toISOString().split('T')[0] + 'T00:00:00';
         };
 
-        const response = await fetch(`/back/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`, {
+        const response = await fetch(`${urlBase}/back/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -631,7 +632,7 @@ async function generateReport() {
         showToast('Gerando relatório PDF...', 'info');
 
         // Gerar o PDF diretamente com o novo endpoint
-        const pdfResponse = await fetch('/back/relatorios/pdf', {
+        const pdfResponse = await fetch(`${urlBase}/back/relatorios/pdf`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

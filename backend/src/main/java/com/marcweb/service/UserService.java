@@ -67,11 +67,11 @@ public class UserService {
     @Auditado(
             acao = "Login de usuário",
             categoria = CategoriaLog.AUDITORIA)
-    public LoginResponse logarUsuario(LoginRequest loginRequest) {
+    public LoginResponse logarUsuario(LoginRequest loginRequest, String tenantId) {
         User user = findByUsername(loginRequest.getUsername());
         if (!user.getAtivo()) throw new RuntimeException("Erro ao logar com este usuário");
         if (encoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            String jwt = jwtService.generateToken(user);
+            String jwt = jwtService.generateToken(user, tenantId);
 
             // Constroi o DTO de resposta com o token e informações do usuário
             var loginResponse = LoginResponse.builder()

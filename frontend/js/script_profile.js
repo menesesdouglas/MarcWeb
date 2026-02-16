@@ -1,6 +1,8 @@
 // Global variable to track current page number for pagination
 let currentPageNumber = 0;
 
+const urlBase = "http://192.168.15.158";
+
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
 
@@ -32,7 +34,7 @@ async function loadUserFolgas(pageNumber) {
     currentPageNumber = pageNumber;
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`/back/folgas/me?pageNumber=${pageNumber}`, {
+        const response = await fetch(`${urlBase}/back/folgas/me?pageNumber=${pageNumber}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -98,7 +100,7 @@ function setupEventListeners() {
 async function loadUserProfile() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch('/back/user/me', {
+        const response = await fetch(`${urlBase}/back/user/me`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -151,7 +153,7 @@ function setupRolePermissions(userRole) {
 async function loadRecentActivity() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch('/back/auditoria/me/logs', {
+        const response = await fetch(`${urlBase}/back/auditoria/me/logs`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -273,7 +275,7 @@ async function handleProfileUpdate(e) {
             updateData.newPassword = newPassword;
         }
 
-        const response = await fetch('/back/user/profile', {
+        const response = await fetch(`${urlBase}/back/user/profile`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -312,7 +314,7 @@ async function handleFolgaSubmit(e) {
             justificativa: justificativa
         };
 
-        const response = await fetch('/back/folgas/solicitar', {
+        const response = await fetch(`${urlBase}/back/folgas/solicitar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -355,7 +357,7 @@ function formatTipoFolga(tipo) {
 
 function formatDate(dateString) {
     if (!dateString) return '';
-    
+
     // Check if the date is in ISO format (YYYY-MM-DD)
     // Parse manually to avoid UTC timezone issues
     if (dateString.includes('-') && !dateString.includes('/')) {
@@ -364,7 +366,7 @@ function formatDate(dateString) {
         const date = new Date(year, month - 1, day);
         return date.toLocaleDateString('pt-BR');
     }
-    
+
     // If already formatted (contains '/'), return as is
     return dateString;
 }

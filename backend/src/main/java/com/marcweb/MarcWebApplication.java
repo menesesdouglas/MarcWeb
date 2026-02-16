@@ -1,17 +1,20 @@
 package com.marcweb;
 
-import com.marcweb.entity.ConfigEmpresa; // Import necessário
+import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.entity.Role;
 import com.marcweb.entity.User;
-import com.marcweb.repository.ConfigEmpresaRepository; // Import necessário
+import com.marcweb.repository.ConfigEmpresaRepository;
 import com.marcweb.repository.UserRepository;
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -19,6 +22,9 @@ import java.time.LocalDateTime;
 import java.util.List; // Import necessário
 
 
+@ComponentScan("com.marcweb")
+@EnableJpaRepositories("com.marcweb.repository")
+@EntityScan("com.marcweb.entity")
 @EnableScheduling
 @EnableJpaAuditing
 @SpringBootApplication

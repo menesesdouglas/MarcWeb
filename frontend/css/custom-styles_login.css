@@ -137,12 +137,14 @@ input, select {
     transition: var(--transition);
 }
 
+option{}
+
 input::placeholder, select:invalid {
     color: var(--text-dim);
     opacity: 0.8;
 }
 
-input:focus, select:focus {
+input:focus {
     outline: none;
     border-color: var(--petrol-light);
     box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.15);
@@ -168,6 +170,7 @@ select {
     transition: var(--transition);
 }
 
+
 .select-icon {
     position: absolute;
     right: 1rem;
@@ -183,7 +186,6 @@ select:focus {
     outline: none;
     border-color: var(--petrol-light);
     box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.15);
-    background: rgba(10, 147, 150, 0.05);
 }
 
 select:focus + .select-icon {
