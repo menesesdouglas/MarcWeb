@@ -133,7 +133,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     UUID findLastExpedienteIdByUserId(@Param("userId") Long userId);
 
     @Query(nativeQuery = true, value = "Select * from registros_ponto where user_id = :userId and tipo = 'SAIDA' order by timestamp DESC limit 1 ")
-    RegistroPonto findByUserIdAndTipoOrderByTimestampDesc(@Param("userId") Long userId);
+    Optional<RegistroPonto> findByUserIdAndTipoOrderByTimestampDesc(@Param("userId") Long userId);
 
 
     /// BUSCANDO O ID DO EXPEDIENTE PARA SALVAR EM UM NOVO PONTO EM CASO DE AJUSTE DO ADMINISTRADOR

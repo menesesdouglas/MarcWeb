@@ -1,5 +1,6 @@
 package com.marcweb.security;
 
+import com.marcweb.hibernate.TenantInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +29,7 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, TenantInterceptor tenantInterceptor) throws Exception {
         http.cors().and()
                 .csrf(csrf -> csrf.disable()) // Desativa CSRF para API stateless (sem sessões)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Política de sessão stateless
@@ -40,7 +41,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona o filtro JWT antes do filtro padrão de login
+                .addFilterBefore(tenantInterceptor, UsernamePasswordAuthenticationFilter.class)  // Adiciona o filtro identificador do tenant antes do filtro padrão de login
+                .addFilterAfter(jwtAuthenticationFilter, TenantInterceptor.class); // Adiciona o filtro jwt do tenant depois do filtro identificador de tenant
 
         return http.build(); // Constroi e retorna o objeto SecurityFilterChain
     }
@@ -64,13 +66,10 @@ public class SecurityConfig {
     }
 
 
-
     @Bean // Encoder de senha BCrypt (conforme SDD)
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
 
 
     @Bean // Gerenciador de autenticação (necessário para o controller de login)

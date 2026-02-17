@@ -1,11 +1,17 @@
 package com.marcweb.auditoria;
 
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
 /// CRIEI ESSA CLASSE PRA FICAR MAIS FÁCIL DE POR OS DETALHES NO LOG
-@Data
 @Component
 public class Detalhes {
-    private  String detalhes = "";
+    private ThreadLocal<String> detalhes = ThreadLocal.withInitial(() -> "");
+
+    public String getDetalhes() {
+        return detalhes.get();
+    }
+
+    public void setDetalhes(String detalhes) {
+        this.detalhes.set(detalhes);
+    }
 }

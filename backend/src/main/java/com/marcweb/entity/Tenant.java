@@ -35,9 +35,11 @@ public class Tenant {
     @Column(nullable = false)
     private boolean ativo;
 
+    @Column(name = "created_at")
     @CreatedDate
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     @LastModifiedDate
     private LocalDateTime updatedAt;
 

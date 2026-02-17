@@ -1,12 +1,14 @@
 package com.marcweb.hibernate;
 
 import lombok.RequiredArgsConstructor;
+import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -37,6 +39,10 @@ public class HibernateConfig {
             CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl
     ) {
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
+        properties.put(Environment.SHOW_SQL, true);
+        properties.put(Environment.FORMAT_SQL, true);
+        properties.put(Environment.HBM2DDL_AUTO, "validate");
+       /// properties.put(Environment.PHYSICAL_NAMING_STRATEGY, "Teste");
         properties.put("hibernate.multiTenancy", "SCHEMA");
         properties.put(Environment.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProviderImpl);
         properties.put(Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantIdentifierResolverImpl);

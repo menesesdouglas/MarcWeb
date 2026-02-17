@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.folha_ponto.*;
 import com.marcweb.entity.*;
+import com.marcweb.exceptions.PeriodoFolhaPontoException;
 import com.marcweb.exceptions.SemRegistrosException;
 import com.marcweb.repository.FolhaPontoRepository;
 import lombok.RequiredArgsConstructor;
@@ -203,7 +204,7 @@ public class FolhaPontoService {
                 var timesSaida = registros.get(3).getTimestamp();
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
                 minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
-                        (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
+                                     (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
 
                 // CASO O USUÁRIO TENHA BATIDO APENAS OS PONTOS DE ENTRADA E SAÍDA
             } else if (registros.size() == 2) {
@@ -343,9 +344,9 @@ public class FolhaPontoService {
     private void validarPeriodoSolicitado(LocalDate dataSolicitada) {
         LocalDate dataAtual = LocalDate.now();
         if (dataSolicitada.getYear() > dataAtual.getYear()) {
-            throw new RuntimeException("Ano ainda nem comessou");
+            throw new PeriodoFolhaPontoException("Erro referente ao ano solicitado");
         } else if (dataSolicitada.getYear() == dataAtual.getYear() && dataAtual.getMonthValue() <= dataSolicitada.getMonthValue()) {
-            throw new RuntimeException("O mês ainda não terminou");
+            throw new PeriodoFolhaPontoException("O mês precisa ser finalizado para a geração da folha de ponto");
         }
     }
 }

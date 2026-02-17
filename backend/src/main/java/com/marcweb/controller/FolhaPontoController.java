@@ -2,11 +2,8 @@ package com.marcweb.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.marcweb.auditoria.Auditado;
-import com.marcweb.auditoria.Detalhes;
-import com.marcweb.dto.folha_ponto.DadosFolhaPonto;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.service.FolhaPontoService;
-import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -357,19 +357,19 @@ public class RegistroPontoService {
     public StatusAtualResponse getStatusAtual() {
         var userDetails = UserService.getUserDetailsBySecurityContext();
         var user = userService.findByUsername(userDetails.getUsername());
-        
+
         LocalDate hoje = LocalDate.now();
         List<RegistroPonto> registrosHoje = repository.buscarRegistrosEmIntervaloDeData(
-            user, hoje.atStartOfDay(), hoje.atTime(LocalTime.MAX));
-        
+                user, hoje.atStartOfDay(), hoje.atTime(LocalTime.MAX));
+
         if (registrosHoje.isEmpty()) {
             return new StatusAtualResponse("Fora de Serviço", null, false);
         }
-        
+
         // Pegar o último registro do dia
         RegistroPonto ultimoRegistro = registrosHoje.get(registrosHoje.size() - 1);
         String tipoTexto = ultimoRegistro.getTipo().getText();
-        
+
         return new StatusAtualResponse(tipoTexto, tipoTexto, true);
     }
 
@@ -461,8 +461,11 @@ public class RegistroPontoService {
     /// BLOQUEANDO NOVO REGISTRO CASO UM EXPEDIENTE TENHA SIDO FINALIZADO HÁ MENOS DE 8 HORAS ATRAS
     private void validarNovoCiclo(User user) {
         var registro = repository.findByUserIdAndTipoOrderByTimestampDesc(user.getId());
-        var horasPassadas = ChronoUnit.HOURS.between(registro.getTimestamp(), LocalDateTime.now());
-        if (horasPassadas < 8) throw new CicloPontoFinalizadoException();
+        if (registro.isPresent()) {
+            var horasPassadas = ChronoUnit.HOURS.between(registro.get().getTimestamp(), LocalDateTime.now());
+            if (horasPassadas < 8) throw new CicloPontoFinalizadoException();
+        }
+
 
     }
 

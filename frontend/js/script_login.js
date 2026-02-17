@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
 
-        // Troca o ícone (simples feedback visual)
+        // Troca o ícone 
         togglePassword.textContent = type === 'password' ? '👁️' : '🔒';
     });
 
@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const company = document.getElementById('company').value;
         const username = document.getElementById('username').value;
         const password = passwordInput.value;
-        const currentTenant = await JSON.parse(localStorage.getItem("tenant_identification"));
 
         if (!company || !username || !password) {
             alert('Por favor, preencha todos os campos!');
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-Tenant-Id": currentTenant.tenant_id
+                "X-Tenant-Id": selectCompany.value
             },
             body: JSON.stringify(dadosLogin)
         });
