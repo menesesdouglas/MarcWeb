@@ -42,31 +42,14 @@ public class BrasilApiService {
             acao = "Registro de feriados de um ano específico",
             categoria = CategoriaLog.ADMIN)
     public Map<String, Integer> sincronizarFeriados(int ano) {
-        // Validação de ano pode ser adicionada aqui se necessário
-        // if (ano < Year.now().getValue()) throw new IllegalArgumentException(...)
         detalhes.setDetalhes("Administrador executou o registro dos feriados nacionais de um ano específico");
         List<FeriadoNacionalDTO> feriadoDTOList = buscarFeriados(ano);
         List<Feriado> feriadosNacionais = feriadoDTOList
                 .stream()
-                .map(Feriado::new) // Assumindo que o construtor Feriado(FeriadoNacionalDTO) existe
+                .map(Feriado::new)
                 .collect(Collectors.toList());
-
-        // Chama o método atualizado do service que retorna estatísticas
         return feriadoService.cadastrarFeriadoComEstatisticas(feriadosNacionais);
     }
 
-    //  ORDEM DO CRON ( SEGUNDO, MINUTO, HORA, DIA DO MES, MES, DIA DA SEMANA
-    // EXECUTA TODO DIA 1° DE JANEIRO ÀS MEIA NOITE E DEZ MINUTOS
-    @Auditado(
-            acao = "Cadastrando feriados nacionais",
-            categoria = CategoriaLog.ADMIN)
-    @Scheduled(cron = "00 10 00 01 01 *", zone = "America/Sao_Paulo")
-    public void cadastrarFeriadosNacionais() {
-        // Chama o novo método com o ano atual
-        sincronizarFeriados(Year.now().getValue());
-        detalhes.setDetalhes("Administrador executou o registro dos feriados nacionais do ano vigente");
-        // O retorno (estatísticas) pode ser logado aqui se desejado
-        // log.info("Sincronização automática de feriados para {}: {}", Year.now().getValue(), stats);
-    }
 
 }

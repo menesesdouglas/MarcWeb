@@ -7,11 +7,16 @@ const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 const urlBase = "http://192.168.15.158";
 
+///  EVITANDO QUE A PÁGINA SEJA RECARREGADA AO ENVIAR O FORMULÁRIO
+const formFeriado = document.getElementById("feriadoForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+})
+
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
+    let feriados;
     if (!auth) {
         window.location.href = "login.html";
-        return;
     }
 
     // Verificar se é admin
@@ -32,11 +37,77 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Configurar eventos
     setupEventListeners();
+
+    //// ==> EVENTOS PARA FERIADOS
+    async function buscarFeriadoPorAno() {
+        const ano = document.getElementById("ano-feriado").value;
+        if (ano.length == 4) {
+            const token = JSON.parse(localStorage.getItem("auth")).token;
+            if (!token) window.location.href = "login.html";
+            const response = await fetch(`${urlBase}/back/feriado?ano=${ano}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const feriadosEncontrados = await response.json();
+                feriados = feriadosEncontrados;
+                renderFeriados(feriados);
+            } else if (response.status === 403) {
+                sessaoExpirada();
+            }
+        }
+    }
+    document.getElementById("btn-buscar-feriado").addEventListener("click", () => {
+        buscarFeriadoPorAno();
+    })
+
+    function renderFeriados(feriados) {
+        const listBody = document.getElementById("feriadoListBody");
+        listBody.innerHTML = "";
+        feriados.forEach((feriado) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+               <td>${feriado.nome}</td>
+               <td>${formatarData(feriado.data)}</td>
+               <td class="${feriado.origem == "API" ? "nacional" : "regional"}">${feriado.origem == "API" ? "Nacional" : "Regional"}</td>
+               <td id="feriado-${feriado.id}"  style="cursor: pointer; color: #ff4d4d;">Deletar</td>
+               `;
+            listBody.appendChild(tr);
+            document.getElementById(`feriado-${feriado.id}`).addEventListener("click", () => {
+                deletarFeriado(feriado.id, feriado.nome)
+            })
+        });
+
+    }
+
+    async function deletarFeriado(idFeriado, nomeFeriado) {
+        const confirmacao = confirm(`Confirma a exclusão do feriado ${nomeFeriado}`);
+        if (confirmacao) {
+            const token = JSON.parse(localStorage.getItem("auth")).token;
+            if (!token) window.location.href = "login.html";
+            const response = await fetch(`${urlBase}/back/feriado/${idFeriado}`, {
+                method: 'DELETE',
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            })
+
+            if (response.status == 204) {
+                showToast("Feriado deletado com sucesso", "success");
+                feriados = feriados.filter(item => item.id != idFeriado);
+                renderFeriados(feriados);
+            }
+            else if (response.status == 403) sessaoExpirada();
+            else showToast("ALgo deu errado", "error");
+        }
+    }
+
+    /// ==>> FIM EVENTOS FERIADO
 });
 
 function setupEventListeners() {
-
-    let menuIsOpen = false;
 
     // Formulário de Cadastro/Edição
     const employeeForm = document.getElementById('employeeForm');
@@ -47,8 +118,22 @@ function setupEventListeners() {
     // Formulário de Ajuste
     document.getElementById('adjustmentForm').addEventListener('submit', handleAdjustmentSubmit);
 
+    // FORMULÁRIO DE CADASTRO DE FERIADOS
+    document.getElementById("feriadoForm").addEventListener("submit", () => { handlerFeriadoSubmit(); });
+
     // Carregar histórico de ajustes
     loadAdjustmentHistory();
+
+    /// ===>> LIMITANDO TECLAS PERMITIDAS NO INPUT DE ANO-FERIADO
+    document.getElementById("ano-feriado").addEventListener("keydown", (e) => {
+        const caractersPermitidos = "0987654321";
+        const key = e.key;
+        if (!caractersPermitidos.includes(key)) {
+            if (key == "Backspace" || key == "Delete" || key == "ArrowLeft" || key == "ArrowRight") return;
+            e.preventDefault();
+        }
+    });
+
 
     // Logout
     document.getElementById('btnLogout').addEventListener('click', () => {
@@ -318,11 +403,107 @@ function closeModalDetalhes() {
     }, 300);
 }
 
+
+// FUNÇÃO PARA ABRIR MODAL DE DETALHES
+function abrirModalFeriado() {
+    document.getElementById('modalFeriado').classList.add('active');
+    document.getElementById('modalFeriado').style.animation = 'fadeIn 0.3s ease';
+}
+
+// FUNÇÃO PARA FECHAR MODAL DE CADASTRO DE FERIADOS
+function closeModalFeriado() {
+    const modalFeriado = document.getElementById('modalFeriado');
+    modalFeriado.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+        modalFeriado.classList.remove('active');
+        modalFeriado.style.animation = '';
+    }, 300);
+}
+
+
+async function handlerFeriadoSubmit() {
+    const data = document.getElementById("dataFeriado").value;
+    const nomeFeriado = document.getElementById("nomeFeriado").value;
+    const token = JSON.parse(localStorage.getItem("auth")).token;
+    if (!token) window.location.href = "login.html";
+
+    const dadosFeriado = {
+        "data": data,
+        "nome": nomeFeriado
+    }
+
+    const response = await fetch(`${urlBase}/back/feriado`, {
+        method: 'POST',
+        body: JSON.stringify(dadosFeriado),
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    })
+
+    if (response.ok) {
+        showToast("Feriado cadastrado com sucesso", "success");
+    } else if (response.status = 409) {
+        const erro = await response.json();
+        showToast(erro.erro, "error");
+    } else if (response.status = 403) {
+        sessaoExpirada();
+    }
+}
+
+async function atualizarFeriados() {
+    const confirmacao = confirm(`Atualizar feriados manuais do ano passado para o ano atual`);
+    if (confirmacao) {
+        const token = JSON.parse(localStorage.getItem("auth")).token;
+        if (!token) window.location.href = "login.html";
+        const response = await fetch(`${urlBase}/back/feriado/atualizar`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (response.status == 201) {
+            showToast("Feriados atualizados com sucesso", "success");
+        } else if (response.status == 403) sessaoExpirada();
+        else {
+            alert("Algo deu errado");
+        }
+
+    }
+
+}
+
+async function cadastrarFeriadosNacionais() {
+    const ano = document.getElementById("ano-feriado").value;
+    const confirmacao = confirm(`Cadastrar feriados para o ano de ${ano}??`);
+    if (confirmacao) {
+        const token = JSON.parse(localStorage.getItem("auth")).token;
+        if (!token) window.location.href = "login.html";
+        const response = await fetch(`${urlBase}/back/feriado/sync?ano=${ano}`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (response.ok) {
+            const result = await response.json();
+            alert(`Feriados encontrados: ${result.totalBuscados} \n Adicionados: ${result.adicionados} \n Já existiam ${result.jaExistiam}`);
+        } else if (response.status == 403) sessaoExpirada();
+        else {
+            alert("Algo deu errado");
+        }
+    }
+}
+
+
+
+
+
 // FUNÇÃO PARA FORMATAR DATA
 function formatarData(data) {
     if (!data) return '';
-    const date = new Date(data);
-    return date.toLocaleDateString('pt-BR');
+    const [ano, mes, dia] = data.split("-");
+    return `${dia}/${mes}/${ano}`;
 }
 
 // Renderizar Dashboard
@@ -713,4 +894,13 @@ function showToast(message, type) {
             toast.remove();
         }, 300);
     }, 3000);
+}
+
+
+function sessaoExpirada() {
+    setTimeout(() => {
+        showToast("Sua sessão terminou, efetue o login novamente", "info");
+    }, 5000)
+    localStorage.removeItem("auth");
+    window.location.href = "login.html";
 }

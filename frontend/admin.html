@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Admin | MarcWeb</title>
     <link rel="stylesheet" href="css/custom-styles_admin.css">
-    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols" />-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols" />
 </head>
 </head>
 
@@ -52,6 +52,12 @@
                         <span>Folgas</span>
                     </div>
                 </a>
+                <a href="#" class="nav-link" data-section="feriados">
+                    <div class="content-nav">
+                        <i class="material-symbols">Calendar_Month</i>
+                        <span>Feriados</span>
+                    </div>
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <button id="btnLogout" class="btn-logout">
@@ -83,6 +89,7 @@
                         </tbody>
                     </table>
                 </div>
+
             </section>
 
             <section id="employees" class="content-section ">
@@ -184,7 +191,6 @@
                                     <th>Data inicio</th>
                                     <th>Data fim</th>
                                     <th>Tipo</th>
-
                                 </tr>
                             </thead>
                             <tbody id="folgasListBody">
@@ -193,9 +199,43 @@
                     </div>
                 </div>
             </section>
+
+            <section id="feriados" class="content-section">
+                <header class="section-header">
+                    <h1>Gestão de feriados</h1>
+                    <button class="btn-primary" onclick="abrirModalFeriado()">+ Novo feriado</button>
+                </header>
+                <h3>Buscar feriado por ano</h3>
+                <div style="display: flex; align-items: end; gap: 50px; margin: 10px 0;" class="">
+                    <div>
+                        <label for="ano-feriado">Ano:</label>
+                        <input minlength="4" maxlength="4" id="ano-feriado" style="width: 100px;" type="text"></input>
+                    </div>
+                    <button id="btn-buscar-feriado" onclick="buscarFeriadoPorAno()"
+                        class="btn-secondary">Buscar</button>
+                </div>
+                <div class="card">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feriadoListBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn-primary" onclick="cadastrarFeriadosNacionais()">+ Feriados nacionais</button>
+                <button class="btn-primary" onclick="atualizarFeriados()">Atualizar feriados</button>
+            </section>
+
         </main>
     </div>
 
+    <!--Cadastro de Employee-->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal card">
             <h2 id="modalTitle">Cadastrar Funcionário</h2>
@@ -237,13 +277,15 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
+
+    <!--Detalhes folga-->
     <div id="modalDetalhes" class="modal-overlay">
         <div id="modalDetalhes-content" class="modal card">
             <h2 style="text-align: center;">Detalhes da Folga</h2>
@@ -270,12 +312,34 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeModalDetalhes()">Fechar</button>
                 <button type="button" class="btn-primary" onclick="solucionarFolga(currentFolgaId, true)"
                     id="btn-aprovar">Aprovar</button>
                 <button type="button" class="btn-danger" onclick="solucionarFolga(currentFolgaId, false)"
                     id="btn-recusar">Recusar</button>
+                <button type="button" class="btn-secondary" onclick="closeModalDetalhes()">Fechar</button>
             </div>
+        </div>
+    </div>
+
+    <!--Cadastro de feriado-->
+    <div id="modalFeriado" class="modal-overlay">
+        <div class="modal card">
+            <h2 style="margin: 20px 0;" id="modalTitle">Cadastrar Funcionário</h2>
+            <form id="feriadoForm">
+                <div class="input-group">
+                    <label for="dataFeriado">Data:</label>
+                    <input type="date" id="dataFeriado" required>
+                </div>
+                <div class="input-group">
+                    <label for="nomeFeriado">Nome feriado:</label>
+                    <input type="text" id="nomeFeriado" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" onclick="closeModalFeriado()">Fechar</button>
+                </div>
+            </form>
         </div>
     </div>
 

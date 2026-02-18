@@ -25,7 +25,6 @@ import java.util.List; // Import necessário
 @ComponentScan("com.marcweb")
 @EnableJpaRepositories("com.marcweb.repository")
 @EntityScan("com.marcweb.entity")
-@EnableScheduling
 @EnableJpaAuditing
 @SpringBootApplication
 @RequiredArgsConstructor // Gera construtor com campos final (Lombok)

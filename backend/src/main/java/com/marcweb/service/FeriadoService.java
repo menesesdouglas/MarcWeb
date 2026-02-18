@@ -6,7 +6,6 @@ import com.marcweb.dto.feriado.CreateFeriado;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.Feriado;
 import com.marcweb.entity.OrigemFeriado;
-import com.marcweb.exceptions.FeriadoAnoInvalidoException;
 import com.marcweb.exceptions.FeriadoDuplicadoException;
 import com.marcweb.repository.FeriadoRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +13,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.List;
-import java.util.ArrayList; // Import necessário
-import java.util.HashMap; // Import necessário
-import java.util.Map;    // Import necessário
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -33,7 +31,7 @@ public class FeriadoService {
             acao = "Registro de feriado",
             categoria = CategoriaLog.ADMIN)
     public void cadastrarFeriado(CreateFeriado dadosFeriado) {
-        var feriadoExiste = validarFeriado(dadosFeriado.getData(), true);
+        var feriadoExiste = validarFeriado(dadosFeriado.getData());
         if (feriadoExiste) throw new FeriadoDuplicadoException();
         repository.save(new Feriado(dadosFeriado, OrigemFeriado.MANUAL));
         detalhes.setDetalhes("Administrador registrou o feriado de " + dadosFeriado.getNome() + " para o dia " + dadosFeriado.getData().toString());
@@ -42,7 +40,7 @@ public class FeriadoService {
     // CADASTRO VIA API - Atualizado para retornar estatísticas
     public Map<String, Integer> cadastrarFeriadoComEstatisticas(List<Feriado> feriadosNacionais) {
         int totalBuscados = feriadosNacionais.size();
-        int jaExistiam = 0; // Contador efetivamente final (não modificado dentro de lambda)
+        int jaExistiam = 0; // Contador efetivamente final
         int adicionados = 0; // Contador para novos registros
 
         // Lista para armazenar apenas os feriados que não existiam
@@ -50,7 +48,7 @@ public class FeriadoService {
 
         // Itera manualmente para contabilizar e filtrar
         for (Feriado feriado : feriadosNacionais) {
-            if (validarFeriado(feriado.getData(), false)) { // isRequest = false para sincronização
+            if (validarFeriado(feriado.getData())) { // isRequest = false para sincronização
                 jaExistiam++; // Conta os que já existiam
             } else {
                 feriadosNovos.add(feriado); // Adiciona os novos à lista
@@ -73,14 +71,7 @@ public class FeriadoService {
     }
 
 
-    private boolean validarFeriado(LocalDate data, boolean isRequest) {
-        // PARA VALIDAR QUE O FERIADO É DO ANO VIGENTE
-        int anoFeriado = data.getYear();
-        int anoAtual = Year.now().getValue();
-        // VALIDAÇÃO APENAS PARA REQUISIÇÕES MANUAIS (isRequest = true)
-        if (isRequest && anoAtual != anoFeriado) {
-            throw new FeriadoAnoInvalidoException();
-        }
+    private boolean validarFeriado(LocalDate data) {
         return repository.existsByData(data);
     }
 
@@ -89,6 +80,16 @@ public class FeriadoService {
             categoria = CategoriaLog.AUDITORIA)
     public List<Feriado> findByDataBetween(LocalDate start, LocalDate end) {
         detalhes.setDetalhes("Usuário executou a busca por feriados entre " + start.toString() + " e " + end.toString());
+        return repository.findByDataBetweenOrderByDataAsc(start, end);
+    }
+
+
+    public List<Feriado> findByAno(int ano) {
+        /// PRIMEIRO DIA DO ANO SOLICITADO
+        LocalDate start = LocalDate.ofYearDay(ano, 1);
+
+        /// ULTIMO DIA DO ANO SOLICITADO
+        LocalDate end = start.withDayOfYear(start.lengthOfYear());
         return repository.findByDataBetweenOrderByDataAsc(start, end);
     }
 
@@ -102,28 +103,25 @@ public class FeriadoService {
     }
 
 
-    // ATUALIZANDO FERIADOS PARA O PRÓXIMO ANO
-    // EXECUTA TODO DIA 1° DE JANEIRO ÀS MEIA NOITE E DEZ MINUTOS
     @Auditado(
             acao = "Atualizando feriados para o ano vigente",
-            categoria = CategoriaLog.SISTEMA)
-    @Scheduled(cron = "00 10 00 01 01 *", zone = "America/Sao_Paulo")
-    protected void atualizarFeriados() {
+            categoria = CategoriaLog.ADMIN)
+    public void atualizarFeriados() {
 
-        // PRIMEIRO DIA DO ANO
-        LocalDate start = LocalDate.now().withDayOfYear(1);
+        // PRIMEIRO DIA DO ANO PASSADO
+        LocalDate start = LocalDate.now().plusYears(-1).withDayOfYear(1);
 
-        // ULTIMO DIA DO ANO
+        // ULTIMO DIA DO ANO PASSADO
         LocalDate end = start.withDayOfYear(start.lengthOfYear());
 
-        // BUSCANDO  FERIADOS DO ANO ATUAL. (SEM ID PARA SALVAR NOVOS REGISTROS E NÃO ATUALIZAR OS ENCONTRADOS)
+        /// BUSCANDO  FERIADOS DO ANO PASSADO. (SEM ID PARA SALVAR NOVOS REGISTROS E NÃO ATUALIZAR OS ENCONTRADOS)
         List<Feriado> feriadosManuais = repository.buscarRegistrosManuaisSemId(start, end);
         feriadosManuais.removeIf(feriado -> {
             feriado.setData(feriado.getData().plusYears(1));
-            return validarFeriado(feriado.getData(), false);
+            return validarFeriado(feriado.getData());
         });
         repository.saveAll(feriadosManuais);
-        detalhes.setDetalhes("Atualizando todos os feriado registrados para o ano de " + start);
+        detalhes.setDetalhes("Atualizando todos os feriados manuais  para o ano vigente:  " + start.getYear());
     }
 
 

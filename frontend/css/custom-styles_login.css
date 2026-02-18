@@ -137,7 +137,6 @@ input, select {
     transition: var(--transition);
 }
 
-option{}
 
 input::placeholder, select:invalid {
     color: var(--text-dim);
