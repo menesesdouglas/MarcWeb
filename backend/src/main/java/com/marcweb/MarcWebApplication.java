@@ -32,8 +32,8 @@ import java.util.List; // Import necessário
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
 
     public static void main(String[] args) {
-        /*Dotenv dotenv = Dotenv.configure().load();
-        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));*/
+        Dotenv dotenv = Dotenv.configure().load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
         SpringApplication.run(MarcWebApplication.class, args);
     }
 
@@ -44,7 +44,8 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
     @Override
     public void run(String... args) throws Exception {
         // Cria um usuário admin padrão se não existir
-        if (userRepository.findByUsername("admin").isEmpty()) {
+        // Usa método que ignora o contexto de tenant para buscar no schema público
+        if (userRepository.findByUsernameIgnoreTenant("admin").isEmpty()) {
             var admin = User.builder()
                     .username("admin") // Username padrão
                     .nome("Administrador Padrão") // Nome padrão
@@ -54,6 +55,7 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
                     .consentGeoloc(false) // Exemplo de consentimento geoloc
                     .cpf("000.000.000-00") // CPF placeholder para admin padrão
                     .createdAt(LocalDateTime.now()) // Data de criação atual
+                    .tenantId("legacy") // Tenant padrão para dados existentes
                     .build();
 
             userRepository.save(admin); // Salva o usuário no banco
@@ -62,8 +64,9 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
 
         /*  Cria uma configuração padrão da empresa se não existir nenhuma
          Usamos findAll().isEmpty() pois pode haver mais de uma configuração no futuro
-         ou critérios específicos para a "configuração ativa". Para MVP, apenas uma é esperada. */
-        List<ConfigEmpresa> configsExistentes = configEmpresaRepository.findAll(); // Busca todas as configurações
+         ou critérios específicos para a "configuração ativa". Para MVP, apenas uma é esperada.
+         Usa método que busca no schema público para ignorara contexto de tenant. */
+        List<ConfigEmpresa> configsExistentes = configEmpresaRepository.findAllInPublicSchema();
         if (configsExistentes.isEmpty()) { // Se a lista estiver vazia, cria a padrão
             var configPadrao = ConfigEmpresa.builder()
                     .nomeEmpresa("Empresa Exemplo LTDA") // Nome padrão

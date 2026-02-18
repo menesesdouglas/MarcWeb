@@ -1,6 +1,5 @@
 package com.marcweb.controller;
 
-
 import com.marcweb.dto.ponto.CreateRegistroPonto;
 import com.marcweb.dto.ponto.PontosRecentes;
 import com.marcweb.dto.ponto.RegistroPontoResponse;
@@ -15,6 +14,7 @@ import com.marcweb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/ponto")
+@Slf4j
 public class RegistroPontoController {
 
     private final RegistroPontoService service;
@@ -97,7 +98,15 @@ public class RegistroPontoController {
             @RequestParam LocalDateTime start,
             @RequestParam LocalDateTime end
     ) {
-        var ajustes = service.getAjustesAdministrativos(start, end);
-        return ResponseEntity.ok(ajustes);
+        log.info("Carregando ajustes administrativos - start: {}, end: {}", start, end);
+        try {
+            var ajustes = service.getAjustesAdministrativos(start, end);
+            log.info("Encontrados {} ajustes administrativos", ajustes.size());
+            return ResponseEntity.ok(ajustes);
+        } catch (Exception e) {
+            log.error("Erro ao carregar ajustes administrativos: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(List.of());
+        }
     }
 }

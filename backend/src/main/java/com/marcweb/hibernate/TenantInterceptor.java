@@ -24,14 +24,30 @@ public class TenantInterceptor extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader("Authorization");
-        if (token != null) {
-            token = token.replace("Bearer ", "");
-            Claims claims = jwtService.extractAllClaims(token);
-            String tenantId = claims.get("tenant_id").toString();
-            Optional.ofNullable(tenantId).ifPresent(TenantContext::setCurrentTenant);
-        } else {
-            Optional.ofNullable(request.getHeader("X-Tenant-Id"))
-                    .ifPresent(TenantContext::setCurrentTenant);
+        String tenantId = null;
+        
+        if (token != null && !token.isBlank()) {
+            try {
+                token = token.replace("Bearer ", "");
+                Claims claims = jwtService.extractAllClaims(token);
+                Object tenantIdClaim = claims.get("tenant_id");
+                if (tenantIdClaim != null) {
+                    tenantId = tenantIdClaim.toString();
+                }
+            } catch (Exception e) {
+                // Log do erro mas continua para permitir que o filtro seguinte tente obter o tenant
+                // Se o token for inválido, o Spring Security irá tratar isso
+            }
+        }
+        
+        // Tentar obter do header X-Tenant-Id se não obteve do token
+        if (tenantId == null || tenantId.isBlank()) {
+            tenantId = request.getHeader("X-Tenant-Id");
+        }
+        
+        // Define o tenant no contexto
+        if (tenantId != null && !tenantId.isBlank()) {
+            TenantContext.setCurrentTenant(tenantId);
         }
 
         try{

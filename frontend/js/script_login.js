@@ -1,5 +1,5 @@
 
-const urlBase = "http://192.168.15.158";
+const urlBase = "";
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: resultado.userId,
                 role: resultado.role,
                 token: resultado.token,
-                username: resultado.username
+                username: resultado.username,
+                tenantId: selectCompany.value
             }
             localStorage.setItem("auth", JSON.stringify(auth));
             window.location.href = auth.role == "ADMIN" ? "admin.html" : "employee.html";

@@ -6,9 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TenantRepository extends JpaRepository<Tenant, Long> {
 
     @Query("Select new com.marcweb.dto.tenant.TenantResponse(t.nome, t.tenantId) from Tenant t where t.ativo = true")
     List<TenantResponse> findAllAtivas();
+
+    Optional<Tenant> findByTenantId(String tenantId);
+
+    boolean existsByTenantId(String tenantId);
+
+    Optional<Tenant> findByCnpj(String cnpj);
 }

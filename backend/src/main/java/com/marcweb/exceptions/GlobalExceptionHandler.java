@@ -149,6 +149,24 @@ public class GlobalExceptionHandler {
     }
     // --- FIM EXCEÇÕES GEOLOCALIZAÇÃO ---
 
+    // --- HANDLER PARA LAZY INITIALIZATION EXCEPTION ---
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(org.hibernate.LazyInitializationException.class)
+    public Map<String, Object> handlerLazyInitializationException(org.hibernate.LazyInitializationException e) {
+        log.error("Erro de inicialização lazy: {} - {}", e.getClass().getName(), e.getMessage(), e);
+        return errorObject("Erro ao carregar dados relacionados. Tente novamente.");
+    }
+    // --- FIM HANDLER LAZY ---
+
+    // --- HANDLER GENÉRICO PARA EXCEÇÕES NÃO TRATADAS ---
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handlerGenericException(Exception e) {
+        log.error("Erro não tratado: {} - {}", e.getClass().getName(), e.getMessage(), e);
+        return errorObject("Erro interno no servidor: " + e.getMessage());
+    }
+    // --- FIM HANDLER GENÉRICO ---
+
     /// PARA PADRONIZAR A RESPOSTA DE ERRO
     private Map<String, Object> errorObject(String message) {
         Map<String, Object> map = new HashMap<>();

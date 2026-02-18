@@ -15,6 +15,7 @@ import com.marcweb.repository.FeriadoRepository; // Import necessário
 import com.marcweb.repository.RegistroPontoRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ import java.util.*;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class RegistroPontoService {
 
     private final UserService userService;
@@ -386,18 +388,26 @@ public class RegistroPontoService {
         }).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<RegistroPontoResponse> getAjustesAdministrativos(LocalDateTime start, LocalDateTime end) {
-        List<RegistroPonto> ajustes = repository.findByIpAndTimestampBetweenOrderByTimestampDesc("AJUSTE_ADMIN", start, end);
-        return ajustes.stream().map(r -> {
-            return new RegistroPontoResponse(
-                    r.getTipo(),
-                    r.getUser().getNome(), // Nome do usuário
-                    r.getUser().getUsername(),
-                    r.getIp(),
-                    r.getJustificativa(),
-                    r.getTimestamp(),
-                    r.getExpedienteId());
-        }).toList();
+        log.info("Buscando ajustes administrativos entre {} e {}", start, end);
+        try {
+            List<RegistroPonto> ajustes = repository.findByIpAndTimestampBetweenOrderByTimestampDesc("AJUSTE_ADMIN", start, end);
+            log.info("Encontrados {} registros de ajustes", ajustes.size());
+            return ajustes.stream().map(r -> {
+                return new RegistroPontoResponse(
+                        r.getTipo(),
+                        r.getUser().getNome(), // Nome do usuário
+                        r.getUser().getUsername(),
+                        r.getIp(),
+                        r.getJustificativa(),
+                        r.getTimestamp(),
+                        r.getExpedienteId());
+            }).toList();
+        } catch (Exception e) {
+            log.error("Erro ao buscar ajustes administrativos: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Auditado(

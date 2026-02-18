@@ -5,7 +5,7 @@ let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
 const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
-const urlBase = "http://192.168.15.158";
+const urlBase = "";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Acesso negado. Apenas administradores podem acessar esta página.');
         window.location.href = "employee.html";
         return;
+    }
+
+    // Initialize logout button directly to ensure it works
+    const logoutBtn = document.getElementById('btnLogout');
+    if (logoutBtn) {
+        logoutBtn.onclick = handleAdminLogout;
     }
 
     initNavigation();
@@ -50,13 +56,12 @@ function setupEventListeners() {
     // Carregar histórico de ajustes
     loadAdjustmentHistory();
 
-    // Logout
-    document.getElementById('btnLogout').addEventListener('click', () => {
-        if (confirm('Deseja encerrar a sessão administrativa?')) {
-            localStorage.removeItem("auth");
-            window.location.href = 'login.html';
-        }
-    });
+    // Logout - using named function for better reliability
+    const logoutBtn = document.getElementById('btnLogout');
+    if (logoutBtn) {
+        logoutBtn.removeEventListener('click', handleAdminLogout);
+        logoutBtn.addEventListener('click', handleAdminLogout);
+    }
 
     // ♠♠♠♠♠♠6 FILTRANDO POR NOME
     textField.addEventListener("keypress", (e) => {
@@ -101,10 +106,20 @@ function setupEventListeners() {
         if (!validKey.includes(key)) {
             e.preventDefault();
         };
-
-
     })
+}
 
+// Logout function - outside setupEventListeners for reliability
+function handleAdminLogout(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    if (confirm('Deseja encerrar a sessão administrativa?')) {
+        localStorage.removeItem("auth");
+        window.location.href = 'login.html';
+    }
 }
 
 function openMenu() {
@@ -121,6 +136,7 @@ async function loadUsers() {
         const response = await fetch(`${urlBase}/back/user`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`,
+                "X-Tenant-Id": auth.tenantId
             }
         });
 
@@ -149,7 +165,8 @@ async function loadFolgasPendentes() {
     const auth = JSON.parse(localStorage.getItem("auth"));
     const response = await fetch(`${urlBase}/back/folgas/pendentes`, {
         headers: {
-            'Authorization': `Bearer ${auth.token}`
+            'Authorization': `Bearer ${auth.token}`,
+            'X-Tenant-Id': auth.tenantId
         }
     })
     if (response.ok) {
@@ -165,7 +182,8 @@ async function loadRecentPunches() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const response = await fetch(`${urlBase}/back/ponto/status-atual`, {
             headers: {
-                "Authorization": `Bearer ${auth.token}`
+                "Authorization": `Bearer ${auth.token}`,
+                "X-Tenant-Id": auth.tenantId
             }
         });
 
@@ -259,7 +277,8 @@ async function solucionarFolga(idFolga, aprovada) {
     const auth = JSON.parse(localStorage.getItem("auth"));
     const response = await fetch(`${urlBase}/back/folgas/solucionar/${idFolga}/${aprovada}`, {
         headers: {
-            "Authorization": `Bearer ${auth.token}`
+            "Authorization": `Bearer ${auth.token}`,
+            "X-Tenant-Id": auth.tenantId
         },
         method: 'PUT'
     })
@@ -426,7 +445,7 @@ async function handleEmployeeSubmit(e) {
         userData.password = password;
     }
 
-    const token = JSON.parse(localStorage.getItem("auth")).token;
+    const auth = JSON.parse(localStorage.getItem("auth"));
     const url = `${urlBase}/back/user${isEdit ? `/${userId}` : ''}`;
     const method = isEdit ? "PUT" : "POST";
 
@@ -434,8 +453,9 @@ async function handleEmployeeSubmit(e) {
         const result = await fetch(url, {
             method: method,
             headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
+                "Authorization": `Bearer ${auth.token}`,
+                "Content-Type": "application/json",
+                "X-Tenant-Id": auth.tenantId
             },
             body: JSON.stringify(userData)
         });
@@ -496,7 +516,8 @@ async function handleAdjustmentSubmit(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
+                'Authorization': `Bearer ${auth.token}`,
+                'X-Tenant-Id': auth.tenantId
             },
             body: JSON.stringify(adjustmentData)
         });
@@ -528,18 +549,35 @@ async function loadAdjustmentHistory() {
             return date.toISOString().split('T')[0] + 'T00:00:00';
         };
 
-        const response = await fetch(`${urlBase}/back/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`, {
+        const url = `${urlBase}/back/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`;
+        console.log('Carregando ajustes administrativos de:', url);
+        
+        const response = await fetch(url, {
             headers: {
-                "Authorization": `Bearer ${auth.token}`
+                "Authorization": `Bearer ${auth.token}`,
+                "X-Tenant-Id": auth.tenantId
             }
         });
 
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
             const adjustments = await response.json();
+            console.log('Ajustes recebidos:', adjustments);
             renderAdjustmentHistory(adjustments);
+        } else {
+            // Log detailed error information
+            const errorText = await response.text();
+            console.error('Erro na resposta do servidor:', {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorText
+            });
+            showToast(`Erro ao carregar histórico: ${response.status} - ${errorText}`, 'error');
         }
     } catch (error) {
         console.error('Erro ao carregar histórico de ajustes:', error);
+        showToast('Erro ao carregar histórico de ajustes: ' + error.message, 'error');
     }
 }
 
@@ -636,7 +674,8 @@ async function generateReport() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
+                'Authorization': `Bearer ${auth.token}`,
+                'X-Tenant-Id': auth.tenantId
             },
             body: JSON.stringify({
                 userId: parseInt(userId),

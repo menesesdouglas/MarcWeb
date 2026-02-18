@@ -14,6 +14,11 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    // Busca usuário no schema público (para login e inicialização)
+    // Este método ignora o contexto de multi-tenant
+    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
+    Optional<User> findByUsernameIgnoreTenant(@Param("username") String username);
+
     Optional<User> findByUsername(String username);
 
     // Outros métodos específicos, se necessário

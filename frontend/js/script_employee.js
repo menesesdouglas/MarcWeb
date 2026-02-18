@@ -1,3 +1,6 @@
+// Variável global para a URL base da API
+var urlBase = "";
+
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos DOM
     const clockElement = document.getElementById('digitalClock');
@@ -7,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const punchButtons = document.querySelectorAll('.punch-btn');
     const usernameTag = document.getElementById("username");
     const auth = JSON.parse(localStorage.getItem("auth"));
-    const urlBase = "http://192.168.15.158";
+    
 
     // Verificar autenticação
     if (!auth) {

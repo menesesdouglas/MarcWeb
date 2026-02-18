@@ -50,6 +50,10 @@ public class UserService {
     public void createUser(@RequestBody @Valid CreateUser data) {
         if (validateUsername(data.getUsername())) throw new UsernameDuplicatedException(data.getUsername());
         Boolean consent = data.getConsentGeoloc();
+        
+        // Obter o tenantId do TenantContext
+        String tenantId = com.marcweb.hibernate.TenantContext.getCurrentTenant();
+        
         User user = User.builder()
                 .ativo(true)
                 .nome(data.getNome())
@@ -59,6 +63,7 @@ public class UserService {
                 .password(encoder.encode(data.getPassword()))
                 .consentGeoloc(consent != null ? consent : false)
                 .cargo(data.getCargo())
+                .tenantId(tenantId) // Associa o usuário ao tenant atual
                 .build();
         repository.save(user);
         detalhes.setDetalhes("Cadastro de usuário feito por administrador");
@@ -68,7 +73,9 @@ public class UserService {
             acao = "Login de usuário",
             categoria = CategoriaLog.AUDITORIA)
     public LoginResponse logarUsuario(LoginRequest loginRequest, String tenantId) {
-        User user = findByUsername(loginRequest.getUsername());
+        // O tenantId é fornecido via header X-Tenant-Id
+        // A busca por usuário precisa ser feita considerando o tenant atual
+        User user = findByUsernameAndTenant(loginRequest.getUsername(), tenantId);
         if (!user.getAtivo()) throw new RuntimeException("Erro ao logar com este usuário");
         if (encoder.matches(loginRequest.getPassword(), user.getPassword())) {
             String jwt = jwtService.generateToken(user, tenantId);
@@ -84,6 +91,23 @@ public class UserService {
             return loginResponse;
         }
         throw new UsernameNotFoundException("Erro ao logar usuário " + loginRequest.getUsername() + " (Usuário e/ou senha incorretos)");
+    }
+
+    /**
+     * Busca usuário considerando o tenant atual (para login)
+     */
+    public User findByUsernameAndTenant(String username, String tenantId) {
+        // O JPA usa o contexto de tenant configurado no TenantContext
+        var user = repository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
+        if (!user.getAtivo()) throw new RuntimeException("Erro ao buscar usuário");
+        
+        // Verifica se o usuário pertence ao tenant correto
+        if (tenantId != null && !tenantId.equals(user.getTenantId())) {
+            throw new UsernameNotFoundException("Usuário não encontrado para o tenant " + tenantId);
+        }
+        
+        return user;
     }
 
 
