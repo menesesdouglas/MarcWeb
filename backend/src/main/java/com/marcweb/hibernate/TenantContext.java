@@ -3,8 +3,8 @@ package com.marcweb.hibernate;
 /// CONTEXTO DO TENANT DA REQUISIÇÃO
 public class TenantContext {
 
-    ///  SCHEMA PADRÃO
-    private static final String DEFAULT_SCHEMA = "public";
+    ///  SCHEMA PADRÃO - legacy para dados existentes sem tenant específico
+    private static final String DEFAULT_SCHEMA = "legacy";
 
     private static final ThreadLocal<String> currentTenant = ThreadLocal.withInitial(() -> DEFAULT_SCHEMA);
 

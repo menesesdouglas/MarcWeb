@@ -3,7 +3,7 @@
 const auth = JSON.parse(localStorage.getItem("auth"));
 if (!auth) window.location.href = "/login.html";
 if (auth.role != "ADMIN") window.location.href = "/employee.html";
-const urlBase = "http://192.168.15.158";
+const urlBase = "";
 const queryString = window.location.search;
 const params = new URLSearchParams(queryString);
 

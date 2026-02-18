@@ -4,6 +4,24 @@ spring:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}   # Configure via variável de ambiente
     driver-class-name: org.postgresql.Driver
+    # Configurações do HikariCP (pool de conexões)
+    hikari:
+      # Tempo máximo que uma conexão pode ficar ociosa (minutos)
+      idle-timeout: 600000
+      # Tempo máximo de vida de uma conexão (minutos)
+      max-lifetime: 1800000
+      # Tempo máximo de espera por uma conexão do pool (milissegundos)
+      connection-timeout: 20000
+      # Tamanho máximo do pool
+      maximum-pool-size: 20
+      # Tamanho mínimo do pool
+      minimum-idle: 5
+      # Nome do pool (para logs)
+      pool-name: MarcWeb-HikariCP
+      # Validação de conexão
+      connection-test-query: SELECT 1
+      # Registrar conexões abandonadas
+      leak-detection-threshold: 60000
   jpa:
     hibernate:
       ddl-auto: validate # Importante: validar contra o schema do Flyway futuramente
@@ -12,7 +30,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Timeouts do Hibernate
+        jdbc:
+          time_zone: America/Sao_Paulo
+        #_STATISTICS_ENABLED: true # Habilitar coleta de estatísticas (se necessário)
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false # Desativar para evitar problemas de lazy loading
   sql:
     init:
       mode: never # Desativar inicialização automática do schema

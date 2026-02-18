@@ -1,257 +1,438 @@
-BOA TARDE ATUALMENTE SÃO  30/12/2025.14:40 
+# IMPLEMENTAÇÃO DE MULTI-TENANCY - MARCWEB
 
+## Visão Geral
 
+Este documento descreve a arquitetura e os detalhes da implementação do sistema de **multi-tenancy** no MarcWeb, permitindo que diversas empresas utilizem a mesma API e o mesmo banco de dados PostgreSQL, com isolamento completo dos dados por meio de **schemas separados**.
 
-DICA PARA SSL: SE NÃO QUISER COLOCAR SSL NA APLICAÇÃO, COLOCAR NO NGINX QUE ELE ENCAPSULA
+---
 
-BANCO DE DADOS POR EMPRESA - CONFIG DAS EMPRESAS PADRÃO (NGINX)?
-BANCO DE DADOS PRINCIPAL - GUARDA INFOS DE CADA EMPRESA?:
-    - IPs/DDNS;
-    - PORTAS;
-REMOVER FUNCIONALIDADE DE SOLICITAÇÃO DE FOLGA USANDO BANCO DE HORAS
-FOLGAS POR PADRÃO EM TODO DOMINGO - BIBLIOTECA LOCALDATE
-RETORNAR JSON DE FOLHA DE PONTO
-FOLHA DE PONTO:
-    - DIAS DO MÊS/ANO;
-    - AÇÕES (ENTRADA, INICIO DESCANSO, FIM DESCANSO E SAIDA)
-    - CALCULO DE HORAS
-    - STATUS (FERIADO OU FOLGA)
-IMPLEMENTAR CONTRACHEQUE (ADM ONLY):
-    - CALCULAR HORAS TRABALHADAS DO MÊS;
-    - ADM DECIDE SE CALCULO VAI SER POR HORISTA OU SALARIO BASE
-    - FÓRMULA DE DESCONTO INSS
-    - CALCULO DE FGTS
-    - OPÇÕES DE OUTROS DESCONTOS (VT,VR,PLANO DE SAUDE)
-    - ABONOS E ADICIONAIS
-    - IMPORTAR LEIAUTE OU SOLICITAR CUSTOMIZAÇÃO
-LOG EM TODAS AS TELAS - UMA TABELA PARA TODOS OS LOGS
-RESOLVER OS BUGS 
+## 1. CONCEITO ESCOLHIDO
 
+### 1.1 Estratégia: Shared Database, Separate Schemas
 
+O sistema utilizará uma única base de dados (database) com múltiplos schemas:
 
-// END POINTS PARA FERIADOS
+- **Schema `public`**: Armazena dados globais compartilhados entre todas as empresas (tabelas de Tenants e Usuários)
+- **Schemas `tenant_{identificador}`**: Cada empresa terá seu próprio schema isolado contendo todos os dados operacionais
 
-## CADASTRO MANUAL DE FERIADOS
-** URL: localhost:8080/api/feriado POST (Apenas ADM)
-*** JSON:{
+### 1.2 Representação Visual da Arquitetura
 
-    "data": "2026-05-20",
-	"nome": "Penga Ngunza"
-   }
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     DATABASE ÚNICO (marcweb)                    │
+│                                                                 │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐   │
+│  │    SCHEMA PUBLIC    │    │   SCHEMA tenant_001         │   │
+│  │  (Dados Globais)    │    │   (Dados da Empresa A)       │   │
+│  │                     │    │                              │   │
+│  │  ┌───────────────┐  │    │  ┌────────────────────────┐  │   │
+│  │  │   tenants     │  │    │  │ configs_empresa       │  │   │
+│  │  └───────────────┘  │    │  └────────────────────────┘  │   │
+│  │                     │    │  ┌────────────────────────┐  │   │
+│  │  ┌───────────────┐  │    │  │ registros_ponto        │  │   │
+│  │  │ users         │  │    │  └────────────────────────┘  │   │
+│  │  │ (com tenantId)│  │    │  ┌────────────────────────┐  │   │
+│  │  └───────────────┘  │    │  │ feriados               │  │   │
+│  └─────────────────────┘    │  └────────────────────────┘  │   │
+│                             │  ┌────────────────────────┐  │   │
+│                             │  │ folgas                 │  │   │
+│  ┌─────────────────────┐    │  └────────────────────────┘  │   │
+│  │ SCHEMA tenant_002   │    │  ┌────────────────────────┐  │   │
+│  │ (Dados da Empresa B)│    │  │ folhas_ponto           │  │   │
+│  │                     │    │  └────────────────────────┘  │   │
+│  │ (mesmas tabelas)    │    │  ┌────────────────────────┐  │   │
+│  └─────────────────────┘    │  │ logs_auditoria         │  │   │
+│                             │  └────────────────────────┘  │   │
+│                             └─────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-** REPOSTAS ESPERADAS:
-** CÓDIGO 201: CREATED
-** CÓDIGO 400: BAD REQUEST ("O feriado precis aser do ano atual")
-** CÓDIGO 409: CONFLICT ("Já existe um feriado para essa data")
---------------------------------------
+---
 
-## CADASTRO DE FERIADOS VIA API
-** URL: localhost:8080/api/feriado/nacionais POST (Apenas ADM)
-** REPOSTAS ESPERADAS:
-** CÓDIGO 201: CREATED
+## 2. REGRAS DE NEGÓCIO DEFINIDAS
 
---------------------------------
+### 2.1 Isolamento de Usuários
 
+- Cada usuário pertence a um único tenant
+- O user_id 1 do tenant "empresa001" é completamente diferente do user_id 1 do tenant "empresa002"
+- Mesmo que seja a mesma pessoa física, serão registros diferentes
 
-## BUSCA POR FERIADOS FILTRADO POR PERIODO
-** URL: localhost:8080/api/feriado?startDate=2026-01-01&endDate=2026-12-31 GET (QUALQUER USUARIO LOGADO)
-** REPOSTAS ESPERADAS:
-** CÓDIGO 200: OK [Lista de feriados cadastrado]
-** CÓDIGO 404: NOT_FOUND 
+### 2.2 Unicidade de Dados
 
-------------------------------------
+- **Username**: Pode se repetir em diferentes tenants (mesmo username "admin" pode existir em múltiplas empresas)
+- **CNPJ**: Único por tenant (não pode ter duas empresas com mesmo CNPJ)
+- **Email/Dominio**: Único por tenant
 
-## DELETAR  FERIADO 
+### 2.3 Criação de Schemas
 
-** URL: localhost:8080/api/feriado/{id} DELETE (APENAS ADM)
-** REPOSTAS ESPERADAS:
-** CÓDIGO 204: NO_CONTENT
+- Os schemas serão criados automaticamente pela aplicação
+- No primeiro acesso de um novo tenant, o sistema criará o schema correspondente
+- As tabelas serão geradas automaticamente dentro do schema do tenant
 
+---
 
+## 3. ESTRUTURA DE DADOS
 
+### 3.1 Tabelas no Schema Public
 
-//Cenário de Teste 1: Registro com Geolocalização Ativa - Coordenadas Válidas Dentro do Raio
-Objetivo: Verificar se um registro é aceito quando a geolocalização está ativa e as coordenadas fornecidas estão dentro do raio configurado.
+#### Tabela: tenants
 
-Passos:
+Responsável por armazenar o cadastro de todas as empresas que utilizam o sistema.
 
-Configure a Empresa: No banco de dados, certifique-se de que configs_empresa.geoloc_ativa = true, e que lat_centro, long_centro, e raio_geoloc (ex: 100 metros) estejam definidos.
-Obtenha um token JWT válido.
-Calcule ou escolha coordenadas próximas ao centro da empresa, dentro do raio (ex: a 50 metros).
-Configure o Insomnia:
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON):
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | BIGINT | Identificador interno (auto-incremento) |
+| tenant_id | VARCHAR(50) | Identificador único da empresa (ex: "empresa001") |
+| nome | VARCHAR(200) | Razão social da empresa |
+| cnpj | VARCHAR(18) | CNPJ da empresa (único) |
+| dominio | VARCHAR(100) | Domínio para futura integração web |
+| ativo | BOOLEAN | Se a empresa está ativa no sistema |
+| created_at | TIMESTAMP | Data de criação do registro |
+| updated_at | TIMESTAMP | Data da última atualização |
+
+#### Tabela: users
+
+Agora com referência ao tenant, permitindo usuários com mesmo username em tenants diferentes.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | BIGINT | Identificador interno |
+| tenant_id | VARCHAR(50) | Referência ao tenant (FK) |
+| nome | VARCHAR(150) | Nome completo do usuário |
+| username | VARCHAR(100) | Nome de usuário (único por tenant) |
+| password | VARCHAR(255) | Senha criptografada |
+| role | VARCHAR(20) | Função (ADMIN, EMPLOYEE) |
+| ativo | BOOLEAN | Se o usuário está ativo |
+| consent_geoloc | BOOLEAN | Consentimento de geolocalização |
+| cargo | VARCHAR(100) | Cargo do funcionário |
+| cpf | VARCHAR(14) | CPF do funcionário |
+| created_at | TIMESTAMP | Data de criação |
+
+**Restrição Unique**: A combinação (tenant_id + username) deve ser única, garantindo que o mesmo username possa existir em tenants diferentes.
+
+### 3.2 Tabelas por Schema de Tenant
+
+Cada tenant terá em seu schema as seguintes tabelas:
+
+#### Tabelas Operacionais
+
+- **configs_empresa**: Configurações específicas da empresa (localização, raio de geolocalização)
+- **registros_ponto**: Todos os registros de ponto dos funcionários
+- **feriados**: Feriados da empresa
+- **folgas**: Solicitações de folga dos funcionários
+- **folhas_ponto**: Resumos mensais de ponto
+- **logs_auditoria**: Registros de auditoria das operações
+
+---
+
+## 4. ARQUITETURA TÉCNICA
+
+### 4.1 Componentes Backend
+
+#### TenantContext
+
+Componente responsável por armazenar o tenant atual durante o processamento de cada requisição HTTP.
+
+- Utiliza ThreadLocal para manter o tenantId disponível durante toda a requisição
+- Permite que qualquer parte do código acesso o tenant atual
+- É limpo após o processamento de cada requisição
+
+#### TenantSchemaResolver
+
+Componente que integra com o Hibernate para determinar qual schema deve ser utilizado em cada operação de banco de dados.
+
+- Implementa a interface CurrentTenantIdentifierResolver do Hibernate
+- Retorna o nome do schema baseado no TenantContext
+- Schema retornado no formato "tenant_{tenantId}"
+
+#### TenantDataSource
+
+Provider de conexões com o banco de dados que configura automaticamente o schema correto em cada conexão.
+
+- Implementa MultiTenantConnectionProvider do Hibernate
+- Configura o schema da conexão antes de retorná-la
+- Após o uso, restaura a conexão ao schema padrão
+
+#### TenantFilter
+
+Filtro de requisições HTTP que extrai o tenantId do token JWT e configura o TenantContext.
+
+- Intercepta todas as requisições autenticadas
+- Extrai o tenantId do payload do JWT
+- Configura o TenantContext para uso durante a requisição
+
+#### TenantSchemaService
+
+Serviço responsável por criar os schemas de tenant automaticamente.
+
+- Verifica se o schema já existe antes de criar
+- Cria todas as tabelas necessárias no schema do tenant
+- Cria os índices para otimização de consultas
+- É chamado na primeira vez que um tenant acessa o sistema
+
+### 4.2 Fluxo de Dados
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    FLUXO DE UMA REQUISIÇÃO                        │
+└──────────────────────────────────────────────────────────────────┘
+
+1. USUÁRIO ENVIA REQUISIÇÃO
+   │
+   ▼
+2. TENTANT FILTER INTERCEPTA
+   │   └── Lê o token JWT do header Authorization
+   ▼
+3. EXTRAI TENANTID DO TOKEN
+   │   └── O tenantId está embedded no payload do JWT
+   ▼
+4. CONFIGURA TENANTCONTEXT
+   │   └── Armazena o tenantId no ThreadLocal
+   ▼
+5. HIBERNATE SOLICITA CONEXÃO
+   │   └── Através do TenantDataSource
+   ▼
+6. DATASOURCE CONFIGURA SCHEMA
+   │   └── Executa SET SCHEMA = 'tenant_{tenantId}'
+   ▼
+7. OPERAÇÃO JPA EXECUTADA
+   │   └── Query executa no schema correto do tenant
+   ▼
+8. CONEXÃO RETORNA AO SCHEMA PÚBLICO
+   │   └── TenantContext é limpo
+   ▼
+9. RESPOSTA RETORNA AO CLIENTE
+```
+
+### 4.3 Integração com JWT
+
+O token JWT será modificado para incluir o tenantId:
+
+**Payload do Token Atual:**
+```json
 {
-  "tipo": "ENTRADA", // ou o tipo apropriado
-  "latitude": -23.5506, // Exemplo: dentro do raio
-  "longitude": -46.6334  // Exemplo: dentro do raio
-  // Nota: timestamp não é enviado no DTO, o backend usa LocalDateTime.now()
+  "sub": "admin",
+  "role": "ADMIN",
+  "exp": 1234567890
 }
-Envie a requisição.
-Critérios de Sucesso:
+```
 
-O servidor responde com status 200 OK (ou 201 Created).
-O registro é salvo com sucesso no banco de dados, contendo as coordenadas fornecidas e o timestamp gerado pelo servidor.
-Nenhuma exceção relacionada à geolocalização ocorre no log do servidor.
-Cenário de Teste 2: Registro com Geolocalização Ativa - Coordenadas Ausentes
-Objetivo: Verificar se um registro é rejeitado quando a geolocalização está ativa e as coordenadas (latitude/longitude) não são fornecidas.
-
-Passos:
-
-Configure a Empresa: Certifique-se de que configs_empresa.geoloc_ativa = true.
-Obtenha um token JWT válido.
-Configure o Insomnia:
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON) - sem latitude e longitude:
+**Payload do Token com Tenant:**
+```json
 {
-  "tipo": "ENTRADA"
-  // latitude e longitude ausentes
+  "sub": "admin",
+  "role": "ADMIN",
+  "tenantId": "empresa001",
+  "exp": 1234567890
 }
-Envie a requisição.
-Critérios de Sucesso:
+```
 
-O servidor responde com status 400 Bad Request.
-O corpo da resposta contém uma mensagem clara indicando que a geolocalização é obrigatória (ex: "Geolocalização é obrigatória para registrar ponto. Latitude e longitude não fornecidas.").
-Nenhum NullPointerException ou 500 Internal Server Error ocorre no log do servidor.
-Nenhum redirecionamento para /error ocorre no log do servidor.
-Cenário de Teste 3: Registro com Geolocalização Ativa - Coordenadas Fora do Raio
-Objetivo: Verificar se um registro é rejeitado quando a geolocalização está ativa e as coordenadas fornecidas estão fora do raio configurado.
+O JwtService será responsável por:
+- Incluir o tenantId no token no momento do login
+- Extrair o tenantId do token em cada requisição
 
-Passos:
+---
 
-Configure a Empresa: Certifique-se de que configs_empresa.geoloc_ativa = true, e que lat_centro, long_centro, e raio_geoloc (ex: 100 metros) estejam definidos.
-Obtenha um token JWT válido.
-Escolha coordenadas longe do centro da empresa, fora do raio (ex: a 200 metros ou mais).
-Configure o Insomnia:
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON):
+## 5. INTEGRAÇÃO COM FRONTEND
+
+### 5.1 Fluxo de Login
+
+O frontend já possui um dropdown de seleção de empresa no formulário de login. O fluxo será:
+
+1. **Usuário acessa a página de login**
+2. **Seleciona a empresa no dropdown** (já existe no HTML)
+3. **Preenche usuário e senha**
+4. **Frontend envia**: username, password E tenantId selecionado
+5. **Backend valida** o usuário no schema public, buscando pelo tenantId específico
+6. **Backend gera JWT** com o tenantId no payload
+7. **Frontend armazena** o token e o tenantId no localStorage
+8. **Requisições futuras** incluem o header X-Tenant-Id
+
+### 5.2 Dados Armazenados no Frontend
+
+```json
 {
-  "tipo": "ENTRADA", // ou o tipo apropriado
-  "latitude": -23.5600, // Exemplo: fora do raio
-  "longitude": -46.6400  // Exemplo: fora do raio
+  "id": 1,
+  "username": "admin",
+  "role": "ADMIN",
+  "token": "eyJ...",
+  "tenantId": "empresa001"
 }
-Envie a requisição.
-Critérios de Sucesso:
+```
 
-O servidor responde com status 400 Bad Request.
-O corpo da resposta contém uma mensagem clara indicando que o registro está fora do raio permitido e a distância calculada (ex: "Registro fora do raio permitido. Distância calculada: 150.25 metros. Raio permitido: 100 metros.").
-Nenhum NullPointerException ou 500 Internal Server Error ocorre no log do servidor.
-Nenhum redirecionamento para /error ocorre no log do servidor.
-Cenário de Teste 4: Registro com Geolocalização Inativa
-Objetivo: Verificar se um registro é aceito normalmente quando a geolocalização está inativa, independentemente de coordenadas serem fornecidas ou não.
+### 5.3 Header em Todas Requisições
 
-Passos:
+Todas as chamadas à API incluirão:
+- Header `Authorization`: Bearer {token}
+- Header `X-Tenant-Id`: {tenantId} (para redundância e validação)
 
-Configure a Empresa: Certifique-se de que configs_empresa.geoloc_ativa = false.
-Obtenha um token JWT válido.
-Configure o Insomnia com coordenadas (ou sem):
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON) - Exemplo com coordenadas:
-{
-  "tipo": "ENTRADA",
-  "latitude": -23.9999, // Exemplo: qualquer coordenada
-  "longitude": -46.9999  // Exemplo: qualquer coordenada
-}
-OU Body (JSON) - Exemplo sem coordenadas:
-{
-  "tipo": "ENTRADA"
-  // latitude e longitude ausentes
-}
-Envie a requisição.
-Critérios de Sucesso:
+---
 
-O servidor responde com status 200 OK (ou 201 Created).
-O registro é salvo com sucesso no banco de dados.
-Nenhuma exceção relacionada à geolocalização ocorre no log do servidor.
-Cenário de Teste 5: Registro em Domingo
-Objetivo: Verificar se um registro é rejeitado quando tentado em um domingo.
+## 6. IMPLEMENTAÇÃO PROGRESSIVA
 
-Passos:
+### Fase 1: Estrutura Base
 
-Obtenha um token JWT válido.
-(Importante) Certifique-se de que a data do servidor no momento do teste seja um domingo. Se não for possível testar em um domingo real, você pode temporariamente modificar o código para aceitar uma data específica no payload (não recomendado para produção) ou usar técnicas de "time mocking" nos testes unitários/integração.
-Configure o Insomnia:
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON):
-{
-  "tipo": "ENTRADA"
-  // latitude e longitude opcionais
-}
-Envie a requisição em um domingo.
-Critérios de Sucesso:
+1. Criar a Entity Tenant
+2. Criar TenantContext e TenantFilter
+3. Configurar TenantSchemaResolver e TenantDataSource
+4. Criar TenantRepository
 
-O servidor responde com status 400 Bad Request.
-O corpo da resposta contém uma mensagem clara indicando que não é permitido registrar ponto no domingo (ex: "Não é permitido registrar ponto no domingo.").
-Nenhum NullPointerException ou 500 Internal Server Error ocorre no log do servidor.
-Nenhum redirecionamento para /error ocorre no log do servidor.
-Cenário de Teste 6: Registro em Feriado Cadastrado
-Objetivo: Verificar se um registro é rejeitado quando tentado em uma data cadastrada como feriado.
+**Resultado**: Estrutura de contexto e filtros prontos
 
-Passos:
+### Fase 2: Banco de Dados
 
-Configure um Feriado: No banco de dados, insira um registro na tabela feriados com uma data futura ou passada (ex: 2026-01-10).
-INSERT INTO feriados (data, nome, origem) VALUES ('2026-01-10', 'Feriado Teste', 'MANUAL');
-Obtenha um token JWT válido.
-(Importante) Certifique-se de que a data do servidor no momento do teste seja o dia do feriado cadastrado (neste exemplo, 2026-01-10).
-Configure o Insomnia:
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON):
-{
-  "tipo": "ENTRADA"
-  // latitude e longitude opcionais
-}
-Envie a requisição no dia do feriado.
-Critérios de Sucesso:
+1. Criar tabela de tenants
+2. Adicionar coluna tenantId na tabela users
+3. Criar constraint de unicidade por tenant+username
 
-O servidor responde com status 400 Bad Request.
-O corpo da resposta contém uma mensagem clara indicando que não é permitido registrar ponto em feriado e o nome do feriado (ex: "Não é permitido registrar ponto em feriado (Feriado Teste).").
-Nenhum NullPointerException ou 500 Internal Server Error ocorre no log do servidor.
-Nenhum redirecionamento para /error ocorre no log do servidor.
-Cenário de Teste 7: Registro em Dia Útil (Segunda a Sábado, não feriado)
-Objetivo: Verificar se um registro é aceito normalmente em um dia útil (não domingo e não feriado).
+**Resultado**: Banco de dados pronto para multi-tenancy
 
-Passos:
+### Fase 3: Lógica de Schemas
 
-Obtenha um token JWT válido.
-(Importante) Certifique-se de que a data do servidor no momento do teste não seja um domingo e que não haja feriado cadastrado para essa data.
-Configure o Insomnia:
-Método: POST
-URL: http://localhost:8080/api/registro-ponto/registrar
-Headers:
-Authorization: Bearer <SEU_TOKEN_JWT>
-Content-Type: application/json
-Body (JSON):
-{
-  "tipo": "ENTRADA" // ou outro tipo válido, considerando a sequência
-  // latitude e longitude opcionais, dependendo da configuração
-}
-Envie a requisição em um dia útil.
-Critérios de Sucesso:
+1. Implementar TenantSchemaService
+2. Configurar criação automática de schemas
+3. Modificar TenantDataSource para criar schemas sob demanda
 
-O servidor responde com status 200 OK (ou 201 Created).
-O registro é salvo com sucesso no banco de dados.
-Nenhuma exceção relacionada a dia útil ou feriado ocorre no log do servidor.
+**Resultado**: Schemas criados automaticamente
+
+### Fase 4: Integração JWT
+
+1. Modificar JwtService para incluir tenantId
+2. Modificar JwtAuthenticationFilter para extrair tenantId
+3. Atualizar LoginRequest e LoginResponse
+
+**Resultado**: Login retorna e armazena tenantId
+
+### Fase 5: Frontend
+
+1. Modificar script_login.js para enviar tenantId
+2. Armazenar tenantId no localStorage
+3. Adicionar header X-Tenant-Id em todas requisições
+
+**Resultado**: Integração completa com interface
+
+### Fase 6: Validação
+
+1. Testar criação de múltiplos tenants
+2. Validar isolamento de dados
+3. Testar login com diferentes empresas
+
+**Resultado**: Sistema pronto para produção
+
+---
+
+## 7. SEGURANÇA
+
+### 7.1 Isolamento de Dados
+
+- O tenantId é extraído exclusivamente do JWT, que é assinado digitalmente
+- O frontend não pode manipular o tenantId diretamente
+- O filtro de segurança valida que o usuário só acessa dados do seu tenant
+
+### 7.2 Validação de Acesso
+
+A cada operação, o sistema garante que:
+- O usuário está autenticado (token válido)
+- O token contém o tenantId
+- As operações só afetam dados do tenant do usuário
+
+### 7.3 Proteção contra Queries Cruzadas
+
+Graças ao isolamento por schema:
+- Não é possível acidentalmente consultar dados de outro tenant
+- Cada conexão está configurada com o schema correto
+- O Hibernate gera queries sempre no schema do tenant atual
+
+---
+
+## 8. BENEFÍCIOS DA ARQUITETURA
+
+### 8.1 Isolamento Completo
+
+- Cada empresa tem seus dados completamente isolados
+- Não há risco de vazamento de dados entre empresas
+--backup e restore podem ser feitos por tenant
+
+### 8.2 Flexibilidade
+
+- Cada tenant pode ter suas próprias configurações
+- Possível migrar um tenant para outro servidor no futuro
+- Escala independentemente do tamanho de cada empresa
+
+### 8.3 Manutenção Simplificada
+
+- Uma única aplicação para todos os tenants
+- Atualizações rodadas uma vez funcionam para todos
+- Monitoramento centralizado
+
+### 8.4 Performance
+
+- Queries não precisam filtrar por tenantId (schema já Isola)
+- Índices específicos por tenant
+- Conexões otimizadas por schema
+
+---
+
+## 9. CENÁRIOS DE USO
+
+### 9.1 Primeira vez que uma empresa acessa
+
+1. Usuário tenta fazer login com empresa nova
+2. Sistema verifica que o tenant existe
+3. Sistema cria o schema automaticamente
+4. Sistema cria todas as tabelas no schema
+5. Login é processado normalmente
+
+### 9.2 Usuário comum acessa
+
+1. Usuário seleciona sua empresa no dropdown
+2. Preenche credenciais
+3. Backend valida usuário no schema public
+4. Backend gera token com tenantId
+5. Todas operações usam o schema do tenant
+
+### 9.3 Admin cria novo usuário
+
+1. Admin está logado em um tenant
+2. Acessa tela de cadastro de usuários
+3. Sistema cria usuário no schema public com o tenantId do admin
+4. Novo usuário pode acessar normalmente
+
+---
+
+## 10. CONSIDERAÇÕES ADICIONAIS
+
+### 10.1 Migrações de Dados Existentes
+
+Ao implementar esta arquitetura em produção:
+- Criar o tenant "legacy" para dados existentes
+- Todos os usuários atuais receberão este tenantId
+- O sistema continuará funcionando normalmente
+
+### 10.2 Future Features
+
+- **Domínio próprio**: Cada tenant pode ter seu próprio subdomínio
+- **Dashboard por tenant**: Relatórios específicos por empresa
+- **Configurações por tenant**: Personalização da interface
+
+### 10.3 Monitoramento
+
+- Logs devem incluir o tenantId para rastreabilidade
+- Métricas de uso por tenant
+- Alertas de uso anormal por empresa
+
+---
+
+## 11. RESUMO EXECUTIVO
+
+| Aspecto | Detalhe |
+|---------|---------|
+| **Estratégia** | Shared Database, Separate Schemas |
+| **Schema Público** | tenants, users |
+| **Schema por Tenant** | dados operacionais (ponto, folgas, etc) |
+| **Criação de Schemas** | Automática via aplicação |
+| **Autenticação** | JWT com tenantId no payload |
+| **Isolamento** | Total por schema |
+| **Frontend** | Dropdown existente será utilizado |
+
+---

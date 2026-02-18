@@ -29,6 +29,9 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, name = "tenant_id")
+    private String tenantId; // Referência ao tenant (para multi-tenancy)
+
     @Column(nullable = false, unique = true)
     private String username;
 

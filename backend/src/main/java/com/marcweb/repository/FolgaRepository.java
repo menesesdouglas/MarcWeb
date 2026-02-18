@@ -17,7 +17,7 @@ public interface FolgaRepository extends JpaRepository<Folga, Long> {
 
 
 
-    @Query(nativeQuery = true , value = "Select * from folgas f where aprovada isNull limit 20")
+    @Query("SELECT f FROM Folga f WHERE f.aprovada IS NULL")
     List<Folga> findFolgasPendentes();
 
     // Método para encontrar folgas de um usuário específico usando ID (mais eficiente)

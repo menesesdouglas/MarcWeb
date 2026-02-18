@@ -1,4 +1,4 @@
-const urlBase = "http://192.168.15.158";
+const urlBase = "";
 
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
