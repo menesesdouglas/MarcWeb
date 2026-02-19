@@ -21,6 +21,4 @@ public class RegistroPontoResponse {
     private LocalDateTime timestamp;
     private UUID idExpediente;
 
-
-
 }

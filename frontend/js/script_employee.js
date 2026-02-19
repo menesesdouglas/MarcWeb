@@ -1,6 +1,6 @@
 // Variável global para a URL base da API
 const isPaulo = true;
-const urlBase = isPaulo? "http://192.168.15.158" : "";
+const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos DOM
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const punchButtons = document.querySelectorAll('.punch-btn');
     const usernameTag = document.getElementById("username");
     const auth = JSON.parse(localStorage.getItem("auth"));
-    
+
 
     // Verificar autenticação
     if (!auth) {
@@ -133,14 +133,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.className = 'punch-item';
                 li.style.opacity = '0';
+                li.style.cursor = 'pointer';
                 li.style.transform = 'translateY(10px)';
                 li.innerHTML = `
                     <span class="item-type">${type}</span>
                     <span class="item-time">${time}</span>
                 `;
 
+                li.addEventListener("click", () => {
+                    baixarPdfPonto();
+                });
                 // Adicionar ao topo da lista
-                punchList.prepend(li);
+                punchList.append(li);
 
                 // Animação de entrada
                 setTimeout(() => {
@@ -303,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Carregar histórico de ponto do dia
     loadTodayPunches();
-    
+
     // 7. Carregar status atual do usuário
     loadCurrentStatus();
 });
@@ -412,8 +416,17 @@ function renderPunchHistory(punches) {
             <span class="item-type">${punch.tipo}</span>
             <span class="item-time">${punch.horario}</span>
         `;
+        li.addEventListener("click", () => {
+            baixarPdfPonto();
+        });
+        li.style = "cursor: pointer;";
         container.appendChild(li);
     });
+}
+
+
+function baixarPdfPonto() {
+    confirm("Baixar pdf deste ponto? ");
 }
 
 // Função para carregar o status atual do usuário
@@ -421,16 +434,16 @@ async function loadCurrentStatus() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const statusElement = document.getElementById('currentStatus');
-        
+
         const response = await fetch(`${urlBase}/back/ponto/status-atual-me`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
         });
-        
+
         if (response.ok) {
             const statusData = await response.json();
-            
+
             if (statusData.temRegistrosHoje) {
                 // Se tem registros hoje, mostra o status do último registro
                 statusElement.textContent = `Status: ${statusData.status}`;

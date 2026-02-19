@@ -3,7 +3,7 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     tenant_id VARCHAR(50) NOT NULL DEFAULT 'legacy',
     nome VARCHAR(150) NOT NULL,
-    cpf VARCHAR(14) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
     cargo VARCHAR(100),
     username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -100,7 +100,7 @@ COMMENT ON CONSTRAINT logs_auditoria_categoria_check ON logs_auditoria
 IS 'Constraint que valida as categorias de log de auditoria conforme enum CategoriaLog';
 
 
-    
+
  CREATE TABLE folhas_ponto (
         id BIGSERIAL PRIMARY KEY,
         user_id BIGINT NOT NULL REFERENCES users(id),

@@ -1,6 +1,6 @@
 
 const isPaulo = true;
-const urlBase = isPaulo? "http://192.168.15.158" : "";
+const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -79,6 +79,9 @@ async function carregarHistorico() {
             const monthLength = resultado.monthLength || resultado.monthLength;
 
             calcularEstatisticas(resultado.registros, minutosTrabalhados, monthLength, primeiroDia, ultimoDia);
+
+            const registros = resultado.registros;
+            renderPunchs(registros);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
@@ -134,6 +137,32 @@ function calcularDiasUteis(mesAno, primeiroDia, ultimoDia) {
     }
 
     return diasUteis;
+}
+
+
+/// RENDERIZAR REGISTROS
+function renderPunchs(registros) {
+    const listBody = document.getElementById("historyBody");
+    listBody.innerHTML = ``;
+    registros.forEach(registro => {
+        const tr = document.createElement("tr");
+        const [data, hora] = registro.timestamp.split("T");
+        const [ano, mes, dia] = data.split("-");
+        tr.innerHTML = `
+        <td>${dia}/${mes}/${ano}</td>
+        <td> <span class="tipo-badge tipo-${registro.tipo.toLowerCase()}">${registro.tipo}</span></td>
+        <td>${hora}</td>
+        `;
+        tr.addEventListener("click", () => {
+            baixarPdfPonto();
+        })
+        listBody.appendChild(tr);
+    })
+}
+
+
+function baixarPdfPonto() {
+    confirm("Baixar pdf deste ponto??")
 }
 
 async function gerarFolhaPonto() {

@@ -37,7 +37,7 @@
 
 
 
-                <a style="color: #B91C1C;"  href="#" id="btnLogout" >
+                <a style="color: #B91C1C;" href="#" id="btnLogout">
                     <i class="material-symbols">Redo</i>
                     <span>Sair</span>
                 </a>
@@ -47,7 +47,7 @@
     </nav>
 
     <main class="dashboard-container">
-        <section  class="history-header">
+        <section class="history-header">
             <h1>Histórico de Registros</h1>
             <p>Visualize todos os seus registros de ponto por período</p>
         </section>
@@ -106,6 +106,30 @@
                         <h4>Horas Débito</h4>
                         <p id="horasDebito">--:--</p>
                     </div>
+                </div>
+            </div>
+        </section>
+        <section class="history-section">
+            <div class="history-card">
+                <div class="history-header">
+                    <h3>Registros do Período</h3>
+                    <!--<div class="loading-indicator" id="loadingIndicator">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Carregando...
+                    </div>-->
+                </div>
+                <div class="history-table-container">
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Horário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>

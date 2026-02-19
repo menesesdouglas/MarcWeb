@@ -1,5 +1,5 @@
 -- Adiciona coluna CPF na tabela users
-ALTER TABLE users ADD COLUMN cpf VARCHAR(14) NOT NULL  DEFAULT '';
+ALTER TABLE users ADD COLUMN cpf VARCHAR(14) NOT NULL DEFAULT '';
 
 -- Remove o valor padrão após garantir que não há registros sem CPF
 UPDATE users SET cpf = '' WHERE cpf IS NULL;
