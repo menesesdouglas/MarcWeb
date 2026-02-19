@@ -31,14 +31,14 @@ import java.util.List; // Import necessário
 public class MarcWebApplication implements CommandLineRunner { // Implementa CommandLineRunner para execução pós-inicialização
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().load();
-        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        /*Dotenv dotenv = Dotenv.configure().load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));*/
         SpringApplication.run(MarcWebApplication.class, args);
     }
 
-    private final UserRepository userRepository; // Injeta o repositório de User
-    private final ConfigEmpresaRepository configEmpresaRepository; // Injeta o repositório de ConfigEmpresa
-    private final PasswordEncoder passwordEncoder; // Injeta o encoder de senha
+    private final UserRepository userRepository;
+    private final ConfigEmpresaRepository configEmpresaRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {

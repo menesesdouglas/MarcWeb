@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 
-/// CLASSE RESPONSÁVEL POR MUDAR O SCHEMA ATUAL
+/// CLASSE RESPONSÁVEL POR MUDAR O SCHEMA DA REQUISIÇÃO
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -39,10 +39,10 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
     @Override
     public Connection getConnection(Object tenantIdentifier) throws SQLException {
         final Connection connection = getAnyConnection();
-        
+
         try {
             String tenantId = tenantIdentifier.toString();
-            
+
             // Para tenants especiais (public, legacy), usar o schema public diretamente
             // sem criar um novo schema
             if ("public".equals(tenantId) || "legacy".equals(tenantId)) {
@@ -51,10 +51,10 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
             } else {
                 // Para tenants normais, usar verificação leve com cache
                 String fullSchemaName = SCHEMA_PREFIX + tenantId;
-                
+
                 // Verificação leve - usa cache para evitar queries repetidas
                 boolean schemaReady = schemaService.isSchemaReady(tenantId);
-                
+
                 if (!schemaReady) {
                     // Se não está pronto, faz a configuração completa (apenas na primeira vez)
                     try {
@@ -64,7 +64,6 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
                         // Não vamos falhar completamente, vamos tentar continuar
                     }
                 }
-                
                 connection.createStatement().execute("set search_path to " + fullSchemaName);
             }
         } catch (SQLException e) {

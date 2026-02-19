@@ -19,7 +19,7 @@ public class UserResponse {
     private String cargo;
     private String cpf;
     private LocalDateTime createdAt;
-    // private LocalDateTime updatedAt; // Removido, pois não existe na entidade User
+
 
     // Construtor padrão (necessário para frameworks como Jackson)
     public UserResponse() {}

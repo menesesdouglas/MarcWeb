@@ -18,6 +18,7 @@ import com.marcweb.entity.User;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.entity.TipoFolga;
+import com.marcweb.exceptions.FolhaPontoNotFoundException;
 import com.marcweb.exceptions.RelatorioException;
 import com.marcweb.exceptions.SemRegistrosException;
 import com.marcweb.dto.folha_ponto.DadosFolhaPonto;
@@ -56,17 +57,12 @@ public class RelatorioService {
      * Gera relatório PDF de folha de ponto com layout completo
      */
     public String gerarRelatorioPDF(Long userId, int mes, int ano) throws RelatorioException {
+        User user = userService.findById(userId);
+
+        // Gera a folha de ponto internamente
+        String folhaPontoJson = folhaPontoService.buscarFolhaPonto(userId, mes, ano);
+
         try {
-            User user = userService.findById(userId);
-            
-            // Gera a folha de ponto internamente
-            String folhaPontoJson;
-            try {
-                folhaPontoJson = folhaPontoService.gerarFolhaPonto(userId, mes, ano);
-            } catch (SemRegistrosException e) {
-                // Caso não haja registros, cria um JSON vazio para gerar PDF em branco
-                folhaPontoJson = criarFolhaPontoVazia(userId, mes, ano);
-            }
 
             // Converte JSON para objeto
             DadosFolhaPonto folhaPonto = objectMapper.readValue(folhaPontoJson, DadosFolhaPonto.class);
@@ -108,23 +104,22 @@ public class RelatorioService {
 
             // Registra log de auditoria
             logAuditoriaService.registrarLog(
-                user,
-                "Geração de relatório PDF",
-                CategoriaLog.USO_SISTEMA,
-                StatusLog.SUCESSO,
-                "Relatório PDF gerado com sucesso - Período: " + mes + "/" + ano
+                    user,
+                    "Geração de relatório PDF",
+                    CategoriaLog.USO_SISTEMA,
+                    StatusLog.SUCESSO,
+                    "Relatório PDF gerado com sucesso - Período: " + mes + "/" + ano
             );
 
             return pdfBase64;
         } catch (Exception e) {
             try {
-                User user = userService.findById(userId);
                 logAuditoriaService.registrarLog(
-                    user,
-                    "Geração de relatório PDF",
-                    CategoriaLog.RELATORIO,
-                    StatusLog.ERRO,
-                    "Falha ao gerar relatório PDF: " + e.getMessage()
+                        user,
+                        "Geração de relatório PDF",
+                        CategoriaLog.RELATORIO,
+                        StatusLog.ERRO,
+                        "Falha ao gerar relatório PDF: " + e.getMessage()
                 );
             } catch (Exception logError) {
                 e.addSuppressed(logError);
@@ -139,7 +134,7 @@ public class RelatorioService {
     private void adicionarCabecalhoModerno(Document document, User user, int mes, int ano, PdfFont font, PdfFont boldFont) {
         // Linha divisória superior
         document.add(new Paragraph("").setMarginBottom(5));
-        
+
         // Título principal com design moderno
         Paragraph title = new Paragraph("MarcWeb - TechHub Soluções Tecnológicas")
                 .setFont(boldFont)
@@ -165,22 +160,22 @@ public class RelatorioService {
         // Informações do funcionário em layout de duas colunas
         Table infoTable = new Table(2);
         infoTable.setWidth(520f);
-        
+
         // Coluna esquerda - Dados do funcionário
         Cell cell1 = new Cell().add(new Paragraph("Funcionário:").setFont(boldFont))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setPaddingRight(5);
         infoTable.addCell(cell1);
-        
+
         Cell cell2 = new Cell().add(new Paragraph(user.getNome()).setFont(font))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
         infoTable.addCell(cell2);
-        
+
         Cell cell3 = new Cell().add(new Paragraph("CPF:").setFont(boldFont))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setPaddingRight(5);
         infoTable.addCell(cell3);
-        
+
         Cell cell4 = new Cell().add(new Paragraph(user.getCpf()).setFont(font))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
         infoTable.addCell(cell4);
@@ -190,16 +185,16 @@ public class RelatorioService {
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setPaddingRight(5);
         infoTable.addCell(cell5);
-        
+
         Cell cell6 = new Cell().add(new Paragraph(String.format("%02d", mes) + "/" + ano).setFont(font))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
         infoTable.addCell(cell6);
-        
+
         Cell cell7 = new Cell().add(new Paragraph("Cargo:").setFont(boldFont))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setPaddingRight(5);
         infoTable.addCell(cell7);
-        
+
         Cell cell8 = new Cell().add(new Paragraph(user.getCargo() != null ? user.getCargo() : "Não informado").setFont(font))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
         infoTable.addCell(cell8);
@@ -223,7 +218,7 @@ public class RelatorioService {
         // Tabela de resumo
         Table resumoTable = new Table(4);
         resumoTable.setWidth(520f);
-        
+
         // Cabeçalho da tabela de resumo
         Cell headerCell = new Cell(1, 4).add(new Paragraph("Métricas do Período").setFont(boldFont))
                 .setBackgroundColor(ColorConstants.LIGHT_GRAY)
@@ -236,15 +231,15 @@ public class RelatorioService {
                 .setBackgroundColor(ColorConstants.GRAY)
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell1);
-        
+
         Cell cell2 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_trabalhadas().toString()).setFont(font));
         resumoTable.addCell(cell2);
-        
+
         Cell cell3 = new Cell().add(new Paragraph("Horas Extras").setFont(boldFont))
                 .setBackgroundColor(ColorConstants.GRAY)
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell3);
-        
+
         Cell cell4 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_extras() + " h").setFont(font));
         resumoTable.addCell(cell4);
 
@@ -253,15 +248,15 @@ public class RelatorioService {
                 .setBackgroundColor(ColorConstants.GRAY)
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell5);
-        
+
         Cell cell6 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_debito() + " h").setFont(font));
         resumoTable.addCell(cell6);
-        
+
         Cell cell7 = new Cell().add(new Paragraph("Saldo de Horas").setFont(boldFont))
                 .setBackgroundColor(ColorConstants.GRAY)
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell7);
-        
+
         Cell cell8 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getSaldo_horas() + " h").setFont(font));
         resumoTable.addCell(cell8);
 
@@ -274,7 +269,7 @@ public class RelatorioService {
     private void adicionarEspacoAssinatura(Document document, User user, PdfFont font, PdfFont boldFont) {
         // Linha divisória
         document.add(new Paragraph("").setMarginTop(30).setMarginBottom(10));
-        
+
         // Título da seção de assinatura
         Paragraph signatureTitle = new Paragraph("Assinatura do Funcionário")
                 .setFont(boldFont)
@@ -286,19 +281,19 @@ public class RelatorioService {
         // Linha para assinatura
         Table signatureTable = new Table(1);
         signatureTable.setWidth(520f);
-        
+
         Cell signatureCell = new Cell().add(new Paragraph("_________________________________________").setFont(boldFont))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginTop(20);
         signatureTable.addCell(signatureCell);
-        
+
         Cell nameCell = new Cell().add(new Paragraph("Nome: " + user.getNome()).setFont(font))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginTop(5);
         signatureTable.addCell(nameCell);
-        
+
         Cell dateCell = new Cell().add(new Paragraph("Data: ____/____/________").setFont(font))
                 .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
                 .setTextAlignment(TextAlignment.CENTER)
@@ -377,42 +372,42 @@ public class RelatorioService {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setPadding(4);
         table.addHeaderCell(cell);
-        
+
         cell = new Cell().add(new Paragraph("Entrada").setFont(boldFont)).setBold()
                 .setBackgroundColor(ColorConstants.BLUE)
                 .setFontColor(ColorConstants.WHITE)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setPadding(4);
         table.addHeaderCell(cell);
-        
+
         cell = new Cell().add(new Paragraph("Início\nDescanso").setFont(boldFont)).setBold()
                 .setBackgroundColor(ColorConstants.BLUE)
                 .setFontColor(ColorConstants.WHITE)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setPadding(4);
         table.addHeaderCell(cell);
-        
+
         cell = new Cell().add(new Paragraph("Fim\nDescanso").setFont(boldFont)).setBold()
                 .setBackgroundColor(ColorConstants.BLUE)
                 .setFontColor(ColorConstants.WHITE)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setPadding(4);
         table.addHeaderCell(cell);
-        
+
         cell = new Cell().add(new Paragraph("Saída").setFont(boldFont)).setBold()
                 .setBackgroundColor(ColorConstants.BLUE)
                 .setFontColor(ColorConstants.WHITE)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setPadding(4);
         table.addHeaderCell(cell);
-        
+
         cell = new Cell().add(new Paragraph("Tipo de Dia").setFont(boldFont)).setBold()
                 .setBackgroundColor(ColorConstants.BLUE)
                 .setFontColor(ColorConstants.WHITE)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setPadding(4);
         table.addHeaderCell(cell);
-        
+
         cell = new Cell().add(new Paragraph("Observações").setFont(boldFont)).setBold()
                 .setBackgroundColor(ColorConstants.BLUE)
                 .setFontColor(ColorConstants.WHITE)
@@ -590,7 +585,7 @@ public class RelatorioService {
 
     private void adicionarRodape(Document document, PdfFont font) {
         document.add(new Paragraph("Relatório gerado em: " +
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                                   LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
                 .setFont(font)
                 .setFontSize(8)
                 .setTextAlignment(TextAlignment.RIGHT)
@@ -623,7 +618,12 @@ public class RelatorioService {
             this.cor = cor;
         }
 
-        public String getDescricao() { return descricao; }
-        public com.itextpdf.kernel.colors.Color getCor() { return cor; }
+        public String getDescricao() {
+            return descricao;
+        }
+
+        public com.itextpdf.kernel.colors.Color getCor() {
+            return cor;
+        }
     }
 }

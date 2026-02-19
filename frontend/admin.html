@@ -172,7 +172,8 @@
                             <label for="reportMonth">Mês-ano (janeiro-2026)</label>
                             <input type="month" id="reportMonth">
                         </div>
-                        <button class="btn-primary" onclick="generateReport()">Gerar Folha de Ponto (PDF)</button>
+                        <button class="btn-primary" onclick="generateReport()">Baixar folha de ponto (PDF)</button>
+                        <button class="btn-primary" onclick="generateFolhaPonto()">Gerar Folha de Ponto</button>
                     </div>
                 </div>
             </section>
@@ -228,8 +229,10 @@
                         </tbody>
                     </table>
                 </div>
-                <button class="btn-primary" onclick="cadastrarFeriadosNacionais()">+ Feriados nacionais</button>
-                <button class="btn-primary" onclick="atualizarFeriados()">Atualizar feriados</button>
+                <div style="display: flex; align-items: start; flex-wrap: wrap; gap: 10px;">
+                    <button class="btn-primary" onclick="cadastrarFeriadosNacionais()">+ Feriados nacionais</button>
+                    <button class="btn-primary" onclick="atualizarFeriados()">Atualizar feriados</button>
+                </div>
             </section>
 
         </main>

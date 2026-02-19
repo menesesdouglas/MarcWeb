@@ -259,6 +259,7 @@ public class UserService {
     }
 
 
+    @Transactional
     public ProfileUser loadUserProfile(Long id, int pageNumber) {
         /// TROCAR A EXCEPTION DEPOIS
         ProfileUser profile = repository.findProfileById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));

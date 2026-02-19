@@ -5,7 +5,9 @@ let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
 const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
-const urlBase = "";
+
+const isPaulo = true;
+const urlBase = isPaulo? "http://192.168.15.158" : "";
 
 ///  EVITANDO QUE A PÁGINA SEJA RECARREGADA AO ENVIAR O FORMULÁRIO
 const formFeriado = document.getElementById("feriadoForm").addEventListener("submit", function (e) {
@@ -47,9 +49,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     //// ==> EVENTOS PARA FERIADOS
     async function buscarFeriadoPorAno() {
         const ano = document.getElementById("ano-feriado").value;
-        if (ano.length == 4) {
+        if (ano.length < 4) showToast("Informe o ano primeiro ", "error");
+        else {
             const token = JSON.parse(localStorage.getItem("auth")).token;
-            if (!token) window.location.href = "login.html";
+            if (!token) sessaoExpirada();
             const response = await fetch(`${urlBase}/back/feriado?ano=${ano}`, {
                 method: 'GET',
                 headers: {
@@ -92,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const confirmacao = confirm(`Confirma a exclusão do feriado ${nomeFeriado}`);
         if (confirmacao) {
             const token = JSON.parse(localStorage.getItem("auth")).token;
-            if (!token) window.location.href = "login.html";
+            if (!token) sessaoExpirada();
             const response = await fetch(`${urlBase}/back/feriado/${idFeriado}`, {
                 method: 'DELETE',
                 headers: {
@@ -218,6 +221,7 @@ function closeMenu() {
 async function loadUsers() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const response = await fetch(`${urlBase}/back/user`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`,
@@ -248,6 +252,7 @@ async function loadUsers() {
 
 async function loadFolgasPendentes() {
     const auth = JSON.parse(localStorage.getItem("auth"));
+    if (!auth) sessaoExpirada();
     const response = await fetch(`${urlBase}/back/folgas/pendentes`, {
         headers: {
             'Authorization': `Bearer ${auth.token}`,
@@ -265,6 +270,7 @@ async function loadFolgasPendentes() {
 async function loadRecentPunches() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const response = await fetch(`${urlBase}/back/ponto/status-atual`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`,
@@ -360,6 +366,7 @@ async function solucionarFolga(idFolga, aprovada) {
     const confimado = confirm(`Confirma a ${aprovada ? "aprovação" : "desaprovação"} desta folga?`);
     if (!confimado) return;
     const auth = JSON.parse(localStorage.getItem("auth"));
+    if (!auth) sessaoExpirada();
     const response = await fetch(`${urlBase}/back/folgas/solucionar/${idFolga}/${aprovada}`, {
         headers: {
             "Authorization": `Bearer ${auth.token}`,
@@ -444,7 +451,7 @@ async function handlerFeriadoSubmit() {
     const data = document.getElementById("dataFeriado").value;
     const nomeFeriado = document.getElementById("nomeFeriado").value;
     const token = JSON.parse(localStorage.getItem("auth")).token;
-    if (!token) window.location.href = "login.html";
+    if (!token) sessaoExpirada();
 
     const dadosFeriado = {
         "data": data,
@@ -474,7 +481,7 @@ async function atualizarFeriados() {
     const confirmacao = confirm(`Atualizar feriados manuais do ano passado para o ano atual`);
     if (confirmacao) {
         const token = JSON.parse(localStorage.getItem("auth")).token;
-        if (!token) window.location.href = "login.html";
+        if (!token) sessaoExpirada();
         const response = await fetch(`${urlBase}/back/feriado/atualizar`, {
             method: "POST",
             headers: {
@@ -494,22 +501,25 @@ async function atualizarFeriados() {
 
 async function cadastrarFeriadosNacionais() {
     const ano = document.getElementById("ano-feriado").value;
-    const confirmacao = confirm(`Cadastrar feriados para o ano de ${ano}??`);
-    if (confirmacao) {
-        const token = JSON.parse(localStorage.getItem("auth")).token;
-        if (!token) window.location.href = "login.html";
-        const response = await fetch(`${urlBase}/back/feriado/sync?ano=${ano}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
+    if (ano.length < 4) showToast("Informe o ano primeiro ", "error");
+    else {
+        const confirmacao = confirm(`Cadastrar feriados para o ano de ${ano}??`);
+        if (confirmacao) {
+            const token = JSON.parse(localStorage.getItem("auth")).token;
+            if (!token) sessaoExpirada();
+            const response = await fetch(`${urlBase}/back/feriado/sync?ano=${ano}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                showToast(`Feriados encontrados: ${result.totalBuscados} \n Adicionados: ${result.adicionados} \n Já existiam ${result.jaExistiam}`, "success");
+            } else if (response.status == 403) sessaoExpirada();
+            else {
+                alert("Algo deu errado");
             }
-        });
-        if (response.ok) {
-            const result = await response.json();
-            alert(`Feriados encontrados: ${result.totalBuscados} \n Adicionados: ${result.adicionados} \n Já existiam ${result.jaExistiam}`);
-        } else if (response.status == 403) sessaoExpirada();
-        else {
-            alert("Algo deu errado");
         }
     }
 }
@@ -627,6 +637,7 @@ async function handleEmployeeSubmit(e) {
     }
 
     const auth = JSON.parse(localStorage.getItem("auth"));
+    if (!auth) sessaoExpirada();
     const url = `${urlBase}/back/user${isEdit ? `/${userId}` : ''}`;
     const method = isEdit ? "PUT" : "POST";
 
@@ -685,6 +696,7 @@ async function handleAdjustmentSubmit(e) {
 
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const adjustmentData = {
             userId: employeeId,
             date: date,
@@ -721,6 +733,7 @@ async function handleAdjustmentSubmit(e) {
 async function loadAdjustmentHistory() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const today = new Date();
         const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -832,12 +845,41 @@ function validateAdjustmentData(data) {
     };
 }
 
+async function generateFolhaPonto() {
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    if (!auth) sessaoExpirada();
+    const userId = document.getElementById('reportEmployee').value;
+    const monthYear = document.getElementById('reportMonth').value;
+
+    if (!userId || !monthYear) {
+        showToast('Selecione o funcionário e o período', 'error');
+        return;
+    }
+
+    const [year, month] = monthYear.split('-');
+
+    const response = await fetch(`${urlBase}/back/folha-ponto?userId=${userId}&mes=${month}&ano=${year}`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${auth.token}`
+        }
+    });
+    if (response.status == 201) {
+        showToast("Folha gerada com sucesso", "success");
+    } else if (response.status === 403) {
+        sessaoExpirada();
+    } else {
+        const responseError = await response.json();
+        showToast(responseError.erro, "error");
+    }
+
+}
+
 async function generateReport() {
     const userId = document.getElementById('reportEmployee').value;
     const monthYear = document.getElementById('reportMonth').value;
 
-    // CORREÇÃO: Removida a validação de length que causava o bug
-    // O input type="month" retorna "YYYY-MM" (7 caracteres), não 6
+
     if (!userId || !monthYear) {
         showToast('Selecione o funcionário e o período', 'error');
         return;
@@ -845,6 +887,7 @@ async function generateReport() {
 
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const [year, month] = monthYear.split('-');
 
         // Mostrar feedback de carregamento
@@ -932,7 +975,7 @@ function showToast(message, type) {
         setTimeout(() => {
             toast.remove();
         }, 300);
-    }, 3000);
+    }, 5000);
 }
 
 

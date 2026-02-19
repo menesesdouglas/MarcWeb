@@ -35,6 +35,13 @@ public class GlobalExceptionHandler {
         return errorObject(e.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(FolhaPontoNotFoundException.class)
+    public Map<String, Object> handlerFolhaPontoNotFoundException(FolhaPontoNotFoundException e) {
+        log.error(e.getMessage());
+        return errorObject(e.getMessage());
+    }
+
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ConfigEmpresaNotFoundException.class)

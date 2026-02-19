@@ -1,4 +1,6 @@
-const urlBase = "";
+
+const isPaulo = true;
+const urlBase = isPaulo? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -44,6 +46,7 @@ function configurarMesAnoPadrao() {
 async function carregarHistorico() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const mesAno = document.getElementById('mesAno').value;
 
         if (!mesAno) {
@@ -70,11 +73,11 @@ async function carregarHistorico() {
             console.log('Resultado completo:', resultado);
             console.log('minutosTrabalhados:', resultado.minutosTrabalhados);
             console.log('monthLength:', resultado.monthLength);
-            
+
             // Verificação defensiva - aceita ambos os formatos de nome de campo
             const minutosTrabalhados = resultado.minutosTrabalhados || resultado.MinutosTrabalhados || 0;
             const monthLength = resultado.monthLength || resultado.monthLength;
-            
+
             calcularEstatisticas(resultado.registros, minutosTrabalhados, monthLength, primeiroDia, ultimoDia);
         } else {
             if (response.status == 403) window.location.href = "login.html";
@@ -120,7 +123,7 @@ function calcularEstatisticas(registros, minutosTrabalhados, monthLength, primei
 function calcularDiasUteis(mesAno, primeiroDia, ultimoDia) {
     let diasUteis = 0;
     const currentDate = new Date(primeiroDia);
-    
+
     while (currentDate <= ultimoDia) {
         const dayOfWeek = currentDate.getDay();
         // 0 = domingo, 6 = sábado
@@ -129,8 +132,35 @@ function calcularDiasUteis(mesAno, primeiroDia, ultimoDia) {
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
-    
+
     return diasUteis;
+}
+
+async function gerarFolhaPonto() {
+
+    const mesAno = document.getElementById('mesAno').value;
+
+    if (!mesAno) {
+        showToast('Selecione o mês e ano para gerar a folha de ponto', 'error');
+        return;
+    }
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    if (!auth) sessaoExpirada();
+    const [ano, mes] = mesAno.split('-').map(Number);
+    const response = await fetch(`${urlBase}/back/folha-ponto/me?mes=${mes}&ano=${ano}`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${auth.token}`
+        }
+    });
+    if (response.status == 201) {
+        showToast("Folha gerada com sucesso", "success");
+    } else if (response.status === 403) {
+        sessaoExpirada();
+    } else {
+        const responseError = await response.json();
+        showToast(responseError.erro, "error");
+    }
 }
 
 
@@ -144,6 +174,7 @@ async function exportarPDF() {
 
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
+        if (!auth) sessaoExpirada();
         const [ano, mes] = mesAno.split('-').map(Number);
 
         // Mostrar feedback de carregamento
@@ -232,4 +263,12 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+
+function sessaoExpirada() {
+    setTimeout(() => {
+        showToast("Sua sessão terminou, efetue o login novamente", "info");
+    }, 5000)
+    localStorage.removeItem("auth");
+    window.location.href = "login.html";
+}
 

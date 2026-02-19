@@ -7,17 +7,21 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.folha_ponto.*;
 import com.marcweb.entity.*;
+import com.marcweb.exceptions.FolhaPontoNotFoundException;
 import com.marcweb.exceptions.PeriodoFolhaPontoException;
 import com.marcweb.exceptions.SemRegistrosException;
 import com.marcweb.repository.FolhaPontoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -47,11 +51,6 @@ public class FolhaPontoService {
 
         var userEntity = userService.findById(userId);
         detalhes.setDetalhes("Folha de ponto do periódo " + mes + "-" + ano + " gerada para o usuário " + userEntity.getUsername());
-
-        var folhaPonto = repository.findByUserIdAndMesAndAno(userId, mes, ano);
-        ///  RETORNA OS DADOS SALVOS CASO JÁ EXISTA UMA FOLHA DE PONTO
-        ///  DO USUÁRIO PARA O MES E O ANO INFORMADO
-        if (folhaPonto != null) return folhaPonto.getDados();
 
         /// --->>> TODAS OS PONTOS BATIDOS NO MES <<< --- ☻☻☻☻☻☻☻☻☻
         var pontosBatidosNoMes = registroPontoService.findByMesAno(userId, mes, ano);
@@ -125,13 +124,17 @@ public class FolhaPontoService {
         /// GERANDO JSON
         String json = mapper.writeValueAsString(dadosFolha);
 
+        /// BUSCANDO FOLHA CASO JA TENHA SIDO CRIADO, SE SIM, OS DADOS SERÃO ATUALIZADOS
+        FolhaPonto possivelFolhaPonto = repository.findByUserIdAndMesAndAno(userId, mes, ano);
         ///  ENTIDADE 'FOLHA_PONTO' QUE SERÁ PERSISTIDA
         FolhaPonto folha = FolhaPonto.builder()
+                .id(possivelFolhaPonto != null ? possivelFolhaPonto.getId() : null)
                 .user(userEntity)
                 .diasTrabalhados(diasTrabalhados)
                 .diasFalta(diasFalta)
                 .ano(ano)
                 .mes(mes)
+                .geradaEm(LocalDateTime.now())
                 .dados(json)
                 .horasTrabalhadas(horasTotais)
                 .build();
@@ -348,5 +351,14 @@ public class FolhaPontoService {
         } else if (dataSolicitada.getYear() == dataAtual.getYear() && dataAtual.getMonthValue() <= dataSolicitada.getMonthValue()) {
             throw new PeriodoFolhaPontoException("O mês precisa ser finalizado para a geração da folha de ponto");
         }
+    }
+
+    public String buscarFolhaPonto(Long userId, int mes, int ano) {
+        var folha = repository.findByUserIdAndMesAndAno(userId, mes, ano);
+        if (folha != null) {
+            detalhes.setDetalhes("Consulta da folha de ponto do usuário " + folha.getUser().getNome() + " referente ao periodo " + ano + "/" + mes);
+            return folha.getDados();
+        }
+        throw new FolhaPontoNotFoundException();
     }
 }

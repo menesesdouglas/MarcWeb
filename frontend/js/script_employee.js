@@ -1,5 +1,6 @@
 // Variável global para a URL base da API
-var urlBase = "";
+const isPaulo = true;
+const urlBase = isPaulo? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos DOM

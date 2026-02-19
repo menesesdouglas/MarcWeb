@@ -1,7 +1,8 @@
 // Global variable to track current page number for pagination
 let currentPageNumber = 0;
 
-const urlBase = "";
+const isPaulo = true;
+const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -16,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
 
     // Carregar folgas do usuário
-    loadUserFolgas(currentPageNumber);
+    loadUserFolgas(0);
 
 
     // Carregar atividades recentes
@@ -421,3 +422,6 @@ function showToast(message, type = 'info') {
         }, 300);
     }, 3000);
 }
+
+
+

@@ -6,12 +6,10 @@ import com.marcweb.entity.CategoriaLog;
 import com.marcweb.service.FolhaPontoService;
 import com.marcweb.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -22,16 +20,39 @@ public class FolhaPontoController {
     private final UserService userService;
 
 
-
     @Auditado(
             acao = "Gerando folha de ponto para de mês e ano específico",
             categoria = CategoriaLog.ADMIN
     )
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/gerar")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping()
     public String gerarFolhaPonto(@RequestParam Long userId, @RequestParam int mes, @RequestParam int ano) throws JsonProcessingException {
         var dados = service.gerarFolhaPonto(userId, mes, ano);
         return dados;
+    }
+
+
+    @Auditado(
+            acao = "Buscando folha de ponto para de mês e ano específico",
+            categoria = CategoriaLog.ADMIN
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public String buscarFolhaPonto(@RequestParam Long userId, @RequestParam int mes, @RequestParam int ano) {
+        return service.buscarFolhaPonto(userId, mes, ano);
+    }
+
+    @Auditado(
+            acao = "Gerando folha de ponto para de mês e ano específico",
+            categoria = CategoriaLog.AUDITORIA)
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/me")
+    public String postMyFolhaPonto(@RequestParam int mes, @RequestParam int ano, Authentication authentication) throws JsonProcessingException {
+        String username = authentication.getName();
+        var user = userService.findByUsername(username);
+        return service.gerarFolhaPonto(user.getId(), mes, ano);
     }
 
     @Auditado(
@@ -42,6 +63,6 @@ public class FolhaPontoController {
     public String getMyFolhaPonto(@RequestParam int mes, @RequestParam int ano, Authentication authentication) throws JsonProcessingException {
         String username = authentication.getName();
         var user = userService.findByUsername(username);
-        return service.gerarFolhaPonto(user.getId(), mes, ano);
+        return service.buscarFolhaPonto(user.getId(), mes, ano);
     }
 }

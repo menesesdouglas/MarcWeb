@@ -171,7 +171,8 @@ public class FolgaService {
         );
         Page<Folga> folgasPaginadas = folgaRepository.findByUserId(user.getId(), PageRequest.of(pageNumber, 20));
         PageFolgaResponse pageFolgaResponse = new PageFolgaResponse();
-        pageFolgaResponse.setFolgas(folgasPaginadas.stream().map(FolgaResponse::new).toList());
+        List<FolgaResponse> folgasResponse = folgasPaginadas.stream().map(FolgaResponse::new).toList();
+        pageFolgaResponse.setFolgas(folgasResponse);
         pageFolgaResponse.setTotalPages(folgasPaginadas.getTotalPages());
         return pageFolgaResponse;
 
