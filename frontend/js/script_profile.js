@@ -1,7 +1,7 @@
 // Global variable to track current page number for pagination
 let currentPageNumber = 0;
 
-const isPaulo = true;
+const isPaulo = false;
 const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -6,7 +6,7 @@ const textField = document.getElementById("filter-by-name");
 const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 
-const isPaulo = true;
+const isPaulo = false;
 const urlBase = isPaulo? "http://192.168.15.158" : "";
 
 ///  EVITANDO QUE A PÁGINA SEJA RECARREGADA AO ENVIAR O FORMULÁRIO
