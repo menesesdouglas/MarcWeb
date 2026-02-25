@@ -99,14 +99,40 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Registrando ponto:', { type, value, time });
         console.log('Token JWT:', auth.token.substring(0, 20) + '...');
 
-        /// -- ☻☻☻☻☻ VIA API
+        // Obter geolocalização real do usuário (com retry automático)
+        const geoData = await getGeolocationWithRetry(2);
+        
+        if (!geoData.success) {
+            // Mostrar opções ao usuário
+            const tentarNovamente = confirm(`${geoData.message}\n\nDeseja tentar novamente?`);
+            if (tentarNovamente) {
+                showToast('📍 Tentando obter localização novamente...', 'info');
+                const retryData = await getGeolocationWithRetry(1);
+                if (!retryData.success) {
+                    showToast(`❌ ${retryData.message}`, 'error');
+                    return;
+                }
+                Object.assign(geoData, retryData);
+            } else {
+                return;
+            }
+        }
+
+        // Dados a serem enviados para a API
         const dados = {
             tipo: value, // ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
-            latitude: -23.5505,
-            longitude: -46.6333,
-            precisao: 10,
+            latitude: geoData.latitude,
+            longitude: geoData.longitude,
+            precisao: geoData.precisao,
             justificativa: "Batendo ponto em dia normal de trabalho"
         }
+
+        console.log('Enviando dados com geolocalização:', {
+            tipo: value,
+            latitude: geoData.latitude,
+            longitude: geoData.longitude,
+            precisao: geoData.precisao + 'm'
+        });
 
         try {
             const result = await fetch(`${urlBase}/back/ponto`, {
@@ -459,4 +485,139 @@ async function loadCurrentStatus() {
     } catch (error) {
         console.error('Erro ao carregar status atual:', error);
     }
+}
+
+/**
+ * Obtém a geolocalização atual do usuário usando a API do navegador
+ * @param {number} timeout - Tempo limite em milissegundos (padrão: 30000ms = 30s)
+ * @returns {Promise<{success: boolean, latitude?: number, longitude?: number, precisao?: number, message?: string}>}
+ */
+function getGeolocation(timeout = 30000) {
+    return new Promise((resolve) => {
+        // Verificar se a API de geolocalização está disponível
+        if (!navigator.geolocation) {
+            resolve({
+                success: false,
+                message: 'Geolocalização não suportada pelo navegador. Use um navegador moderno.'
+            });
+            return;
+        }
+
+        // Opções para a geolocalização - timeout aumentado para 30 segundos
+        const options = {
+            enableHighAccuracy: true,  // Tentar obter a posição mais precisa possível
+            timeout: timeout,          // Tempo limite configurável
+            maximumAge: 60000          // Aceitar posições em cache de até 1 minuto
+        };
+
+        // Mostrar indicador de carregamento
+        showToast('📍 Obtendo sua localização...', 'info');
+
+        navigator.geolocation.getCurrentPosition(
+            // Sucesso
+            (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const precisao = Math.round(position.coords.accuracy);
+
+                console.log('Geolocalização obtida:', {
+                    latitude,
+                    longitude,
+                    precisao: precisao + 'm'
+                });
+
+                // Verificar se a precisão é aceitável (menos de 500 metros)
+                if (precisao > 500) {
+                    showToast(`⚠️ Localização imprecisa (${precisao}m). Tente ao ar livre para melhor precisão.`, 'info');
+                }
+
+                resolve({
+                    success: true,
+                    latitude: latitude,
+                    longitude: longitude,
+                    precisao: precisao
+                });
+            },
+            // Erro
+            (error) => {
+                let message;
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        message = 'Permissão de geolocalização negada. Por favor, habilite a localização no navegador.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message = 'Informações de localização indisponíveis. Verifique se o GPS está ativo e tenha paciencia.';
+                        break;
+                    case error.TIMEOUT:
+                        message = 'Tempo limite excedido ao obter localização. O GPS pode estar com dificuldade. Tente novamente.';
+                        break;
+                    default:
+                        message = 'Erro desconhecido ao obter geolocalização.';
+                }
+
+                console.error('Erro de geolocalização:', error.message);
+                resolve({
+                    success: false,
+                    message: message
+                });
+            },
+            // Opções
+            options
+        );
+    });
+}
+
+/**
+ * Obtém geolocalização com tentativas automáticas
+ * @param {number} maxRetries - Número máximo de tentativas
+ * @returns {Promise<{success: boolean, latitude?: number, longitude?: number, precisao?: number, message?: string}>}
+ */
+async function getGeolocationWithRetry(maxRetries = 2) {
+    let lastError = 'Erro desconhecido';
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`Tentativa ${attempt} de ${maxRetries} para obter geolocalização...`);
+        
+        const result = await getGeolocation(30000); // 30 segundos de timeout
+        
+        if (result.success) {
+            return result;
+        }
+        
+        lastError = result.message;
+        
+        // Se não foi o último intento, espera um pouco e tenta novamente
+        if (attempt < maxRetries) {
+            console.log(`Tentativa ${attempt} falhou. Tentando novamente em 2 segundos...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+    }
+    
+    return {
+        success: false,
+        message: `Não foi possível obter a localização após ${maxRetries} tentativas. ${lastError}`
+    };
+}
+
+/**
+ * Calcula a distância entre dois pontos usando a fórmula de Haversine
+ * @param {number} lat1 - Latitude do ponto 1
+ * @param {number} lon1 - Longitude do ponto 1
+ * @param {number} lat2 - Latitude do ponto 2
+ * @param {number} lon2 - Longitude do ponto 2
+ * @returns {number} Distância em metros
+ */
+function calcularDistanciaHaversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Raio da Terra em metros
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
 }
