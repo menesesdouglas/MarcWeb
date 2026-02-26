@@ -98,9 +98,9 @@ public class UserService {
      */
     public User findByUsernameAndTenant(String username, String tenantId) {
         // O JPA usa o contexto de tenant configurado no TenantContext
-        var user = repository.findByUsername(username)
+        var user = repository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
-        if (!user.getAtivo()) throw new RuntimeException("Erro ao buscar usuário");
+        if (!user.getAtivo()) throw new UsernameNotFoundException("O usuário " + username + " foi desligado");
         
         // Verifica se o usuário pertence ao tenant correto
         if (tenantId != null && !tenantId.equals(user.getTenantId())) {
@@ -151,7 +151,7 @@ public class UserService {
 
     ///  SÓ É,LIBERADO SE O USUÁRIO ESTIVER ATIVO
     public User findByUsername(String username) {
-        var user = repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
+        var user = repository.findByUsernameIgnoreCase(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
         if (!user.getAtivo()) throw new RuntimeException("Erro ao buuscar usuário");
         return user;
     }

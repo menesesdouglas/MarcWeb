@@ -157,15 +157,70 @@ Esta é uma solicitação automática enviada através do formulário de contato
             input.addEventListener('input', function() {
                 if (this.hasAttribute('required') && this.value.trim()) {
                     this.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    // Remove error message if field becomes valid
+                    const errorSpan = this.parentElement.querySelector('.error-message');
+                    if (errorSpan) {
+                        errorSpan.style.display = 'none';
+                    }
                 }
             });
 
             input.addEventListener('blur', function() {
                 if (this.hasAttribute('required') && !this.value.trim()) {
                     this.style.borderColor = '#ff6b6b';
+                    // Show error message
+                    showError(this, 'Este campo é obrigatório');
                 }
             });
+
+            // Email validation on blur
+            if (input.type === 'email') {
+                input.addEventListener('blur', function() {
+                    if (this.value && !validateEmail(this.value)) {
+                        this.style.borderColor = '#ff6b6b';
+                        showError(this, 'Por favor, insira um e-mail válido');
+                    } else if (this.value) {
+                        this.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        const errorSpan = this.parentElement.querySelector('.error-message');
+                        if (errorSpan) {
+                            errorSpan.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            // Employee count validation
+            if (input.id === 'employeeCount') {
+                input.addEventListener('blur', function() {
+                    if (this.value && parseInt(this.value) < 1) {
+                        this.style.borderColor = '#ff6b6b';
+                        showError(this, 'O número de funcionários deve ser maior que 0');
+                    } else if (this.value) {
+                        this.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        const errorSpan = this.parentElement.querySelector('.error-message');
+                        if (errorSpan) {
+                            errorSpan.style.display = 'none';
+                        }
+                    }
+                });
+            }
         });
+    }
+
+    // Show error message
+    function showError(input, message) {
+        let errorSpan = input.parentElement.querySelector('.error-message');
+        if (!errorSpan) {
+            errorSpan = document.createElement('span');
+            errorSpan.className = 'error-message';
+            errorSpan.style.color = '#ff6b6b';
+            errorSpan.style.fontSize = '0.8rem';
+            errorSpan.style.marginTop = '0.5rem';
+            errorSpan.style.display = 'block';
+            input.parentElement.appendChild(errorSpan);
+        }
+        errorSpan.textContent = message;
+        errorSpan.style.display = 'block';
     }
 
     // Phone input formatting
@@ -214,6 +269,24 @@ Esta é uma solicitação automática enviada através do formulário de contato
         });
     }
 
+    // Add keyboard navigation support
+    function addKeyboardSupport() {
+        const inputs = financialForm.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach((input, index) => {
+            input.addEventListener('keydown', function(e) {
+                // Enter key submits form
+                if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    financialForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+    }
+
     // Initialize form animations
     animateForm();
+    
+    // Add keyboard support
+    addKeyboardSupport();
 });

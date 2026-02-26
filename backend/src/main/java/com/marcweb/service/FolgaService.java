@@ -11,9 +11,7 @@ import com.marcweb.repository.FolgaRepository;
 import com.marcweb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,7 +96,7 @@ public class FolgaService {
 
 
     public void solicitarFolga(SolicitaFolga dados, String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado para o username: " + username));
+        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado para o username: " + username));
 
         // Validação de sobreposição - Usando método que será adicionado ao FolgaRepository
         if (existeSobreposicao(user, dados.dataInicio(), dados.dataFim(), null)) { // null para ID, pois é um novo registro
@@ -151,9 +149,10 @@ public class FolgaService {
         }
     }
 
+    /// VERIFICANDO SE USUÁRIO POSSUI FOLGA APROVADA EM DATA EXPECÍFICA
     public boolean existsByUserAndDate(Long idUser, LocalDate data) {
-        return folgaRepository.existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual
-                (idUser, data, data);
+        return folgaRepository.existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqualAndAprovada
+                (idUser, data, data, true);
     }
 
     /// BUSCANDO FOLGAS APROVADAS EM UM DETERMINADO PERIODO
@@ -166,7 +165,7 @@ public class FolgaService {
     //  Listar folgas do usuário autenticado
     public PageFolgaResponse findByMe(int pageNumber) {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(
+        User user = userRepository.findByUsernameIgnoreCase(userDetails.getUsername()).orElseThrow(
                 () -> new RuntimeException("Usuário não encontrado")
         );
         Page<Folga> folgasPaginadas = folgaRepository.findByUserId(user.getId(), PageRequest.of(pageNumber, 20));

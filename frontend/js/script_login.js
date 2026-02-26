@@ -1,5 +1,5 @@
 
-const isPaulo = true;
+const isPaulo = false;
 const urlBase = isPaulo? "http://192.168.15.158" : "";
 
 
@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             username: username,
             password: password
         }
+        
         const loginResponse = await fetch(`${urlBase}/back/auth/login`, {
             method: "POST",
             headers: {
@@ -63,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify(dadosLogin)
         });
+        
+        
         const resultado = await loginResponse.json();
         if (loginResponse.status == 200) {
             const auth = {

@@ -24,7 +24,7 @@ public class AuditoriaAspec {
     private final Detalhes detalhes;
 
 
-    /// ♦♦♦♦♦♦♦♦♦♦♦   ♦♦♦♦♦
+    /// AÇÕES AO TERMINAR UMA FUNÇÃO ANOTADA COM '@Auditato''
     @AfterReturning(pointcut = "@annotation(auditado)", returning = "retorno")
     public void auditarSucesso(JoinPoint jp, Auditado auditado, Object retorno) throws Throwable {
         String username = "";
@@ -45,7 +45,7 @@ public class AuditoriaAspec {
     }
 
 
-    /// ♥♥♥♥♥♥♥♥♥♥♥
+    ///  AÇÕES AO OCORRER ERRO DURANTE A EXECUÇÃO DE UMA FUNÇÃO ANOTADA COM '@Auditato''
     @AfterThrowing(pointcut = "@annotation(auditado)",
             throwing = "e")
     public void auditarErro(Auditado auditado, Exception e) throws JsonProcessingException {

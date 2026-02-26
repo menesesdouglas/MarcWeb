@@ -80,7 +80,7 @@ class UserServiceTest {
     @Test
     void findByUsername_DeveRetornarUsuario_QuandoExistir() {
         // Arrange
-        when(repository.findByUsername(anyString())).thenReturn(Optional.of(user));
+        when(repository.findByUsernameIgnoreCase(anyString())).thenReturn(Optional.of(user));
 
         // Act
         User resultado = userService.findByUsername("testuser");
@@ -93,7 +93,7 @@ class UserServiceTest {
     @Test
     void findByUsername_DeveLancarExcecao_QuandoNaoExistir() {
         // Arrange
-        when(repository.findByUsername(anyString())).thenReturn(Optional.empty());
+        when(repository.findByUsernameIgnoreCase(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(RuntimeException.class, () ->

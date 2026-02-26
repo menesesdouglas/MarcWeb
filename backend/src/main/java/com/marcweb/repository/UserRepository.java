@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
     Optional<User> findByUsernameIgnoreTenant(@Param("username") String username);
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findByUsernameIgnoreCase(String username);
 
     // Outros métodos específicos, se necessário
     boolean existsByUsername(String username);

@@ -179,7 +179,7 @@ class RegistroPontoDTOControllerTest {
     @Test
     void listarRegistros_Success() throws Exception {
         // Criar alguns registros
-        User user = userRepository.findByUsername("test.user").orElseThrow();
+        User user = userRepository.findByUsernameIgnoreCase("test.user").orElseThrow();
 
         RegistroPonto registro1 = new RegistroPonto();
         registro1.setUser(user);

@@ -9,7 +9,6 @@ import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.repository.LogAuditoriaRepository;
 import com.marcweb.repository.UserRepository;
-import com.marcweb.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -63,7 +62,7 @@ public class LogAuditoriaService {
     // NOVO Método: Buscar logs do usuário autenticado
     public List<LogAuditoriaResponse> buscarLogsPorMe() {
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(
+        User user = userRepository.findByUsernameIgnoreCase(userDetails.getUsername()).orElseThrow(
                 () -> new RuntimeException("Usuário não encontrado")
         );
         return repository.findByUserId(user.getId());

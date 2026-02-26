@@ -6,11 +6,10 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.security.Key;
 import java.util.Date;

@@ -1,5 +1,5 @@
 
-const isPaulo = true;
+const isPaulo = false;
 const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {

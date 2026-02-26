@@ -67,9 +67,9 @@ public class RegistroPontoService {
         // A validação é feita com base no momento atual do servidor
         validarDiaUtil(dataAtual); // <-- Valida se é dia útil (não domingo e não feriado)
 
-        // VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)
+        /// VALIDAÇÃO DE GEOLOCALIZAÇÃO (Novo passo)      ♦♦♦♦ <==========
         ConfigEmpresa config = configEmpresaService.findConfigsEmpresa().toEntity(); // Obtém a configuração ativa
-        validarGeolocalizacao(data, config); // Chama o método de validação
+        validarGeolocalizacao(data, config); /// Chama o método de validação ATENÇÃO PARA ESSE MÉTODO
 
         ///  CAMPO QUE FICARÁ RESPONSÁVEL POR IDENTIFICAR UM DIA DE TRABALHO DE FORMA INDIVIDUAL
         UUID expedienteId;

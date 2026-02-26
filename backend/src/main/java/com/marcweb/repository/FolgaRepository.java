@@ -41,8 +41,8 @@ public interface FolgaRepository extends JpaRepository<Folga, Long> {
 
     // UTILIZADO PARA SABER SE EXISTE UMA FOLGA EM UM CERTO INTERVALO
     // USADO PARA VALIDAR SE EXISTE FOLGA NO DIA EM QUE UM PONTO TENTA SER BATIDO
-    boolean existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual(
-            Long idUser, LocalDate dataInicio, LocalDate dataFim);
+    boolean existsByUserIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqualAndAprovada(
+            Long idUser, LocalDate dataInicio, LocalDate dataFim, boolean aprovada);
 
 
     /// BUSCANDO FOLGAS  POR PERIODO ESPECIFICO
