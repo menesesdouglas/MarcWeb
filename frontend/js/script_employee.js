@@ -119,13 +119,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Dados a serem enviados para a API
+        // Obter geolocalização real do usuário (com retry automático)
+        const geoData = await getGeolocationWithRetry(2);
+        
+        if (!geoData.success) {
+            // Mostrar opções ao usuário
+            const tentarNovamente = confirm(`${geoData.message}\n\nDeseja tentar novamente?`);
+            if (tentarNovamente) {
+                showToast('📍 Tentando obter localização novamente...', 'info');
+                const retryData = await getGeolocationWithRetry(1);
+                if (!retryData.success) {
+                    showToast(`❌ ${retryData.message}`, 'error');
+                    return;
+                }
+                Object.assign(geoData, retryData);
+            } else {
+                return;
+            }
+        }
+
+        // Dados a serem enviados para a API
         const dados = {
             tipo: value, // ENTRADA, INICIO_DESCANSO, FIM_DESCANSO, SAIDA
             latitude: geoData.latitude,
             longitude: geoData.longitude,
             precisao: geoData.precisao,
+            latitude: geoData.latitude,
+            longitude: geoData.longitude,
+            precisao: geoData.precisao,
             justificativa: "Batendo ponto em dia normal de trabalho"
         }
+
+        console.log('Enviando dados com geolocalização:', {
+            tipo: value,
+            latitude: geoData.latitude,
+            longitude: geoData.longitude,
+            precisao: geoData.precisao + 'm'
+        });
 
         console.log('Enviando dados com geolocalização:', {
             tipo: value,
