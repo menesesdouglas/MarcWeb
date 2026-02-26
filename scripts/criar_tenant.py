@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 #!/usr/bin/env python3
-"""
-Script para criação automatizada de tenants no MarcWeb
-Autor: Cline AI
-Data: 2026
-"""
 
 import sys
 import os
@@ -223,7 +218,7 @@ class CriadorTenant:
         cursor.execute(f"""
             INSERT INTO tenant_{tenant_id}.users (username, password, role, tenant_id, nome, ativo, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, NOW())
-            ON CONFLICT (username) DO NOTHING
+            ON CONFLICT (tenant_id, username) DO NOTHING
         """, ('admin', senha_hash, 'ADMIN', tenant_id, 'Administrador', True))
         
         print(f"✅ Usuário admin criado com senha criptografada para o tenant '{tenant_id}'")
