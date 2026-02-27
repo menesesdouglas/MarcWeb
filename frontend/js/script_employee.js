@@ -100,11 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Token JWT:', auth.token.substring(0, 20) + '...');
 
         // Obter geolocalização real do usuário (com retry automático)
-        const geoData = await getGeolocationWithRetry(2);
+        const firstGeoData = await getGeolocationWithRetry(2);
         
-        if (!geoData.success) {
+        if (!firstGeoData.success) {
             // Mostrar opções ao usuário
-            const tentarNovamente = confirm(`${geoData.message}\n\nDeseja tentar novamente?`);
+            const tentarNovamente = confirm(`${firstGeoData.message}\n\nDeseja tentar novamente?`);
             if (tentarNovamente) {
                 showToast('📍 Tentando obter localização novamente...', 'info');
                 const retryData = await getGeolocationWithRetry(1);
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast(`❌ ${retryData.message}`, 'error');
                     return;
                 }
-                Object.assign(geoData, retryData);
+                Object.assign(firstGeoData, retryData);
             } else {
                 return;
             }

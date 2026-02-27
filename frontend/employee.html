@@ -12,9 +12,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols" />
-    <style>
-        
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols" />
+   <style>
         /* Animação de loading para o corpo */
         body.loading {
             opacity: 0.8;
@@ -79,35 +78,36 @@
         /* Barra de navegação fixa */
         .nav-bottom {
             position: fixed;
+            background-color: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--bg-card);
-            border-top: 1px solid var(--border);
-            padding: 1rem 2rem;
+            z-index: 100;
+        }
+
+        .section-nav {
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 1rem;
-            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            padding: 5px 0;
+            gap: 25px;
+            width: 100vw;
         }
 
         .nav-btn {
             background: var(--petrol-light);
             color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
             text-decoration: none;
+            padding: 20px;
+            border-radius: 5px;
             display: inline-flex;
+            gap: 10px;
             align-items: center;
-            gap: 0.5rem;
-            min-width: 200px;
             justify-content: center;
+
         }
 
         .nav-btn:hover {
@@ -171,9 +171,14 @@
             }
 
             .nav-btn {
-                width: 100%;
                 min-width: auto;
+                flex-direction: column;
+                width: 25%;
+                padding: 10px 2px;
+                text-align: center;
+                font-size: .9em;
             }
+            
         }
 
         @media (max-width: 480px) {
@@ -237,15 +242,20 @@
 
     <!-- Barra de navegação fixa no final -->
     <nav class="nav-bottom">
-        <a href="profile.html" class="nav-btn">
-            <i class="fas fa-user"></i> Meu Perfil
-        </a>
-        <a href="history.html" class="nav-btn secondary">
-            <i class="fas fa-file-alt"></i> Folha de Ponto
-        </a>
-        <button id="btnLogout" class="nav-btn">
-            <i class="fas fa-sign-out-alt"></i> Sair do Sistema
-        </button>
+        <section class="section-nav">
+            <a href="profile.html" class="nav-btn">
+                <i class="fas fa-user"></i>
+                <span class="desc-nav">Meu Perfil</span>
+            </a>
+            <a href="history.html" class="nav-btn secondary">
+                <i class="fas fa-file-alt"></i>
+                <span class="desc-nav"> Folha de Ponto</span>
+            </a>
+            <button id="btnLogout" class="nav-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="desc-nav">Sair do Sistema</span>
+            </button>
+        </section>
     </nav>
 
     <script src="js/script_employee.js"></script>
