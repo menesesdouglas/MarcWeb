@@ -10,6 +10,8 @@ import com.marcweb.dto.TimeAdjustmentRequest;
 import com.marcweb.dto.ponto.RegistroPontoMe;
 import com.marcweb.service.LogAuditoriaService;
 import com.marcweb.service.RegistroPontoService;
+import com.marcweb.service.RegistroPontoIndividualService;
+import com.marcweb.service.RelatorioService;
 import com.marcweb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -34,6 +36,8 @@ public class RegistroPontoController {
     private final RegistroPontoService service;
     private final LogAuditoriaService logAuditoriaService;
     private final UserService userService;
+    private final RegistroPontoIndividualService registroPontoIndividualService;
+    private final RelatorioService relatorioService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
@@ -107,6 +111,22 @@ public class RegistroPontoController {
             log.error("Erro ao carregar ajustes administrativos: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(List.of());
+        }
+    }
+
+    /**
+     * Endpoint para gerar comprovante PDF de registro de ponto individual
+     * Segue a Portaria 671/2021 - Ministério do Trabalho e Emprego
+     */
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<String> gerarComprovantePontoIndividual(@PathVariable Long id) {
+        try {
+            String pdfBase64 = relatorioService.gerarComprovantePontoIndividual(id);
+            return ResponseEntity.ok(pdfBase64);
+        } catch (Exception e) {
+            log.error("Erro ao gerar comprovante de ponto individual: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Falha ao gerar comprovante PDF: " + e.getMessage());
         }
     }
 }

@@ -150,6 +150,10 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     boolean existsByExpedienteIdAndTipo(UUID expedienteId, TipoRegistro tipo);
 
+    // Método para buscar registro de ponto com usuário carregado (resolve LazyInitializationException)
+    @Query("SELECT r FROM RegistroPonto r LEFT JOIN FETCH r.user WHERE r.id = :id")
+    Optional<RegistroPonto> findByIdWithUser(@Param("id") Long id);
+
 
 
 

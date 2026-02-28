@@ -18,6 +18,9 @@ import com.marcweb.entity.User;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.StatusLog;
 import com.marcweb.entity.TipoFolga;
+import com.marcweb.dto.ponto.RegistroPontoIndividualDTO;
+import com.marcweb.service.RegistroPontoIndividualService;
+import org.springframework.security.core.userdetails.UserDetails;
 import com.marcweb.exceptions.FolhaPontoNotFoundException;
 import com.marcweb.exceptions.RelatorioException;
 import com.marcweb.exceptions.SemRegistrosException;
@@ -52,6 +55,7 @@ public class RelatorioService {
     private final FeriadoService feriadoService;
     private final FolgaService folgaService;
     private final UserService userService;
+    private final RegistroPontoIndividualService registroPontoIndividualService;
 
     /**
      * Gera relatório PDF de folha de ponto com layout completo
@@ -625,5 +629,367 @@ public class RelatorioService {
         public com.itextpdf.kernel.colors.Color getCor() {
             return cor;
         }
+    }
+
+    /**
+     * Gera comprovante PDF de registro de ponto individual seguindo a Portaria 671/2021
+     */
+    public String gerarComprovantePontoIndividual(Long registroId) throws RelatorioException {
+        // Busca os dados do registro individual
+        UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
+        User user = userService.findByUsername(userDetails.getUsername());
+        
+        RegistroPontoIndividualDTO registro = registroPontoIndividualService.buscarRegistroPontoIndividual(registroId, user.getId());
+
+        try {
+            // Cria PDF em memória
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            // Configurações de fonte
+            PdfFont font = PdfFontFactory.createFont();
+            PdfFont boldFont = PdfFontFactory.createFont();
+
+            // Cabeçalho institucional conforme Portaria 671/2021
+            adicionarCabecalhoInstitucional(document, registro, font, boldFont);
+
+            // Dados do trabalhador
+            adicionarDadosTrabalhador(document, registro, font, boldFont);
+
+            // Detalhes do registro
+            adicionarDetalhesRegistro(document, registro, font, boldFont);
+
+            // Conformidade legal
+            adicionarConformidadeLegal(document, registro, font, boldFont);
+
+            // Informações de auditoria
+            adicionarInformacoesAuditoria(document, registro, font, boldFont);
+
+            // Rodapé
+            adicionarRodapeComprovante(document, font);
+
+            // Finaliza documento
+            document.close();
+
+            // Converte para Base64
+            String pdfBase64 = Base64.getEncoder().encodeToString(outputStream.toByteArray());
+
+            // Registra log de auditoria
+            logAuditoriaService.registrarLog(
+                    user,
+                    "Geração de comprovante de ponto individual",
+                    CategoriaLog.USO_SISTEMA,
+                    StatusLog.SUCESSO,
+                    "Comprovante PDF gerado para registro ID: " + registroId
+            );
+
+            return pdfBase64;
+        } catch (Exception e) {
+            try {
+                logAuditoriaService.registrarLog(
+                        user,
+                        "Geração de comprovante de ponto individual",
+                        CategoriaLog.RELATORIO,
+                        StatusLog.ERRO,
+                        "Falha ao gerar comprovante PDF: " + e.getMessage()
+                );
+            } catch (Exception logError) {
+                e.addSuppressed(logError);
+            }
+            throw new RelatorioException("Falha ao gerar comprovante de ponto individual", e);
+        }
+    }
+
+    /**
+     * Cabeçalho institucional conforme Portaria 671/2021
+     */
+    private void adicionarCabecalhoInstitucional(Document document, RegistroPontoIndividualDTO registro, PdfFont font, PdfFont boldFont) {
+        // Linha divisória superior
+        document.add(new Paragraph("").setMarginBottom(5));
+
+        // Título principal com design institucional
+        Paragraph title = new Paragraph("COMPROVANTE DE REGISTRO DE PONTO ELETRÔNICO")
+                .setFont(boldFont)
+                .setFontSize(18)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(3);
+        document.add(title);
+
+        // Subtítulo com referência legal
+        Paragraph subtitle = new Paragraph("Portaria 671/2021 - Ministério do Trabalho e Emprego")
+                .setFont(font)
+                .setFontSize(10)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontColor(ColorConstants.DARK_GRAY)
+                .setMarginBottom(8);
+        document.add(subtitle);
+
+        // Linha divisória decorativa
+        document.add(new Paragraph("").setMarginBottom(5));
+
+        // Informações da empresa
+        Table infoTable = new Table(2);
+        infoTable.setWidth(520f);
+
+        Cell cell1 = new Cell().add(new Paragraph("EMPRESA:").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setPaddingRight(5);
+        infoTable.addCell(cell1);
+
+        Cell cell2 = new Cell().add(new Paragraph(registro.getTenantNome()).setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+        infoTable.addCell(cell2);
+
+        Cell cell3 = new Cell().add(new Paragraph("CNPJ:").setFont(boldFont))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+                .setPaddingRight(5);
+        infoTable.addCell(cell3);
+
+        Cell cell4 = new Cell().add(new Paragraph(registro.getTenantCnpj()).setFont(font))
+                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+        infoTable.addCell(cell4);
+
+        document.add(infoTable.setMarginBottom(10));
+    }
+
+    /**
+     * Dados do trabalhador
+     */
+    private void adicionarDadosTrabalhador(Document document, RegistroPontoIndividualDTO registro, PdfFont font, PdfFont boldFont) {
+        // Título da seção
+        Paragraph sectionTitle = new Paragraph("DADOS DO TRABALHADOR")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setBold()
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(10);
+        document.add(sectionTitle);
+
+        // Tabela de dados do trabalhador
+        Table dadosTable = new Table(2);
+        dadosTable.setWidth(520f);
+
+        // Linha 1: Nome e CPF
+        Cell cell1 = new Cell().add(new Paragraph("NOME:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        dadosTable.addCell(cell1);
+
+        Cell cell2 = new Cell().add(new Paragraph(registro.getNomeUsuario()).setFont(font));
+        dadosTable.addCell(cell2);
+
+        Cell cell3 = new Cell().add(new Paragraph("CPF:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        dadosTable.addCell(cell3);
+
+        Cell cell4 = new Cell().add(new Paragraph(registro.getCpf()).setFont(font));
+        dadosTable.addCell(cell4);
+
+        // Linha 2: Cargo e Matrícula
+        Cell cell5 = new Cell().add(new Paragraph("CARGO:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        dadosTable.addCell(cell5);
+
+        Cell cell6 = new Cell().add(new Paragraph(registro.getCargo()).setFont(font));
+        dadosTable.addCell(cell6);
+
+        Cell cell7 = new Cell().add(new Paragraph("MATRÍCULA:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        dadosTable.addCell(cell7);
+
+        Cell cell8 = new Cell().add(new Paragraph(registro.getId().toString()).setFont(font));
+        dadosTable.addCell(cell8);
+
+        document.add(dadosTable.setMarginBottom(10));
+    }
+
+    /**
+     * Detalhes do registro
+     */
+    private void adicionarDetalhesRegistro(Document document, RegistroPontoIndividualDTO registro, PdfFont font, PdfFont boldFont) {
+        // Título da seção
+        Paragraph sectionTitle = new Paragraph("DETALHES DO REGISTRO")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setBold()
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(10);
+        document.add(sectionTitle);
+
+        // Tabela de detalhes
+        Table detalhesTable = new Table(2);
+        detalhesTable.setWidth(520f);
+
+        // Linha 1: Tipo de registro e Data/Hora
+        Cell cell1 = new Cell().add(new Paragraph("TIPO DE REGISTRO:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        detalhesTable.addCell(cell1);
+
+        Cell cell2 = new Cell().add(new Paragraph(registro.getTipo().getText()).setFont(font));
+        detalhesTable.addCell(cell2);
+
+        Cell cell3 = new Cell().add(new Paragraph("DATA/HORA DO REGISTRO:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        detalhesTable.addCell(cell3);
+
+        Cell cell4 = new Cell().add(new Paragraph(registro.getTimestamp().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))).setFont(font));
+        detalhesTable.addCell(cell4);
+
+        // Linha 2: Geolocalização
+        Cell cell5 = new Cell().add(new Paragraph("LATITUDE:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        detalhesTable.addCell(cell5);
+
+        Cell cell6 = new Cell().add(new Paragraph(registro.getLatitude() != null ? registro.getLatitude().toString() : "Não disponível").setFont(font));
+        detalhesTable.addCell(cell6);
+
+        Cell cell7 = new Cell().add(new Paragraph("LONGITUDE:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        detalhesTable.addCell(cell7);
+
+        Cell cell8 = new Cell().add(new Paragraph(registro.getLongitude() != null ? registro.getLongitude().toString() : "Não disponível").setFont(font));
+        detalhesTable.addCell(cell8);
+
+        // Linha 3: Precisão e IP
+        Cell cell9 = new Cell().add(new Paragraph("PRECISÃO (metros):").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        detalhesTable.addCell(cell9);
+
+        Cell cell10 = new Cell().add(new Paragraph(registro.getPrecisao() != null ? registro.getPrecisao().toString() : "Não disponível").setFont(font));
+        detalhesTable.addCell(cell10);
+
+        Cell cell11 = new Cell().add(new Paragraph("ENDEREÇO IP:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        detalhesTable.addCell(cell11);
+
+        Cell cell12 = new Cell().add(new Paragraph(registro.getIp() != null ? registro.getIp() : "Não disponível").setFont(font));
+        detalhesTable.addCell(cell12);
+
+        document.add(detalhesTable.setMarginBottom(10));
+    }
+
+    /**
+     * Conformidade legal
+     */
+    private void adicionarConformidadeLegal(Document document, RegistroPontoIndividualDTO registro, PdfFont font, PdfFont boldFont) {
+        // Título da seção
+        Paragraph sectionTitle = new Paragraph("CONFORMIDADE LEGAL")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setBold()
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(10);
+        document.add(sectionTitle);
+
+        // Tabela de conformidade
+        Table conformidadeTable = new Table(2);
+        conformidadeTable.setWidth(520f);
+
+        // Código de autenticação
+        Cell cell1 = new Cell().add(new Paragraph("CÓDIGO DE AUTENTICAÇÃO:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        conformidadeTable.addCell(cell1);
+
+        Cell cell2 = new Cell().add(new Paragraph("REG-" + registro.getId() + "-" + registro.getExpedienteId().substring(0, 8).toUpperCase()).setFont(font));
+        conformidadeTable.addCell(cell2);
+
+        // Data de emissão
+        Cell cell3 = new Cell().add(new Paragraph("DATA DE EMISSÃO:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        conformidadeTable.addCell(cell3);
+
+        Cell cell4 = new Cell().add(new Paragraph(registro.getDataEmissao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))).setFont(font));
+        conformidadeTable.addCell(cell4);
+
+        // Referência legal
+        Cell cell5 = new Cell().add(new Paragraph("FUNDAMENTO LEGAL:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        conformidadeTable.addCell(cell5);
+
+        Cell cell6 = new Cell().add(new Paragraph("Portaria 671/2021 - Art. 4º, § 1º").setFont(font));
+        conformidadeTable.addCell(cell6);
+
+        document.add(conformidadeTable.setMarginBottom(10));
+    }
+
+    /**
+     * Informações de auditoria
+     */
+    private void adicionarInformacoesAuditoria(Document document, RegistroPontoIndividualDTO registro, PdfFont font, PdfFont boldFont) {
+        // Título da seção
+        Paragraph sectionTitle = new Paragraph("INFORMAÇÕES DE AUDITORIA")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setBold()
+                .setFontColor(ColorConstants.BLUE)
+                .setMarginBottom(10);
+        document.add(sectionTitle);
+
+        // Tabela de auditoria
+        Table auditoriaTable = new Table(2);
+        auditoriaTable.setWidth(520f);
+
+        // ID do registro
+        Cell cell1 = new Cell().add(new Paragraph("ID DO REGISTRO:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        auditoriaTable.addCell(cell1);
+
+        Cell cell2 = new Cell().add(new Paragraph(registro.getId().toString()).setFont(font));
+        auditoriaTable.addCell(cell2);
+
+        // ID do expediente
+        Cell cell3 = new Cell().add(new Paragraph("ID DO EXPEDIENTE:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        auditoriaTable.addCell(cell3);
+
+        Cell cell4 = new Cell().add(new Paragraph(registro.getExpedienteId()).setFont(font));
+        auditoriaTable.addCell(cell4);
+
+        // Justificativa
+        Cell cell5 = new Cell().add(new Paragraph("JUSTIFICATIVA:").setFont(boldFont))
+                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                .setFontColor(ColorConstants.BLACK);
+        auditoriaTable.addCell(cell5);
+
+        Cell cell6 = new Cell().add(new Paragraph(registro.getJustificativa() != null ? registro.getJustificativa() : "Não informada").setFont(font));
+        auditoriaTable.addCell(cell6);
+
+        document.add(auditoriaTable.setMarginBottom(10));
+    }
+
+    /**
+     * Rodapé do comprovante
+     */
+    private void adicionarRodapeComprovante(Document document, PdfFont font) {
+        document.add(new Paragraph("Este comprovante foi gerado eletronicamente e possui validade legal conforme a Portaria 671/2021.")
+                .setFont(font)
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(15)
+                .setMarginBottom(5));
+
+        document.add(new Paragraph("Relatório gerado em: " +
+                                   LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                .setFont(font)
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.CENTER));
     }
 }
