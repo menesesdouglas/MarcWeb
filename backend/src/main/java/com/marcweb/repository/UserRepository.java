@@ -53,4 +53,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("Select new com.marcweb.dto.user.ProfileUser(u.nome, u.cargo) from User u where u.id = :id")
     Optional<ProfileUser> findProfileById(Long id);
+
+    @Query(nativeQuery = true, value = "Select count(id) from users where ativo = 'true' and role = 'EMPLOYEE' ")
+    Integer coutUserEmployeeAtivo();
 }

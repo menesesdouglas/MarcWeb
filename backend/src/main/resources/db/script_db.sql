@@ -9,6 +9,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     ativo BOOLEAN DEFAULT TRUE,
+    ativacoes IN NOT NULL DEFAULT 1,
     consent_geoloc BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -23,8 +24,13 @@ CREATE TABLE configs_empresa (
     lat_centro DOUBLE PRECISION,
     long_centro DOUBLE PRECISION,
     raio_geoloc INTEGER DEFAULT 100,
-    geoloc_ativa BOOLEAN DEFAULT FALSE
+    geoloc_ativa BOOLEAN DEFAULT FALSE,
+    plano varchar(30) NOT NULL DEFAUL 'BASICO'
+    CONSTRAINT configs_empresa_plano_check
+    CHECK (plano IN ('FREEMIUM', 'BASICO', 'PREMIUM', 'ENTERPRISE'));
 );
+COMMENT ON CONSTRAINT configs_empresa_plano_check ON configs_empresa
+IS 'Constraint que valida as planos de configs empresa conforme o enum de planos';
 
 -- REGISTROS DE PONTO
 CREATE TABLE registros_ponto (

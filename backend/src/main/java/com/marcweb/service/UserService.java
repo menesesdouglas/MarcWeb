@@ -9,10 +9,10 @@ import com.marcweb.dto.user.CreateUser;
 import com.marcweb.dto.user.ProfileUser;
 import com.marcweb.dto.user.UpdateProfileRequest;
 import com.marcweb.dto.user.UserResponse;
-import com.marcweb.entity.CategoriaLog;
-import com.marcweb.entity.Folga;
-import com.marcweb.entity.User;
+import com.marcweb.entity.*;
+import com.marcweb.exceptions.LimiteFuncionarioAtivosException;
 import com.marcweb.exceptions.UsernameDuplicatedException;
+import com.marcweb.exceptions.UsuarioBloqueadoException;
 import com.marcweb.repository.FolgaRepository;
 import com.marcweb.repository.UserRepository;
 import com.marcweb.security.JwtService;
@@ -37,6 +37,7 @@ import java.util.List;
 public class UserService {
 
 
+    private final ConfigEmpresaService configEmpresaService;
     private final UserRepository repository;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
@@ -47,13 +48,15 @@ public class UserService {
             acao = "Cadastro de usuário",
             categoria = CategoriaLog.ADMIN
     )
+    @Transactional
     public void createUser(@RequestBody @Valid CreateUser data) {
+        /// VALIDANDO USERNAME
         if (validateUsername(data.getUsername())) throw new UsernameDuplicatedException(data.getUsername());
         Boolean consent = data.getConsentGeoloc();
-        
+
         // Obter o tenantId do TenantContext
         String tenantId = com.marcweb.hibernate.TenantContext.getCurrentTenant();
-        
+
         User user = User.builder()
                 .ativo(true)
                 .nome(data.getNome())
@@ -66,6 +69,9 @@ public class UserService {
                 .tenantId(tenantId) // Associa o usuário ao tenant atual
                 .build();
         repository.save(user);
+        /// VALIDANDO QUANTIDADE DE USUÁRIOS DE ACORDO COM O PLANO
+        /// LANÇA ERRO COM AVISO DE LIMITE ATINGIDO E EXECUTA ROLLBACK CASO O LIMITE SEJA ESTOURADO
+        if (data.getRole().equals(Role.EMPLOYEE)) validarPlano();
         detalhes.setDetalhes("Cadastro de usuário feito por administrador");
     }
 
@@ -101,12 +107,12 @@ public class UserService {
         var user = repository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado para o username " + username));
         if (!user.getAtivo()) throw new UsernameNotFoundException("O usuário " + username + " foi desligado");
-        
+
         // Verifica se o usuário pertence ao tenant correto
         if (tenantId != null && !tenantId.equals(user.getTenantId())) {
             throw new UsernameNotFoundException("Usuário não encontrado para o tenant " + tenantId);
         }
-        
+
         return user;
     }
 
@@ -116,25 +122,39 @@ public class UserService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
-    public void editUser(Long id, CreateUser data) {
+    public String editUser(Long id, CreateUser data) {
+        String message = "";
         var user = repository.findById(id).orElse(null);
         if (user == null) {
             throw new UsernameNotFoundException("Usuário não encontrado");
         }
+
         ///  SE O USUÁRIO ESTIVER RECEBENDO UM USERNAME QUE NÃO É IGUAL AO ATUAL SALVO NO BANCO DE DADOS
         /// PASSA POR UMA VALIDAÇÃO PARA SABER SE JÁ NÃO PERTENCE A UM OUTRO USUÁRIO
         if (!user.getUsername().equals(data.getUsername()) && validateUsername(data.getUsername())) {
             throw new UsernameDuplicatedException(data.getUsername());
         }
         if (StringUtils.isNotBlank(data.getUsername())) user.setUsername(data.getUsername());
-        if (data.getRole() != null) user.setRole(data.getRole());
         if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
-        if (data.getAtivo() != null) user.setAtivo(data.getAtivo());
+        if (data.getAtivo() != null && !data.getAtivo().equals(user.getAtivo())) {
+            /// ALTERANDO SITUAÇÃO DO CADASTRO
+            user.setAtivo(data.getAtivo());
+            /// VALIDANDO QUANTIDADE DE USUÁRIOS DE ACORDO COM O PLANO
+            /// LANÇA ERRO COM AVISO DE LIMITE ATINGIDO E EXECUTA ROLLBACK CASO O LIMITE SEJA ESTOURADO
+            if (data.getAtivo()) validarPlano();
+            if (data.getAtivo()) {
+                if (user.getAtivacoes() > 3) throw new UsuarioBloqueadoException();
+                user.setAtivacoes(user.getAtivacoes() + 1);
+            }
+            message = user.getAtivacoes() < 4 ? "Atenção, este usuário só poderá ser reativado mais " + (4 - user.getAtivacoes()) + " vezes"
+                    : "Atenção, este usuário não poderá ser ativado novamente";
+        }
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
         if (StringUtils.isNotBlank(data.getCargo())) user.setCargo(data.getCargo());
         if (StringUtils.isNotBlank(data.getCpf())) user.setCpf(data.getCpf());
         detalhes.setDetalhes("Usuário " + user.getUsername() + " teve seus dados alterados pelo administrador");
+        return message;
     }
 
 
@@ -206,7 +226,7 @@ public class UserService {
         return new UserResponse(user);
     }
 
-// NOVO Método: Atualizar perfil do usuário autenticado
+    // NOVO Método: Atualizar perfil do usuário autenticado
     @Auditado(
             acao = "Atualização de perfil do usuário",
             categoria = CategoriaLog.AUDITORIA
@@ -270,5 +290,28 @@ public class UserService {
         profile.setTotalPagesFolgas(folgasPaginadas.getTotalPages());
         return profile;
     }
+
+    ///  VALIDANDO QUANTIDADE DE USUÁRIOS DE ACORDO COM O PLANO DA EMPRESA
+    private void validarPlano() {
+        Plano plano = configEmpresaService.findPlanoEmpresa();
+        if (!plano.equals(Plano.ENTERPRISE)) {
+            int qtdFuncionariosAtivos = repository.coutUserEmployeeAtivo();
+            if (plano.equals(Plano.FREEMIUM) && qtdFuncionariosAtivos > 3)
+                throw new LimiteFuncionarioAtivosException(
+                        "Seu plano FREEMIUM permite até 3 funcionários ativos. Faça upgrade para o plano BÁSICO (até 15 funcionários)."
+                );
+
+            if (plano.equals(Plano.BASICO) && qtdFuncionariosAtivos > 15)
+                throw new LimiteFuncionarioAtivosException(
+                        "Seu plano BÁSICO permite até 15 funcionários ativos. Faça upgrade para o plano PREMIUM (até 29 funcionários)."
+                );
+
+            if (plano.equals(Plano.PREMIUM) && qtdFuncionariosAtivos > 29)
+                throw new LimiteFuncionarioAtivosException(
+                        "Seu plano PREMIUM permite até 29 funcionários ativos. Entre em contato para contratar o plano ilimitado."
+                );
+        }
+    }
+
 
 }

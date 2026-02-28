@@ -32,4 +32,7 @@ public class ConfigEmpresa {
 
     @Column(name = "geoloc_ativa", columnDefinition = "boolean default false")
     private Boolean geolocAtiva; // Se a geolocalização é obrigatória ou não
+
+    @Enumerated(EnumType.STRING)
+    private Plano plano; /// FREEMIUM || BASICO || PREMIUM || ENTREPRISE
 }

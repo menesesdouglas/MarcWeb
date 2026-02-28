@@ -9,10 +9,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page; // Import para paginação (opcional)
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List; // Import necessário para findAll sem paginação
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -57,10 +60,12 @@ public class UserController {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}")
-    public void editUser(@PathVariable Long id, @RequestBody CreateUser data) {
-        service.editUser(id, data);
+    public ResponseEntity<Map<String, Object>> editUser(@PathVariable Long id, @RequestBody CreateUser data) {
+        Map<String, Object> response = new HashMap<>();
+        String responseStr = service.editUser(id, data);
+        response.put("resultado", responseStr);
+        return ResponseEntity.ok(response);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -70,7 +75,7 @@ public class UserController {
         service.deleteUser(id);
     }
 
-// NOVO Endpoint: Atualizar perfil do usuário autenticado
+    // NOVO Endpoint: Atualizar perfil do usuário autenticado
     @PutMapping("/profile")
     public void updateProfile(@RequestBody UpdateProfileRequest data) {
         service.updateProfile(data);

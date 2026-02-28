@@ -9,16 +9,16 @@ import org.hibernate.validator.constraints.br.CPF;
 @Data
 public class CreateUser {
 
-    @NotBlank(message = "Campo obrigatório")
+    @NotBlank(message = "Crie um nome de usuário (Campo único)")
     private String username;
 
-    @NotBlank(message = "Campo obrigatório")
+    @NotBlank(message = "Informe o nome do funcionário")
     private String nome;
 
-    @NotBlank(message = "Campo obrigatório")
+    @NotBlank(message = "Crie uma senha (Campo obrigatório)")
     private String password;
 
-    @NotNull(message = "Campo obrigatório")
+    @NotNull(message = "Informe o perfil do usuário")
     private Role role;
 
     private Boolean ativo;
@@ -29,8 +29,6 @@ public class CreateUser {
 
     @CPF(message = "Informe o CPF do funcionário")
     private String cpf;
-
-
 
 
 }

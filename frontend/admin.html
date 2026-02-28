@@ -267,7 +267,7 @@
                 </div>
                 <div class="input-group">
                     <label>Perfil</label>
-                    <select id="empProfile">
+                    <select id="empProfile" disabled>
                         <option value="EMPLOYEE">Usuário</option>
                         <option value="ADMIN">Administrador</option>
                     </select>
@@ -343,6 +343,21 @@
                     <button type="button" class="btn-secondary" onclick="closeModalFeriado()">Fechar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!--MODAL DE AVISO-->
+    <div id="modalWarning" class="modal-overlay">
+        <div class="modal card">
+            <h1>AVISO</h1>
+            <article>
+                <i style="color: red; scale: 130%;" class="material-symbols">WARNING</i>
+                <p id="paragraph-warn">Este aviso é para avisar sobre um aviso muito bem avisado, seu plano é muiot
+                    baixo, atualiza ele , meu filho, vamo scooby!</p>
+            </article>
+            <div style="display: flex;">
+                <button id="dispose-warn" style="margin: auto;" class="btn-secondary">Ok</button>
+            </div>
         </div>
     </div>
 

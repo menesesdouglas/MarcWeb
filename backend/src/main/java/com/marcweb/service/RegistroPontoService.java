@@ -88,6 +88,12 @@ public class RegistroPontoService {
         // SALVANDO CASO PASSE NAS VALIDAÇÕES
         // O RegistroPonto deve receber os dados do DTO e o usuário, o timestamp é definido internamente
         repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request)));
+        /// VALIDANDO QUE FOI SALVO APENAS UM REGISTRO
+        /// O  QUERY METHOD LANÇA UM ERRO CASO SEJAM ENCONTRADOS MAIS DE UM, CAUSANDO UM ROLLBACK
+        var registroCriado = repository.findByUserAndTipoAndTimestampBetween(
+                user, data.getTipo(),
+                LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX)
+        );
         detalhes.setDetalhes("Usuário registrou ponto de " + data.getTipo().getText());
     }
 
@@ -192,8 +198,8 @@ public class RegistroPontoService {
         RegistroPonto ultimoRegistro = possivelUltimoRegistro.get();
         TipoRegistro ultimoTipoRegistro = ultimoRegistro.getTipo();
 
-        /// NOVA LÓGICA: VERIFICAR SE O ÚLTIMO REGISTRO É DE UM DIA ANTERIOR E NÃO FOI FINALIZADO (SAÍDA)
-        /// COMPARA O ID DO EXPEDIENTE ATUAL COM O ID_EXPEDIENTE DO ULTIMO REGISTRO
+        /// VERIFICA SE O ÚLTIMO REGISTRO É DE UM DIA ANTERIOR E NÃO FOI FINALIZADO (SAÍDA)
+        /// COMPARANDO O ID DO EXPEDIENTE ATUAL COM O ID_EXPEDIENTE DO ULTIMO REGISTRO
         if (possivelUltimoRegistro.get().getExpedienteId() != idExpediente) {
             /// BUSCANDO UM REGISTRO DE ENTRADA PARA O DIA ATUAL
             var possivelRegistroDeEntrada = repository.findByUserAndTipoAndTimestampBetween(

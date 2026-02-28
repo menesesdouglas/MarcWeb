@@ -5,6 +5,7 @@ import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.config_empresa.DataConfigEmpresa;
 import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.ConfigEmpresa;
+import com.marcweb.entity.Plano;
 import com.marcweb.exceptions.ConfigEmpresaNotFoundException;
 import com.marcweb.repository.ConfigEmpresaRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,5 +44,9 @@ public class ConfigEmpresaService {
         detalhes.setDetalhes("Usuário realizando visualização de dados da empresa");
         var configEmpresa = repository.findFirst().orElseThrow(ConfigEmpresaNotFoundException::new);
         return new DataConfigEmpresa(configEmpresa);
+    }
+
+    public Plano findPlanoEmpresa(){
+        return repository.findPlano();
     }
 }

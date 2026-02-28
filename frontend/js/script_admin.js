@@ -7,7 +7,7 @@ const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 
 const isPaulo = false;
-const urlBase = isPaulo? "http://192.168.15.158" : "";
+const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 ///  EVITANDO QUE A PÁGINA SEJA RECARREGADA AO ENVIAR O FORMULÁRIO
 const formFeriado = document.getElementById("feriadoForm").addEventListener("submit", function (e) {
@@ -194,6 +194,11 @@ function setupEventListeners() {
         if (!validKey.includes(key)) {
             e.preventDefault();
         };
+    })
+
+    /// FECHANDO MODAL DE WARN
+    document.getElementById("dispose-warn").addEventListener("click", () => {
+        document.getElementById("modalWarning").classList.remove("active");
     })
 }
 
@@ -567,6 +572,7 @@ function openModal(type) {
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('modalOverlay').style.animation = 'fadeIn 0.3s ease';
     if (type === 'add') {
+        document.getElementById("empProfile").disabled = false;
         document.getElementById('modalTitle').textContent = 'Cadastrar Funcionário';
         document.getElementById('employeeForm').reset();
         document.getElementById('empPassword').required = true; // Senha obrigatória para novo usuário
@@ -597,6 +603,7 @@ document.head.appendChild(style);
 
 function editEmployee(index) {
     const emp = allUsers[index];
+    document.getElementById("empProfile").disabled = true;
     openModal('edit');
     document.getElementById('modalTitle').textContent = 'Editar Funcionário';
     document.getElementById('empName').value = emp.nome;
@@ -653,10 +660,17 @@ async function handleEmployeeSubmit(e) {
         });
 
         if (result.status == 201 || result.status == 200) {
+            const response = await result.json();
+            if (response.resultado.trim()) {
+                openModalWarn(response.resultado);
+            }
             const message = isEdit ? "Usuário atualizado com sucesso" : "Usuário cadastrado com sucesso";
             showToast(message, "success");
             // Recarregar lista de usuários
             await loadUsers();
+        } else if (result.status == 429) {
+            const message = await result.json();
+            openModalWarn(message.erro);
         } else {
             const erro = await result.json();
             const errorMessage = isEdit ? "Erro ao atualizar usuário" : "Erro ao cadastrar usuário";
@@ -728,6 +742,13 @@ async function handleAdjustmentSubmit(e) {
         console.error('Erro ao realizar ajuste:', error);
         showToast('Erro ao realizar ajuste', 'error');
     }
+}
+
+
+/// ABRINDO MÓDAL DE AVISO
+function openModalWarn(message) {
+    document.getElementById("paragraph-warn").textContent = message;
+    document.getElementById("modalWarning").classList.add("active");
 }
 
 async function loadAdjustmentHistory() {

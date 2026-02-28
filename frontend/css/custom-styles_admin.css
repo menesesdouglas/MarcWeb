@@ -439,6 +439,21 @@ textarea::placeholder {
     margin-top: 1.5rem;
 }
 
+/*CONFIGURAÇÕES DO MODAL DE AVISO (WARNING)*/
+
+#modalWarning h1{
+    text-align: center;
+    font-family: Arial Black, sans-serif;
+}
+
+#modalWarning article{
+    display: flex;
+    gap: 15px;
+    padding: 15px 5%;
+    margin-bottom: 20px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 1.1em;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {

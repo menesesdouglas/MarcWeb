@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -198,23 +199,30 @@ public class FolhaPontoService {
         for (List<RegistroPonto> registros : registrosSeparadosPorDia) {
             int minutosTrabalhados = 0;
 
-            // COLETANDO REGISTROS DE UM UNICO DIA
-            // INDICA QUE O USUARIO BATEU OS QUATRO PONTOS EM ORDEM
-            if (registros.size() == 4) {
-                var timesTampEntrada = registros.get(0).getTimestamp();
-                var timesTampInicioDescanso = registros.get(1).getTimestamp();
-                var timesTampFimDescanso = registros.get(2).getTimestamp();
-                var timesSaida = registros.get(3).getTimestamp();
+            LocalDateTime timesTampEntrada = null;
+            LocalDateTime timesTampInicioDescanso = null;
+            LocalDateTime timesTampFimDescanso = null;
+            LocalDateTime timesSaida = null;
+            for (int i = 0; i < registros.size(); i++) {
+                if (i == 0) {
+                    timesTampEntrada = registros.get(0).getTimestamp();
+                } else if (i == 1) {
+                    timesTampInicioDescanso = registros.get(1).getTimestamp();
+                } else if (i == 2) {
+                    timesTampFimDescanso = registros.get(2).getTimestamp();
+
+                } else if (i == 3) {
+                    timesSaida = registros.get(3).getTimestamp();
+
+                }
+            }
+            /// VERIFICANDO SE CALCULO É VIÁVEL
+            if (timesTampEntrada != null && timesTampInicioDescanso != null) {
+
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
                 minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
-                                     (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
-
-                // CASO O USUÁRIO TENHA BATIDO APENAS OS PONTOS DE ENTRADA E SAÍDA
-            } else if (registros.size() == 2) {
-                var timesTampEntrada = registros.get(0).getTimestamp();
-                var timesSaida = registros.get(1).getTimestamp();
-                // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
-                minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesSaida);
+                                     (timesTampFimDescanso != null && timesSaida != null ?
+                                             (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida) : 0);
             }
 
             // CONVERTENDO MINUTOS PARA HORAS (FORMATO DECIMAL)

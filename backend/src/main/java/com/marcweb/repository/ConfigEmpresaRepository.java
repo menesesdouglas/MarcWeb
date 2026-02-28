@@ -1,6 +1,7 @@
 package com.marcweb.repository;
 
 import com.marcweb.entity.ConfigEmpresa;
+import com.marcweb.entity.Plano;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -23,4 +24,7 @@ public interface ConfigEmpresaRepository extends JpaRepository<ConfigEmpresa, Lo
     // Busca todas no schema público
     @Query(nativeQuery = true, value = "SELECT * FROM public.configs_empresa")
     List<ConfigEmpresa> findAllInPublicSchema();
+
+    @Query(nativeQuery = true, value = "Select c.plano from configs_empresa c order by id limit 1")
+    Plano findPlano();
 }

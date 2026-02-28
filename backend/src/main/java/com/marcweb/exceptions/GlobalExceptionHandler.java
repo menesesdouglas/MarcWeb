@@ -50,6 +50,13 @@ public class GlobalExceptionHandler {
         return errorObject(e.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    @ExceptionHandler(LimiteFuncionarioAtivosException.class)
+    public Map<String, Object> handlerLimiteFuncionarioAtivosException(LimiteFuncionarioAtivosException e) {
+        log.warn(e.getMessage());
+        return errorObject(e.getMessage());
+    }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RegistroPontoSequenciaInvalidaException.class)
@@ -70,9 +77,16 @@ public class GlobalExceptionHandler {
         return errorObject(message.toString());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     @ExceptionHandler(CicloPontoFinalizadoException.class)
     public Map<String, Object> handlerCicloPontoFinalizadoException(CicloPontoFinalizadoException e) {
+        log.warn(e.getMessage());
+        return errorObject(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public Map<String, Object> handlerUsuarioBloqueadoException(UsuarioBloqueadoException e) {
         log.warn(e.getMessage());
         return errorObject(e.getMessage());
     }

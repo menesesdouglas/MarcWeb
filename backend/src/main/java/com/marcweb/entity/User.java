@@ -48,6 +48,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Boolean ativo; // true se o usuário está ativo
 
+    @Column(nullable = false, columnDefinition = "int defaul 1")
+    private int ativacoes;
+
     @Column(name = "consent_geoloc")
     private Boolean consentGeoloc; // true se o usuário consentiu com geoloc
 

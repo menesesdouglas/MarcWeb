@@ -1,6 +1,9 @@
 package com.marcweb.dto.config_empresa;
 
 import com.marcweb.entity.ConfigEmpresa;
+import com.marcweb.entity.Plano;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -11,7 +14,6 @@ import org.springframework.beans.BeanUtils;
 @Data
 public class DataConfigEmpresa {
 
-    private Long id; // Adicionando ID para mapeamento completo, se necessário
 
     @NotBlank(message = "Campo obrigatório")
     private String nomeEmpresa;
@@ -26,6 +28,8 @@ public class DataConfigEmpresa {
     private Integer raioGeoloc;
 
     private Boolean geolocAtiva;
+
+    private Plano plano; /// FREEMIUM || BASICO || PREMIUM || ENTREPRISE
 
     public DataConfigEmpresa(ConfigEmpresa configEmpresa) {
         BeanUtils.copyProperties(configEmpresa, this);

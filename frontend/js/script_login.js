@@ -133,14 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 async function loadTenants(isAutomatic) {
-
     const currentTenantIdentification = localStorage.getItem("tenant_identification");
     const select = document.getElementById("company");
     if (currentTenantIdentification && isAutomatic) {
         const currentTenant = JSON.parse(currentTenantIdentification);
         const option = document.createElement("option");
         option.addEventListener("click", (event) => {
-            eventoTest(event);
+            selectTenant(event);
         })
         option.value = currentTenant.tenant_id;
         option.textContent = currentTenant.nome_empresa;
@@ -158,7 +157,7 @@ async function loadTenants(isAutomatic) {
         tenants.forEach(tenant => {
             const option = document.createElement("option");
             option.addEventListener("click", (event) => {
-                eventoTest(event);
+                selectTenant(event);
             })
             option.value = tenant.tenantId;
             option.textContent = tenant.nomeEmpresa;
@@ -168,7 +167,7 @@ async function loadTenants(isAutomatic) {
     }
 }
 
-function eventoTest(event) {
+function selectTenant(event) {
     const currentTenant = {
         nome_empresa: event.target.textContent,
         tenant_id: event.target.value

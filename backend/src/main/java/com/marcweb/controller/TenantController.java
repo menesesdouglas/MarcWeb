@@ -24,8 +24,7 @@ public class TenantController {
 
     private final TenantService service;
 
-    // Chave de admin para criação de tenants (você e seu sócio)
-    // Altere esta chave para uma mais segura em produção
+    /// CHAVE DE AMIN PARA CRIAÇÃO DE TENANTS
     private static final String ADMIN_KEY = "marcweb_admin_2026";
 
     @GetMapping
@@ -37,7 +36,7 @@ public class TenantController {
     public ResponseEntity<?> createTenant(
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey,
             @Valid @RequestBody CreateTenantRequest request) {
-        
+
         // Verificar a chave de admin
         if (adminKey == null || !adminKey.equals(ADMIN_KEY)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
