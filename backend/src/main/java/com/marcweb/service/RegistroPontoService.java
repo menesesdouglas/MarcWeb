@@ -357,7 +357,7 @@ public class RegistroPontoService {
         List<RegistroPonto> pontosRecentesEntity = repository.buscarRegistrosEmIntervaloDeData(user, date.atStartOfDay(), date.atTime(LocalTime.MAX));
         List<PontosRecentes> pontosRecentesDTO = pontosRecentesEntity.stream().map(r -> {
             String horario = r.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm"));
-            return new PontosRecentes(r.getTipo().getText(), horario);
+            return new PontosRecentes(r.getId(), r.getTipo().getText(), horario);
         }).toList();
         return pontosRecentesDTO;
     }

@@ -196,9 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="item-time">${time}</span>
                 `;
 
-                li.addEventListener("click", () => {
-                    baixarPdfPonto();
-                });
+        li.addEventListener("click", () => {
+            const registroId = li.dataset.registroId;
+            if (registroId) {
+                baixarPdfPonto(registroId);
+            } else {
+                showToast('ID do registro não disponível', 'error');
+            }
+        });
                 // Adicionar ao topo da lista
                 punchList.append(li);
 
@@ -468,21 +473,86 @@ function renderPunchHistory(punches) {
     punches.forEach(punch => {
         const li = document.createElement('li');
         li.className = 'punch-item';
+        li.style.cursor = 'pointer';
+        li.style.opacity = '0';
+        li.style.transform = 'translateY(10px)';
+        
+        // Armazenar o ID do registro no elemento
+        li.dataset.registroId = punch.id || '';
+        
         li.innerHTML = `
             <span class="item-type">${punch.tipo}</span>
             <span class="item-time">${punch.horario}</span>
         `;
+        
         li.addEventListener("click", () => {
-            baixarPdfPonto();
+            const registroId = li.dataset.registroId;
+            if (registroId) {
+                baixarPdfPonto(registroId);
+            } else {
+                showToast('ID do registro não disponível', 'error');
+            }
         });
-        li.style = "cursor: pointer;";
+        
         container.appendChild(li);
+        
+        // Animação de entrada
+        setTimeout(() => {
+            li.style.opacity = '1';
+            li.style.transform = 'translateY(0)';
+            li.style.transition = 'all 0.3s ease-out';
+        }, 50);
     });
 }
 
 
-function baixarPdfPonto() {
-    confirm("Baixar pdf deste ponto? ");
+function baixarPdfPonto(registroId) {
+    if (confirm("Deseja baixar o comprovante PDF deste ponto?")) {
+        gerarComprovantePonto(registroId);
+    }
+}
+
+async function gerarComprovantePonto(registroId) {
+    try {
+        showToast('Gerando comprovante PDF...', 'info');
+        
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        const response = await fetch(`${urlBase}/back/ponto/${registroId}/pdf`, {
+            method: 'GET',
+            headers: {
+                "Authorization": `Bearer ${auth.token}`
+            }
+        });
+
+        if (response.ok) {
+            const pdfBase64 = await response.text();
+            
+            // Cria um link para download do PDF
+            const link = document.createElement('a');
+            link.href = `data:application/pdf;base64,${pdfBase64}`;
+            link.download = `comprovante_ponto_${registroId}.pdf`;
+            link.click();
+            
+            showToast('Comprovante PDF gerado e baixado com sucesso!', 'success');
+        } else {
+            let errorMessage = 'Erro ao gerar comprovante PDF';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.erro || 'Erro ao gerar comprovante PDF';
+            } catch (e) {
+                try {
+                    const errorText = await response.text();
+                    errorMessage = errorText || 'Erro ao gerar comprovante PDF';
+                } catch (e2) {
+                    errorMessage = 'Erro ao gerar comprovante PDF';
+                }
+            }
+            showToast(`❌ ${errorMessage}`, 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao gerar comprovante:', error);
+        showToast('❌ Erro de conexão com o servidor. Verifique sua internet.', 'error');
+    }
 }
 
 // Função para carregar o status atual do usuário
