@@ -177,7 +177,7 @@ async function loadRecentActivity() {
 
 function renderFolgas(folgas) {
     const container = document.getElementById('folgasList');
-
+    console.log(folgas);
     if (folgas.length === 0) {
         container.innerHTML = '<p>Nenhuma folga encontrada.</p>';
         return;
@@ -309,6 +309,7 @@ async function handleFolgaSubmit(e) {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const folgaData = {
+            id: null,
             tipo: tipo,
             dataInicio: dataInicio,
             dataFim: dataFim,
@@ -327,7 +328,7 @@ async function handleFolgaSubmit(e) {
         if (response.ok) {
             showToast('Folga solicitada com sucesso!', 'success');
             closeFolgaModal();
-            loadUserFolgas(); // Recarregar folgas
+            loadUserFolgas(0);
         } else {
             const error = await response.json();
             showToast(error.erro || 'Erro ao solicitar folga', 'error');
@@ -422,6 +423,3 @@ function showToast(message, type = 'info') {
         }, 300);
     }, 3000);
 }
-
-
-

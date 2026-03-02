@@ -13,7 +13,7 @@ public class UserResponse {
     private Long id;
     private String username;
     private String nome;
-    private Role role; // Usando o enum Role
+    private String role;
     private Boolean ativo;
     private Boolean consentGeoloc;
     private String cargo;
@@ -30,7 +30,7 @@ public class UserResponse {
             this.id = user.getId();
             this.username = user.getUsername();
             this.nome = user.getNome();
-            this.role = user.getRole();
+            this.role = user.getRole().getTexto();
             this.ativo = user.getAtivo();
             this.consentGeoloc = user.getConsentGeoloc();
             this.cargo = user.getCargo();

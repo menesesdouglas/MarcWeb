@@ -1,9 +1,6 @@
 package com.marcweb.controller;
 
-import com.marcweb.dto.user.CreateUser;
-import com.marcweb.dto.user.ProfileUser;
-import com.marcweb.dto.user.UpdateProfileRequest;
-import com.marcweb.dto.user.UserResponse; // Import necessário
+import com.marcweb.dto.user.*;
 import com.marcweb.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +58,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> editUser(@PathVariable Long id, @RequestBody CreateUser data) {
+    public ResponseEntity<Map<String, Object>> editUser(@PathVariable Long id, @RequestBody UpdateUserDTO data) {
         Map<String, Object> response = new HashMap<>();
         String responseStr = service.editUser(id, data);
         response.put("resultado", responseStr);
@@ -87,6 +84,4 @@ public class UserController {
     public void updateCpf(@PathVariable Long id, @RequestBody String cpf) {
         service.updateCpf(id, cpf);
     }
-
-
 }

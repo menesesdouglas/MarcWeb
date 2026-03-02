@@ -29,6 +29,4 @@ public class CreateUser {
 
     @CPF(message = "Informe o CPF do funcionário")
     private String cpf;
-
-
 }

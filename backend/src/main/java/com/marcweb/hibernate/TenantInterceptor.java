@@ -49,7 +49,6 @@ public class TenantInterceptor extends OncePerRequestFilter {
         if (tenantId != null && !tenantId.isBlank()) {
             TenantContext.setCurrentTenant(tenantId);
         }
-        System.out.println(" ++++++++++++++++++++++++++++++++++++++++++++" + TenantContext.getCurrentTenant());
         try{
             filterChain.doFilter(request, response);
         }finally {

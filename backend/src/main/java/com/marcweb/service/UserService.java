@@ -5,10 +5,7 @@ import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.folga.FolgaPendenteDetalhada;
 import com.marcweb.dto.login.LoginRequest;
 import com.marcweb.dto.login.LoginResponse;
-import com.marcweb.dto.user.CreateUser;
-import com.marcweb.dto.user.ProfileUser;
-import com.marcweb.dto.user.UpdateProfileRequest;
-import com.marcweb.dto.user.UserResponse;
+import com.marcweb.dto.user.*;
 import com.marcweb.entity.*;
 import com.marcweb.exceptions.LimiteFuncionarioAtivosException;
 import com.marcweb.exceptions.UsernameDuplicatedException;
@@ -122,7 +119,7 @@ public class UserService {
             categoria = CategoriaLog.ADMIN
     )
     @Transactional
-    public String editUser(Long id, CreateUser data) {
+    public String editUser(Long id, UpdateUserDTO data) {
         String message = "";
         var user = repository.findById(id).orElse(null);
         if (user == null) {
@@ -312,6 +309,4 @@ public class UserService {
                 );
         }
     }
-
-
 }
