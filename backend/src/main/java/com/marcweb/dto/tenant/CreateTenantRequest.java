@@ -20,4 +20,6 @@ public class CreateTenantRequest {
     
     @Size(max = 100, message = "O domínio deve ter no máximo 100 caracteres")
     private String dominio;
+    
+    private String plano;
 }

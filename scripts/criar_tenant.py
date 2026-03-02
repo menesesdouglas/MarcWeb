@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 
 import sys
 import os
@@ -30,6 +29,30 @@ class CriadorTenant:
         print("           CRIADOR DE TENANTS MARCWEB")
         print("=" * 60)
         print()
+    
+    def obter_plano(self) -> str:
+        """Exibe menu para seleção do plano"""
+        print("\n📋 Selecione o plano:")
+        print("  1 - Freemium (Gratuito)")
+        print("  2 - Básico")
+        print("  3 - Premium")
+        print("  4 - Enterprise")
+        print()
+        
+        planos = {
+            "1": "FREEMIUM",
+            "2": "BASICO", 
+            "3": "PREMIUM",
+            "4": "ENTERPRISE"
+        }
+        
+        while True:
+            opcao = input("Digite o número do plano [1]: ").strip()
+            if not opcao:
+                return "FREEMIUM"  # Default
+            if opcao in planos:
+                return planos[opcao]
+            print("❌ Opção inválida. Digite 1, 2, 3 ou 4.")
     
     def obter_dados_empresa(self) -> Dict[str, str]:
         """Coleta os dados da empresa interativamente"""
@@ -65,6 +88,9 @@ class CriadorTenant:
         # Domínio (opcional)
         dominio = input("Domínio [opcional]: ").strip()
         dados['dominio'] = dominio if dominio else None
+        
+        # Plano
+        dados['plano'] = self.obter_plano()
         
         return dados
     
@@ -150,7 +176,8 @@ class CriadorTenant:
             "tenantId": dados['tenant_id'],
             "nome": dados['nome'],
             "cnpj": dados['cnpj'],
-            "dominio": dados['dominio']
+            "dominio": dados['dominio'],
+            "plano": dados['plano']
         }
         
         headers = {
@@ -185,16 +212,131 @@ class CriadorTenant:
         
         try:
             conn = psycopg2.connect(**Config.DB_CONFIG)
+            conn.autocommit = True
             cursor = conn.cursor()
             
-            # Executa a função para criar o schema
-            cursor.execute("SELECT criar_schema_tenant(%s)", (tenant_id,))
-            conn.commit()
+            # Remove o schema se já existir (para recriar limpo) - usando format seguro
+            schema_name = f"tenant_{tenant_id}"
+            cursor.execute(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE")
+            print(f"✅ Schema existente removido (se havia)")
+            
+            # Cria o schema
+            cursor.execute(f"CREATE SCHEMA {schema_name}")
+            print(f"✅ Schema '{schema_name}' criado")
+            
+            # Cria a tabela users com ativacoes
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.users (
+                    id BIGSERIAL PRIMARY KEY,
+                    tenant_id VARCHAR(50) NOT NULL,
+                    nome VARCHAR(150) NOT NULL,
+                    username VARCHAR(100) NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) NOT NULL,
+                    ativo BOOLEAN DEFAULT TRUE,
+                    consent_geoloc BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    cargo VARCHAR(100),
+                    cpf VARCHAR(20),
+                    ativacoes INTEGER DEFAULT 1 NOT NULL
+                )
+            """)
+            print(f"✅ Tabela users criada com coluna ativacoes")
+            
+            # Cria índices
+            cursor.execute(f"CREATE UNIQUE INDEX idx_users_tenant_username ON {schema_name}.users(tenant_id, username)")
+            cursor.execute(f"CREATE INDEX idx_users_tenant_id ON {schema_name}.users(tenant_id)")
+            
+            # Cria tabela configs_empresa
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.configs_empresa (
+                    id BIGSERIAL PRIMARY KEY,
+                    nome_empresa VARCHAR(200) NOT NULL,
+                    lat_centro DOUBLE PRECISION,
+                    long_centro DOUBLE PRECISION,
+                    raio_geoloc INTEGER DEFAULT 100,
+                    geoloc_ativa BOOLEAN DEFAULT FALSE,
+                    precisao_maxima INTEGER DEFAULT 500
+                )
+            """)
+            
+            # Insere configuração padrão
+            cursor.execute(f"INSERT INTO {schema_name}.configs_empresa (nome_empresa, raio_geoloc, geoloc_ativa) VALUES ('Empresa {tenant_id}', 100, false)")
+            
+            # Cria outras tabelas...
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.registros_ponto (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    tipo VARCHAR(30) NOT NULL,
+                    timestamp TIMESTAMP NOT NULL,
+                    latitude DOUBLE PRECISION,
+                    longitude DOUBLE PRECISION,
+                    ip VARCHAR(45),
+                    precisao DOUBLE PRECISION,
+                    justificativa TEXT,
+                    expediente_id UUID
+                )
+            """)
+            cursor.execute(f"CREATE INDEX idx_registro_user_data ON {schema_name}.registros_ponto(user_id, timestamp)")
+            
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.feriados (
+                    id BIGSERIAL PRIMARY KEY,
+                    data DATE NOT NULL,
+                    nome VARCHAR(150) NOT NULL,
+                    origem VARCHAR(20) NOT NULL
+                )
+            """)
+            cursor.execute(f"CREATE INDEX idx_feriados_data ON {schema_name}.feriados(data)")
+            
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.folgas (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    data_inicio DATE NOT NULL,
+                    data_fim DATE NOT NULL,
+                    tipo VARCHAR(20) DEFAULT 'FOLGA',
+                    status VARCHAR(20) DEFAULT 'Pendente',
+                    justificativa TEXT,
+                    dias_calculados INTEGER DEFAULT 0,
+                    aprovada BOOLEAN
+                )
+            """)
+            
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.folhas_ponto (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    mes INTEGER NOT NULL,
+                    ano INTEGER NOT NULL,
+                    total_horas_trabalhadas VARCHAR(10),
+                    total_horas_extras VARCHAR(10),
+                    total_horas_faltantes VARCHAR(10),
+                    status VARCHAR(20) DEFAULT 'Pendente',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, mes, ano)
+                )
+            """)
+            
+            cursor.execute(f"""
+                CREATE TABLE {schema_name}.logs_auditoria (
+                    id BIGSERIAL PRIMARY KEY,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    user_id BIGINT,
+                    acao VARCHAR(150) NOT NULL,
+                    categoria VARCHAR(30) NOT NULL,
+                    detalhes TEXT,
+                    status VARCHAR(20) NOT NULL
+                )
+            """)
+            cursor.execute(f"CREATE INDEX idx_logs_user_data ON {schema_name}.logs_auditoria(user_id, timestamp)")
+            
+            print(f"✅ Todas as tabelas criadas com sucesso!")
             
             # Cria o usuário admin com senha criptografada
             self.criar_usuario_admin(cursor, tenant_id)
             
-            conn.commit()
             cursor.close()
             conn.close()
             
@@ -203,11 +345,15 @@ class CriadorTenant:
             
         except Exception as e:
             print(f"❌ Erro ao criar schema no banco de dados: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def criar_usuario_admin(self, cursor, tenant_id: str):
         """Cria o usuário admin com senha criptografada"""
         print(f"🔐 Criando usuário admin para o tenant '{tenant_id}'...")
+        
+        schema_name = f"tenant_{tenant_id}"
         
         # Gera o hash BCrypt para a senha padrão
         senha_plana = self.config.DEFAULT_ADMIN_PASSWORD
@@ -216,10 +362,9 @@ class CriadorTenant:
         
         # Insere o usuário admin
         cursor.execute(f"""
-            INSERT INTO tenant_{tenant_id}.users (username, password, role, tenant_id, nome, ativo, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, NOW())
-            ON CONFLICT (tenant_id, username) DO NOTHING
-        """, ('admin', senha_hash, 'ADMIN', tenant_id, 'Administrador', True))
+            INSERT INTO {schema_name}.users (username, password, role, tenant_id, nome, ativo, created_at, ativacoes)
+            VALUES ('admin', '{senha_hash}', 'ADMIN', '{tenant_id}', 'Administrador', true, NOW(), 1)
+        """)
         
         print(f"✅ Usuário admin criado com senha criptografada para o tenant '{tenant_id}'")
     
@@ -234,6 +379,7 @@ class CriadorTenant:
         print(f"📄 CNPJ: {dados['cnpj']}")
         if dados['dominio']:
             print(f"🌐 Domínio: {dados['dominio']}")
+        print(f"📦 Plano: {dados['plano']}")
         print(f"👤 Usuário admin: admin")
         print(f"🔑 Senha: {self.config.DEFAULT_ADMIN_PASSWORD}")
         print("=" * 60)
@@ -288,6 +434,8 @@ class CriadorTenant:
             return False
         except Exception as e:
             print(f"\n❌ Erro inesperado: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
 

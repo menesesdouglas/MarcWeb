@@ -64,6 +64,9 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
                         // Não vamos falhar completamente, vamos tentar continuar
                     }
                 }
+                // Nota: A adição de colunas faltantes é feita automaticamente pelo Flyway
+                // via migrations, não é necessário verificar em toda requisição.
+                // Isso evita exaustão do pool de conexões.
                 connection.createStatement().execute("set search_path to " + fullSchemaName);
             }
         } catch (SQLException e) {

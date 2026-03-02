@@ -36,6 +36,9 @@ public class Tenant {
 
     private String dominio;
 
+    @Column(length = 30)
+    private String plano;
+
     @Column(nullable = false)
     private boolean ativo;
 

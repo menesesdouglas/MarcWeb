@@ -1,4 +1,4 @@
 package com.marcweb.dto.tenant;
 
-public record TenantResponse(String nomeEmpresa, String tenantId) {
+public record TenantResponse(String nomeEmpresa, String tenantId, String plano) {
 }

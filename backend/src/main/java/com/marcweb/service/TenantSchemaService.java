@@ -173,7 +173,7 @@ public class TenantSchemaService {
             // Criar índice para tenant
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)");
 
-            // Tabela de configuração da empresa
+            // Tabela de configuração da empresa (incluindo plano - V16)
             stmt.execute(
                 "CREATE TABLE IF NOT EXISTS configs_empresa (" +
                 "id BIGSERIAL PRIMARY KEY, " +
@@ -181,7 +181,8 @@ public class TenantSchemaService {
                 "lat_centro DOUBLE PRECISION, " +
                 "long_centro DOUBLE PRECISION, " +
                 "raio_geoloc INTEGER DEFAULT 100, " +
-                "geoloc_ativa BOOLEAN DEFAULT FALSE)"
+                "geoloc_ativa BOOLEAN DEFAULT FALSE, " +
+                "plano VARCHAR(30) DEFAULT 'BASICO')"
             );
 
             // Tabela de registros de ponto (incluindo expediente_id da migration V8)
@@ -262,9 +263,9 @@ public class TenantSchemaService {
                 "CREATE INDEX IF NOT EXISTS idx_logs_user_data ON logs_auditoria(user_id, timestamp)"
             );
 
-            // Inserir configuração padrão da empresa
-            String insertConfig = "INSERT INTO configs_empresa (nome_empresa, raio_geoloc, geoloc_ativa) " +
-                "SELECT 'Empresa " + tenantId + "', 100, false WHERE NOT EXISTS (SELECT 1 FROM configs_empresa)";
+            // Inserir configuração padrão da empresa (incluindo plano - V16)
+            String insertConfig = "INSERT INTO configs_empresa (nome_empresa, raio_geoloc, geoloc_ativa, plano) " +
+                "SELECT 'Empresa " + tenantId + "', 100, false, 'BASICO' WHERE NOT EXISTS (SELECT 1 FROM configs_empresa)";
             stmt.execute(insertConfig);
 
             // Adicionar colunas faltantes em tabelas já existentes (para tenants existentes)
@@ -292,6 +293,12 @@ public class TenantSchemaService {
             stmt.execute("ALTER TABLE registros_ponto ADD COLUMN IF NOT EXISTS expediente_id UUID");
         } catch (SQLException e) {
             log.debug("Coluna 'expediente_id' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE configs_empresa ADD COLUMN IF NOT EXISTS plano VARCHAR(30) DEFAULT 'BASICO'");
+        } catch (SQLException e) {
+            log.debug("Coluna 'plano' pode já existir: {}", e.getMessage());
         }
     }
 
@@ -351,5 +358,24 @@ public class TenantSchemaService {
         initializedTenants.clear();
         existingSchemas.clear();
         log.info("Cache de tenants limpo");
+    }
+
+    /**
+     * Adiciona colunas faltantes em um tenant específico
+     * Usado para atualizar tenants existentes com novas colunas
+     * @param tenantId O identificador único do tenant
+     */
+    public void addMissingColumnsIfNeeded(String tenantId) {
+        String schemaName = SCHEMA_PREFIX + tenantId;
+        
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setSchema(schemaName);
+            try (Statement stmt = connection.createStatement()) {
+                addMissingColumns(stmt);
+                log.debug("Colunas atualizadas para tenant {}", tenantId);
+            }
+        } catch (SQLException e) {
+            log.debug("Erro ao adicionar colunas para tenant {}: {}", tenantId, e.getMessage());
+        }
     }
 }

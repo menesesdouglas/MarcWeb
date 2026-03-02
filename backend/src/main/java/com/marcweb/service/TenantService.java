@@ -36,11 +36,18 @@ public class TenantService {
         }
 
         // Criar o tenant
+        // Define o plano (default: FREEMIUM se não especificado)
+        String plano = request.getPlano();
+        if (plano == null || plano.isBlank()) {
+            plano = "FREEMIUM";
+        }
+        
         Tenant tenant = Tenant.builder()
                 .tenantId(request.getTenantId())
                 .nome(request.getNome())
                 .cnpj(request.getCnpj())
                 .dominio(request.getDominio())
+                .plano(plano)
                 .ativo(true)
                 .build();
 
@@ -57,6 +64,6 @@ public class TenantService {
             // O schema pode ser criado sob demanda na primeira requisição
         }
 
-        return new TenantResponse(tenant.getNome(), tenant.getTenantId());
+        return new TenantResponse(tenant.getNome(), tenant.getTenantId(), tenant.getPlano());
     }
 }

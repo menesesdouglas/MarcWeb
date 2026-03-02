@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public interface TenantRepository extends JpaRepository<Tenant, Long> {
 
-    @Query("Select new com.marcweb.dto.tenant.TenantResponse(t.nome, t.tenantId) from Tenant t where t.ativo = true")
+    @Query("Select new com.marcweb.dto.tenant.TenantResponse(t.nome, t.tenantId, t.plano) from Tenant t where t.ativo = true")
     List<TenantResponse> findAllAtivas();
 
     @Query(value = "SELECT * FROM public.tenants t WHERE t.tenant_id = :tenantId", nativeQuery = true)

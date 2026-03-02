@@ -21,7 +21,8 @@ BEGIN
         consent_geoloc BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         cargo VARCHAR(100),
-        cpf VARCHAR(20)
+        cpf VARCHAR(20),
+        ativacoes INTEGER DEFAULT 1 NOT NULL
     )';
     
     -- Cria índice único para tenant + username
@@ -115,8 +116,8 @@ BEGIN
              VALUES (' || quote_literal('Empresa ' || tenant_id_param) || ', 100, false)';
     
     -- Cria usuário admin padrão
-    EXECUTE 'INSERT INTO ' || quote_ident(schema_name) || '.users (nome, username, password, role, ativo, consent_geoloc, created_at, tenant_id, cargo, cpf) 
-             VALUES (' || quote_literal('Administrador') || ', ''admin'', ''$2a$10$DlyZMkqoQ7yqQZqQZqQZqOuTqQZqQZqQZqQZqQZqQZqQZqQZqQZq'', ''ADMIN'', true, false, CURRENT_TIMESTAMP, ' || quote_literal(tenant_id_param) || ', ''Administrador'', ''000.000.000-00'')';
+    EXECUTE 'INSERT INTO ' || quote_ident(schema_name) || '.users (nome, username, password, role, ativo, consent_geoloc, created_at, tenant_id, cargo, cpf, ativacoes) 
+             VALUES (' || quote_literal('Administrador') || ', ''admin'', ''$2a$10$DlyZMkqoQ7yqQZqQZqQZqOuTqQZqQZqQZqQZqQZqQZqQZqQZqQZqQZqQZq'', ''ADMIN'', true, false, CURRENT_TIMESTAMP, ' || quote_literal(tenant_id_param) || ', ''Administrador'', ''000.000.000-00'', 1)';
 END;
 $$ LANGUAGE plpgsql;
 
