@@ -5,6 +5,8 @@ let employees = []; // Alias para compatibilidade
 const textField = document.getElementById("filter-by-name");
 const sideBar = document.getElementById("sidebar");
 let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
+let autoRefreshInterval = null; // Armazena o intervalo de auto-refresh
+const AUTO_REFRESH_TIME = 30000; // 30 segundos
 
 const isPaulo = false;
 const urlBase = isPaulo ? "http://192.168.15.158" : "";
@@ -45,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Configurar eventos
     setupEventListeners();
+
+    // Iniciar auto-refresh a cada 30 segundos
+    startAutoRefresh();
 
     //// ==> EVENTOS PARA FERIADOS
     async function buscarFeriadoPorAno() {
@@ -115,6 +120,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /// ==>> FIM EVENTOS FERIADO
 });
+
+// Função para iniciar o auto-refresh
+function startAutoRefresh() {
+    // Limpa qualquer intervalo existente
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    // Configura o novo intervalo de 30 segundos
+    autoRefreshInterval = setInterval(() => {
+        refreshAllData(false); // false = não mostra loading manual
+    }, AUTO_REFRESH_TIME);
+    
+    // Adiciona indicador visual de auto-refresh
+    const btnRefresh = document.getElementById('btnRefresh');
+    if (btnRefresh) {
+        const indicator = document.createElement('span');
+        indicator.className = 'auto-refresh-indicator';
+        indicator.textContent = 'Auto';
+        btnRefresh.appendChild(indicator);
+    }
+}
+
+// Função principal de refresh - pode ser chamada manualmente ou pelo auto-refresh
+async function refreshAllData(showLoading = true) {
+    const btnRefresh = document.getElementById('btnRefresh');
+    
+    // Adiciona efeito visual de loading
+    if (showLoading && btnRefresh) {
+        btnRefresh.classList.add('loading');
+    }
+    
+    try {
+        // Carrega todos os dados em paralelo
+        await Promise.all([
+            loadUsers(),
+            loadRecentPunches(),
+            loadFolgasPendentes()
+        ]);
+        
+        // Mostra toast de sucesso apenas se for refresh manual
+        if (showLoading) {
+            showToast('Dados atualizados com sucesso!', 'success');
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar dados:', error);
+        if (showLoading) {
+            showToast('Erro ao atualizar dados', 'error');
+        }
+    } finally {
+        // Remove efeito de loading
+        if (showLoading && btnRefresh) {
+            btnRefresh.classList.remove('loading');
+        }
+    }
+}
 
 function setupEventListeners() {
 

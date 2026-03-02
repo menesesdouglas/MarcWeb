@@ -215,7 +215,10 @@ public class RegistroPontoService {
         }
 
         // VALIDAÇÃO DE ORDEM PARA REGISTROS SUBSEQUENTES (código original ajustado)
-        if (ultimoTipoRegistro.equals(TipoRegistro.ENTRADA) && !tipoRegistro.equals(TipoRegistro.INICIO_DESCANSO))
+        // Permite SAIDA diretamente após ENTRADA (sem necessidade de intervalo de descanso)
+        if (ultimoTipoRegistro.equals(TipoRegistro.ENTRADA) && 
+            !tipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) && 
+            !tipoRegistro.equals(TipoRegistro.SAIDA))
             throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.INICIO_DESCANSO);
 
         if (ultimoTipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) && !tipoRegistro.equals(TipoRegistro.FIM_DESCANSO))

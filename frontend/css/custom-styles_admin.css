@@ -628,3 +628,111 @@ textarea::placeholder {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* Header Actions (Menu + Refresh Button) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.header-actions i#menu {
+    display: inline;
+}
+
+/* Refresh Button */
+.btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--petrol-blue);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    margin-left: auto;
+}
+
+.btn-refresh:hover {
+    background: var(--petrol-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-refresh:active {
+    transform: translateY(0);
+}
+
+.btn-refresh i {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-refresh.loading i {
+    animation: spin 1s linear infinite;
+}
+
+.btn-refresh.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-refresh .auto-refresh-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-left: 10px;
+}
+
+.btn-refresh .auto-refresh-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--petrol-light);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-actions {
+        padding: 0 10px;
+    }
+    
+    .btn-refresh span {
+        display: none;
+    }
+    
+    .btn-refresh {
+        padding: 10px 15px;
+    }
+    
+    .btn-refresh .auto-refresh-indicator {
+        display: none;
+    }
+}

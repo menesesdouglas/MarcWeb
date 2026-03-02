@@ -207,6 +207,30 @@ public class RelatorioService {
     }
 
     /**
+     * Converte minutos para formato HH:MM
+     * @param minutos Total de minutos
+     * @return String formatada como HH:MM
+     */
+    private String formatarHorasMinutos(int minutos) {
+        int horas = Math.abs(minutos) / 60;
+        int mins = Math.abs(minutos) % 60;
+        String sinal = minutos < 0 ? "-" : "";
+        return String.format("%s%d:%02d", sinal, horas, mins);
+    }
+
+    /**
+     * Converte BigDecimal (minutos) para formato HH:MM
+     * @param minutos BigDecimal representando minutos
+     * @return String formatada como HH:MM
+     */
+    private String formatarHorasMinutos(BigDecimal minutos) {
+        if (minutos == null) {
+            return "0:00";
+        }
+        return formatarHorasMinutos(minutos.intValue());
+    }
+
+    /**
      * Seção de resumo executivo com métricas rápidas
      */
     private void adicionarResumoExecutivo(Document document, DadosFolhaPonto folhaPonto, PdfFont font, PdfFont boldFont) {
@@ -236,7 +260,7 @@ public class RelatorioService {
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell1);
 
-        Cell cell2 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_trabalhadas().toString()).setFont(font));
+        Cell cell2 = new Cell().add(new Paragraph(formatarHorasMinutos(folhaPonto.getTotalizacao().getHoras_trabalhadas())).setFont(font));
         resumoTable.addCell(cell2);
 
         Cell cell3 = new Cell().add(new Paragraph("Horas Extras").setFont(boldFont))
@@ -244,7 +268,7 @@ public class RelatorioService {
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell3);
 
-        Cell cell4 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_extras() + " h").setFont(font));
+        Cell cell4 = new Cell().add(new Paragraph(formatarHorasMinutos(folhaPonto.getTotalizacao().getHoras_extras())).setFont(font));
         resumoTable.addCell(cell4);
 
         // Linha 2: Horas débito e saldo
@@ -253,7 +277,7 @@ public class RelatorioService {
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell5);
 
-        Cell cell6 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getHoras_debito() + " h").setFont(font));
+        Cell cell6 = new Cell().add(new Paragraph(formatarHorasMinutos(folhaPonto.getTotalizacao().getHoras_debito())).setFont(font));
         resumoTable.addCell(cell6);
 
         Cell cell7 = new Cell().add(new Paragraph("Saldo de Horas").setFont(boldFont))
@@ -261,7 +285,7 @@ public class RelatorioService {
                 .setFontColor(ColorConstants.WHITE);
         resumoTable.addCell(cell7);
 
-        Cell cell8 = new Cell().add(new Paragraph(folhaPonto.getTotalizacao().getSaldo_horas() + " h").setFont(font));
+        Cell cell8 = new Cell().add(new Paragraph(formatarHorasMinutos(folhaPonto.getTotalizacao().getSaldo_horas())).setFont(font));
         resumoTable.addCell(cell8);
 
         document.add(resumoTable.setMarginBottom(10));
@@ -576,13 +600,13 @@ public class RelatorioService {
                 .setMarginTop(10)
                 .setMarginBottom(5));
 
-        document.add(new Paragraph("Horas Trabalhadas: " + folhaPonto.getTotalizacao().getHoras_trabalhadas())
+        document.add(new Paragraph("Horas Trabalhadas: " + formatarHorasMinutos(folhaPonto.getTotalizacao().getHoras_trabalhadas()))
                 .setFont(font)
                 .setMarginBottom(3));
-        document.add(new Paragraph("Horas Extras: " + folhaPonto.getTotalizacao().getHoras_extras())
+        document.add(new Paragraph("Horas Extras: " + formatarHorasMinutos(folhaPonto.getTotalizacao().getHoras_extras()))
                 .setFont(font)
                 .setMarginBottom(3));
-        document.add(new Paragraph("Horas Débito: " + folhaPonto.getTotalizacao().getHoras_debito())
+        document.add(new Paragraph("Horas Débito: " + formatarHorasMinutos(folhaPonto.getTotalizacao().getHoras_debito()))
                 .setFont(font)
                 .setMarginBottom(5));
     }

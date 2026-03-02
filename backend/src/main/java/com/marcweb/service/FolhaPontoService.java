@@ -109,11 +109,18 @@ public class FolhaPontoService {
         BigDecimal saldoHoras = horasExtras.subtract(horasDebito);
 
         /// TOTALIZAÇÃO DE DIAS E HORAS
+        /// Convertendo de horas (decimal) para minutos para formatação correta HH:MM
+        /// Ex: 19.91 horas = 19.91 * 60 = 1194.6 ≈ 1195 minutos = 19:55
+        BigDecimal horasTotaisEmMinutos = horasTotais.multiply(BigDecimal.valueOf(60));
+        int horasExtrasEmMinutos = horasExtras.multiply(BigDecimal.valueOf(60)).intValue();
+        int horasDebitoEmMinutos = horasDebito.multiply(BigDecimal.valueOf(60)).intValue();
+        int saldoHorasEmMinutos = saldoHoras.multiply(BigDecimal.valueOf(60)).intValue();
+
         Totalizacao totalizacao = new Totalizacao(
-                horasTotais,
-                horasExtras.intValue(),
-                horasDebito.intValue(),
-                saldoHoras.intValue()
+                horasTotaisEmMinutos,
+                horasExtrasEmMinutos,
+                horasDebitoEmMinutos,
+                saldoHorasEmMinutos
         );
         dadosFolha.setTotalizacao(totalizacao);
 

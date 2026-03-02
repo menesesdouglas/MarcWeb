@@ -38,14 +38,21 @@ public class TenantSchemaService {
      */
     public void ensureTenantSchema(String tenantId) {
         // Verificação rápida com cache para evitar processamento desnecessário
-        if (initializedTenants.contains(tenantId)) {
-            log.debug("Tenant {} já inicializado, pulando verificação", tenantId);
+        // Mas ainda assim verifica/adiciona colunas faltantes para garantir compatibilidade
+        boolean alreadyInitialized = initializedTenants.contains(tenantId);
+        
+        if (alreadyInitialized) {
+            // Mesmo que o tenant já esteja inicializado, ainda adiciona colunas faltantes
+            // Isso garante que novas colunas adicionadas ao código sejam adicionadas aos tenants existentes
+            addMissingColumnsIfNeeded(tenantId);
+            log.debug("Tenant {} já inicializado, mas verificando colunas faltantes", tenantId);
             return;
         }
         
         synchronized (this) {
             // Verificação dupla dentro do synchronized
             if (initializedTenants.contains(tenantId)) {
+                addMissingColumnsIfNeeded(tenantId);
                 return;
             }
             
@@ -299,6 +306,49 @@ public class TenantSchemaService {
             stmt.execute("ALTER TABLE configs_empresa ADD COLUMN IF NOT EXISTS plano VARCHAR(30) DEFAULT 'BASICO'");
         } catch (SQLException e) {
             log.debug("Coluna 'plano' pode já existir: {}", e.getMessage());
+        }
+
+        // Migration V3 - Adicionar colunas da tabela folhas_ponto
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS dados TEXT");
+        } catch (SQLException e) {
+            log.debug("Coluna 'dados' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS horas_trabalhadas DECIMAL(10,2)");
+        } catch (SQLException e) {
+            log.debug("Coluna 'horas_trabalhadas' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS horas_extras DECIMAL(10,2) DEFAULT 0");
+        } catch (SQLException e) {
+            log.debug("Coluna 'horas_extras' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS horas_debito DECIMAL(10,2) DEFAULT 0");
+        } catch (SQLException e) {
+            log.debug("Coluna 'horas_debito' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS dias_trabalhados INTEGER DEFAULT 0");
+        } catch (SQLException e) {
+            log.debug("Coluna 'dias_trabalhados' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS dias_falta INTEGER DEFAULT 0");
+        } catch (SQLException e) {
+            log.debug("Coluna 'dias_falta' pode já existir: {}", e.getMessage());
+        }
+
+        try {
+            stmt.execute("ALTER TABLE folhas_ponto ADD COLUMN IF NOT EXISTS gerada_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        } catch (SQLException e) {
+            log.debug("Coluna 'gerada_em' pode já existir: {}", e.getMessage());
         }
     }
 

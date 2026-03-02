@@ -12,8 +12,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class Totalizacao {
 
-    private BigDecimal horas_trabalhadas;
-    private int horas_extras;
-    private int horas_debito;
-    private int saldo_horas;
+    // Stored in minutes for proper hours:minutes formatting
+    private BigDecimal horas_trabalhadas; // in minutes
+    private int horas_extras;             // in minutes
+    private int horas_debito;             // in minutes
+    private int saldo_horas;              // in minutes
 }
