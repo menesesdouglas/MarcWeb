@@ -35,7 +35,7 @@ async function loadUserFolgas(pageNumber) {
     currentPageNumber = pageNumber;
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`${urlBase}/back/folgas/me?pageNumber=${pageNumber}`, {
+        const response = await fetch(`/back/folgas/me?pageNumber=${pageNumber}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -101,7 +101,7 @@ function setupEventListeners() {
 async function loadUserProfile() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`${urlBase}/back/user/me`, {
+        const response = await fetch(`/back/user/me`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -154,7 +154,7 @@ function setupRolePermissions(userRole) {
 async function loadRecentActivity() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`${urlBase}/back/auditoria/me/logs`, {
+        const response = await fetch(`/back/auditoria/me/logs`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -276,7 +276,7 @@ async function handleProfileUpdate(e) {
             updateData.newPassword = newPassword;
         }
 
-        const response = await fetch(`${urlBase}/back/user/profile`, {
+        const response = await fetch(`/back/user/profile`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -316,7 +316,7 @@ async function handleFolgaSubmit(e) {
             justificativa: justificativa
         };
 
-        const response = await fetch(`${urlBase}/back/folgas/solicitar`, {
+        const response = await fetch(`/back/folgas/solicitar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

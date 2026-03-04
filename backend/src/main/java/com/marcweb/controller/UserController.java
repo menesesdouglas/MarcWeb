@@ -31,7 +31,7 @@ public class UserController {
     ///  CARREGANDO PERFIL DO USUÁRIO PARA GERENCIAMENTO DO ADMIN
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    public ProfileUser loadUserProfile(@PathVariable Long id, @RequestParam int pageNumber) {
+    public ProfileUser loadUserProfile(@PathVariable long id, @RequestParam int pageNumber) {
         return service.loadUserProfile(id, pageNumber);
     }
 
@@ -51,8 +51,9 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public void createUser(@RequestBody @Valid CreateUser data) {
+    public ResponseEntity<String> createUser(@RequestBody @Valid CreateUser data) {
         service.createUser(data);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário cadastrado com sucesso");
     }
 
 

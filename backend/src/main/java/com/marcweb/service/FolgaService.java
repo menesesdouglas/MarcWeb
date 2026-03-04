@@ -40,7 +40,6 @@ public class FolgaService {
     public FolgaResponse findById(Long id) {
         detalhes.setDetalhes("Usuário realizou consulta de folga pelo id " + id);
         Folga folga = folgaRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folga não encontrada com ID: " + id)); // Usando ResponseStatusException para padronizar a resposta HTTP
-
         // VALIDANDO SE USUÁRIO TEM PERMISSÃO OU NÃO
         validarUsuario(folga.getUser().getId());
         // CASO TENHA, RETORNA A FOLGA
@@ -168,7 +167,7 @@ public class FolgaService {
         User user = userRepository.findByUsernameIgnoreCase(userDetails.getUsername()).orElseThrow(
                 () -> new RuntimeException("Usuário não encontrado")
         );
-        Page<Folga> folgasPaginadas = folgaRepository.findByUserId(user.getId(), PageRequest.of(pageNumber, 20));
+        Page<Folga> folgasPaginadas = folgaRepository.findByUserId(user.getId(), PageRequest.of(pageNumber, 8));
         PageFolgaResponse pageFolgaResponse = new PageFolgaResponse();
         List<FolgaResponse> folgasResponse = folgasPaginadas.stream().map(FolgaResponse::new).toList();
         pageFolgaResponse.setFolgas(folgasResponse);

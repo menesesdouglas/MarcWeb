@@ -8,8 +8,6 @@ let currentFolgaId = null; // Para armazenar o ID da folga atual no modal
 let autoRefreshInterval = null; // Armazena o intervalo de auto-refresh
 const AUTO_REFRESH_TIME = 30000; // 30 segundos
 
-const isPaulo = false;
-const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 ///  EVITANDO QUE A PÁGINA SEJA RECARREGADA AO ENVIAR O FORMULÁRIO
 const formFeriado = document.getElementById("feriadoForm").addEventListener("submit", function (e) {
@@ -58,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else {
             const token = JSON.parse(localStorage.getItem("auth")).token;
             if (!token) sessaoExpirada();
-            const response = await fetch(`${urlBase}/back/feriado?ano=${ano}`, {
+            const response = await fetch(`/back/feriado?ano=${ano}`, {
                 method: 'GET',
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -101,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (confirmacao) {
             const token = JSON.parse(localStorage.getItem("auth")).token;
             if (!token) sessaoExpirada();
-            const response = await fetch(`${urlBase}/back/feriado/${idFeriado}`, {
+            const response = await fetch(`/back/feriado/${idFeriado}`, {
                 method: 'DELETE',
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -127,12 +125,12 @@ function startAutoRefresh() {
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
     }
-    
+
     // Configura o novo intervalo de 30 segundos
     autoRefreshInterval = setInterval(() => {
         refreshAllData(false); // false = não mostra loading manual
     }, AUTO_REFRESH_TIME);
-    
+
     // Adiciona indicador visual de auto-refresh
     const btnRefresh = document.getElementById('btnRefresh');
     if (btnRefresh) {
@@ -146,12 +144,12 @@ function startAutoRefresh() {
 // Função principal de refresh - pode ser chamada manualmente ou pelo auto-refresh
 async function refreshAllData(showLoading = true) {
     const btnRefresh = document.getElementById('btnRefresh');
-    
+
     // Adiciona efeito visual de loading
     if (showLoading && btnRefresh) {
         btnRefresh.classList.add('loading');
     }
-    
+
     try {
         // Carrega todos os dados em paralelo
         await Promise.all([
@@ -159,7 +157,7 @@ async function refreshAllData(showLoading = true) {
             loadRecentPunches(),
             loadFolgasPendentes()
         ]);
-        
+
         // Mostra toast de sucesso apenas se for refresh manual
         if (showLoading) {
             showToast('Dados atualizados com sucesso!', 'success');
@@ -288,7 +286,7 @@ async function loadUsers() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) sessaoExpirada();
-        const response = await fetch(`${urlBase}/back/user`, {
+        const response = await fetch(`/back/user`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`,
                 "X-Tenant-Id": auth.tenantId
@@ -319,7 +317,7 @@ async function loadUsers() {
 async function loadFolgasPendentes() {
     const auth = JSON.parse(localStorage.getItem("auth"));
     if (!auth) sessaoExpirada();
-    const response = await fetch(`${urlBase}/back/folgas/pendentes`, {
+    const response = await fetch(`/back/folgas/pendentes`, {
         headers: {
             'Authorization': `Bearer ${auth.token}`,
             'X-Tenant-Id': auth.tenantId
@@ -337,7 +335,7 @@ async function loadRecentPunches() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) sessaoExpirada();
-        const response = await fetch(`${urlBase}/back/ponto/status-atual`, {
+        const response = await fetch(`/back/ponto/status-atual`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`,
                 "X-Tenant-Id": auth.tenantId
@@ -433,7 +431,7 @@ async function solucionarFolga(idFolga, aprovada) {
     if (!confimado) return;
     const auth = JSON.parse(localStorage.getItem("auth"));
     if (!auth) sessaoExpirada();
-    const response = await fetch(`${urlBase}/back/folgas/solucionar/${idFolga}/${aprovada}`, {
+    const response = await fetch(`/back/folgas/solucionar/${idFolga}/${aprovada}`, {
         headers: {
             "Authorization": `Bearer ${auth.token}`,
             "X-Tenant-Id": auth.tenantId
@@ -524,7 +522,7 @@ async function handlerFeriadoSubmit() {
         "nome": nomeFeriado
     }
 
-    const response = await fetch(`${urlBase}/back/feriado`, {
+    const response = await fetch(`/back/feriado`, {
         method: 'POST',
         body: JSON.stringify(dadosFeriado),
         headers: {
@@ -548,7 +546,7 @@ async function atualizarFeriados() {
     if (confirmacao) {
         const token = JSON.parse(localStorage.getItem("auth")).token;
         if (!token) sessaoExpirada();
-        const response = await fetch(`${urlBase}/back/feriado/atualizar`, {
+        const response = await fetch(`/back/feriado/atualizar`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -573,7 +571,7 @@ async function cadastrarFeriadosNacionais() {
         if (confirmacao) {
             const token = JSON.parse(localStorage.getItem("auth")).token;
             if (!token) sessaoExpirada();
-            const response = await fetch(`${urlBase}/back/feriado/sync?ano=${ano}`, {
+            const response = await fetch(`/back/feriado/sync?ano=${ano}`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -706,7 +704,7 @@ async function handleEmployeeSubmit(e) {
 
     const auth = JSON.parse(localStorage.getItem("auth"));
     if (!auth) sessaoExpirada();
-    const url = `${urlBase}/back/user${isEdit ? `/${userId}` : ''}`;
+    const url = `/back/user${isEdit ? `/${userId}` : ''}`;
     const method = isEdit ? "PUT" : "POST";
 
     try {
@@ -720,9 +718,10 @@ async function handleEmployeeSubmit(e) {
             body: JSON.stringify(userData)
         });
 
-        if (result.status == 201 || result.status == 200) {
+        const ok = result.status == 200;
+        if (result.status == 201 || ok) {
             const response = await result.json();
-            if (response.resultado.trim()) {
+            if (response.resultado && response.resultado.trim()) {
                 openModalWarn(response.resultado);
             }
             const message = isEdit ? "Usuário atualizado com sucesso" : "Usuário cadastrado com sucesso";
@@ -780,7 +779,7 @@ async function handleAdjustmentSubmit(e) {
             justificativa: justificativa
         };
 
-        const response = await fetch(`${urlBase}/back/ponto/ajuste`, {
+        const response = await fetch(`/back/ponto/ajuste`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -825,7 +824,7 @@ async function loadAdjustmentHistory() {
             return date.toISOString().split('T')[0] + 'T00:00:00';
         };
 
-        const url = `${urlBase}/back/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`;
+        const url = `/back/ponto/ajustes-admin?start=${formatDateForAPI(firstDayOfMonth)}&end=${formatDateForAPI(endDate)}`;
         console.log('Carregando ajustes administrativos de:', url);
 
         const response = await fetch(url, {
@@ -940,7 +939,7 @@ async function generateFolhaPonto() {
 
     const [year, month] = monthYear.split('-');
 
-    const response = await fetch(`${urlBase}/back/folha-ponto?userId=${userId}&mes=${month}&ano=${year}`, {
+    const response = await fetch(`/back/folha-ponto?userId=${userId}&mes=${month}&ano=${year}`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${auth.token}`
@@ -976,7 +975,7 @@ async function generateReport() {
         showToast('Gerando relatório PDF...', 'info');
 
         // Gerar o PDF diretamente com o novo endpoint
-        const pdfResponse = await fetch(`${urlBase}/back/relatorios/pdf`, {
+        const pdfResponse = await fetch(`/back/relatorios/pdf`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

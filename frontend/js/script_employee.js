@@ -1,6 +1,4 @@
 // Variável global para a URL base da API
-const isPaulo = false;
-const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos DOM
@@ -80,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function registerPunch(type, time, value) {
+        const confirmacao = confirm(`Bater ponto de ${type}??`);
+        if(!confirmacao) return;
         // Validar token JWT
         if (!auth.token || auth.token.trim() === '') {
             showToast('Token de autenticação inválido. Por favor, faça login novamente.', 'error');
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            const result = await fetch(`${urlBase}/back/ponto`, {
+            const result = await fetch(`/back/ponto`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -445,7 +445,7 @@ async function loadTodayPunches() {
         const today = new Date();
         const dateStr = today.toISOString().split('T')[0];
 
-        const response = await fetch(`${urlBase}/back/ponto/historico?date=${dateStr}`, {
+        const response = await fetch(`/back/ponto/historico?date=${dateStr}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -517,7 +517,7 @@ async function gerarComprovantePonto(registroId) {
         showToast('Gerando comprovante PDF...', 'info');
         
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`${urlBase}/back/ponto/${registroId}/pdf`, {
+        const response = await fetch(`/back/ponto/${registroId}/pdf`, {
             method: 'GET',
             headers: {
                 "Authorization": `Bearer ${auth.token}`
@@ -561,7 +561,7 @@ async function loadCurrentStatus() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const statusElement = document.getElementById('currentStatus');
 
-        const response = await fetch(`${urlBase}/back/ponto/status-atual-me`, {
+        const response = await fetch(`/back/ponto/status-atual-me`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -630,7 +630,6 @@ function getGeolocation(timeout = 30000) {
                 if (precisao > 500) {
                     showToast(`⚠️ Localização imprecisa (${precisao}m). Tente ao ar livre para melhor precisão.`, 'info');
                 }
-
                 resolve({
                     success: true,
                     latitude: latitude,
@@ -654,7 +653,6 @@ function getGeolocation(timeout = 30000) {
                     default:
                         message = 'Erro desconhecido ao obter geolocalização.';
                 }
-
                 console.error('Erro de geolocalização:', error.message);
                 resolve({
                     success: false,
@@ -673,13 +671,10 @@ function getGeolocation(timeout = 30000) {
  * @returns {Promise<{success: boolean, latitude?: number, longitude?: number, precisao?: number, message?: string}>}
  */
 async function getGeolocationWithRetry(maxRetries = 2) {
-    let lastError = 'Erro desconhecido';
-    
+    let lastError = 'Erro desconhecido';  
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         console.log(`Tentativa ${attempt} de ${maxRetries} para obter geolocalização...`);
-        
         const result = await getGeolocation(30000); // 30 segundos de timeout
-        
         if (result.success) {
             return result;
         }
@@ -691,8 +686,7 @@ async function getGeolocationWithRetry(maxRetries = 2) {
             console.log(`Tentativa ${attempt} falhou. Tentando novamente em 2 segundos...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
-    }
-    
+    }   
     return {
         success: false,
         message: `Não foi possível obter a localização após ${maxRetries} tentativas. ${lastError}`

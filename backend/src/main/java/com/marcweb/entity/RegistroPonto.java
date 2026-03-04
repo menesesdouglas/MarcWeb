@@ -26,7 +26,7 @@ public class RegistroPonto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Relacionamento com User
 
@@ -63,5 +63,21 @@ public class RegistroPonto {
         this.ip = ip;
         this.timestamp = LocalDateTime.now();
         this.expedienteId = expedienteId;
+    }
+
+    @Override
+    public String toString() {
+        return "RegistroPonto{" +
+               "id=" + id +
+               ", user=" + user +
+               ", tipo=" + tipo +
+               ", timestamp=" + timestamp +
+               ", latitude=" + latitude +
+               ", longitude=" + longitude +
+               ", ip='" + ip + '\'' +
+               ", precisao=" + precisao +
+               ", justificativa='" + justificativa + '\'' +
+               ", expedienteId=" + expedienteId +
+               '}';
     }
 }

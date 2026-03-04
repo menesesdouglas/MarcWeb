@@ -1,7 +1,4 @@
 
-const isPaulo = false;
-const urlBase = isPaulo? "http://192.168.15.158" : "";
-
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
@@ -56,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             password: password
         }
         
-        const loginResponse = await fetch(`${urlBase}/back/auth/login`, {
+        const loginResponse = await fetch(`/back/auth/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -148,7 +145,7 @@ async function loadTenants(isAutomatic) {
         return;
     }
 
-    const response = await fetch(`${urlBase}/back/tenant`);
+    const response = await fetch(`/back/tenant`);
 
     if (response.ok) {
         select.innerHTML = `<option  value="" disabled selected>Selecione sua empresa

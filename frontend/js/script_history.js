@@ -1,6 +1,4 @@
 
-const isPaulo = false;
-const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 document.addEventListener('DOMContentLoaded', () => {
     const auth = JSON.parse(localStorage.getItem("auth"));
@@ -62,7 +60,7 @@ async function carregarHistorico() {
         const inicioTimestamp = primeiroDia.toISOString().split('T')[0] + "T00:00:00";
         const fimTimestamp = ultimoDia.toISOString().split('T')[0] + 'T23:59:59';
 
-        const response = await fetch(`${urlBase}/back/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
+        const response = await fetch(`/back/ponto/me?start=${encodeURIComponent(inicioTimestamp)}&end=${encodeURIComponent(fimTimestamp)}`, {
             headers: {
                 'Authorization': `Bearer ${auth.token}`
             }
@@ -81,7 +79,8 @@ async function carregarHistorico() {
             calcularEstatisticas(resultado.registros, minutosTrabalhados, monthLength, primeiroDia, ultimoDia);
 
             const registros = resultado.registros;
-            renderPunchs(registros);
+            if (!registros.length) alert("Nenhum resultado encontrado");
+            else renderPunchs(registros);
         } else {
             if (response.status == 403) window.location.href = "login.html";
             const error = await response.json();
@@ -147,10 +146,10 @@ function renderPunchs(registros) {
     registros.forEach(registro => {
         const tr = document.createElement("tr");
         tr.style.cursor = 'pointer';
-        
+
         // Armazenar o ID do registro no elemento
         tr.dataset.registroId = registro.id || '';
-        
+
         const [data, hora] = registro.timestamp.split("T");
         const [ano, mes, dia] = data.split("-");
         tr.innerHTML = `
@@ -180,9 +179,9 @@ function baixarPdfPonto(registroId) {
 async function gerarComprovantePonto(registroId) {
     try {
         showToast('Gerando comprovante PDF...', 'info');
-        
+
         const auth = JSON.parse(localStorage.getItem("auth"));
-        const response = await fetch(`${urlBase}/back/ponto/${registroId}/pdf`, {
+        const response = await fetch(`/back/ponto/${registroId}/pdf`, {
             method: 'GET',
             headers: {
                 "Authorization": `Bearer ${auth.token}`
@@ -191,13 +190,13 @@ async function gerarComprovantePonto(registroId) {
 
         if (response.ok) {
             const pdfBase64 = await response.text();
-            
+
             // Cria um link para download do PDF
             const link = document.createElement('a');
             link.href = `data:application/pdf;base64,${pdfBase64}`;
             link.download = `comprovante_ponto_${registroId}.pdf`;
             link.click();
-            
+
             showToast('Comprovante PDF gerado e baixado com sucesso!', 'success');
         } else {
             let errorMessage = 'Erro ao gerar comprovante PDF';
@@ -231,7 +230,7 @@ async function gerarFolhaPonto() {
     const auth = JSON.parse(localStorage.getItem("auth"));
     if (!auth) sessaoExpirada();
     const [ano, mes] = mesAno.split('-').map(Number);
-    const response = await fetch(`${urlBase}/back/folha-ponto/me?mes=${mes}&ano=${ano}`, {
+    const response = await fetch(`/back/folha-ponto/me?mes=${mes}&ano=${ano}`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${auth.token}`
@@ -265,7 +264,7 @@ async function exportarPDF() {
         showToast('Gerando relatório PDF...', 'info');
 
         // Gerar o PDF usando o endpoint para funcionários
-        const pdfResponse = await fetch(`${urlBase}/back/relatorios/pdf/me`, {
+        const pdfResponse = await fetch(`/back/relatorios/pdf/me`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -355,4 +354,3 @@ function sessaoExpirada() {
     localStorage.removeItem("auth");
     window.location.href = "login.html";
 }
-

@@ -20,7 +20,6 @@ public class FolgaController {
     private final FolgaService folgaService;
 
 
-
     // GET /api/folgas - Listar todas as folgas pendentes (requer ROLE_ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/pendentes")

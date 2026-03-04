@@ -1,6 +1,4 @@
 
-const isPaulo = false;
-const urlBase = isPaulo ? "http://192.168.15.158" : "";
 
 const auth = JSON.parse(localStorage.getItem("auth"));
 if (!auth) window.location.href = "/login.html";
@@ -38,7 +36,7 @@ async function loadPage() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) window.location.href = "/login.html";
         if (auth.role != "ADMIN") window.location.href = "/employee.html";
-        const response = await fetch(`${urlBase}/back/user/${userId}?pageNumber=${pageNumber - 1}`, {
+        const response = await fetch(`/back/user/${userId}?pageNumber=${pageNumber - 1}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${auth.token}`
@@ -104,7 +102,7 @@ async function loadPage() {
             tipo: tipo
         }
 
-        const response = await fetch(`${urlBase}/back/folgas`, {
+        const response = await fetch(`/back/folgas`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${auth.token}`,
@@ -215,7 +213,7 @@ async function loadPage() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         if (!auth) window.location.href = "/login.html";
         if (auth.role != "ADMIN") window.location.href = "/employee.html";
-        const response = await fetch(`${urlBase}/back/folgas/solucionar/${idFolga}/${aprovada}`, {
+        const response = await fetch(`/back/folgas/solucionar/${idFolga}/${aprovada}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             },
@@ -241,7 +239,7 @@ async function loadPage() {
             const auth = JSON.parse(localStorage.getItem("auth"));
             if (!auth) window.location.href = "/login.html";
             if (auth.role != "ADMIN") window.location.href = "/employee.html";
-            const response = await fetch(`${urlBase}/back/folgas/${idFolga}`, {
+            const response = await fetch(`/back/folgas/${idFolga}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${auth.token}`

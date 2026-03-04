@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -45,7 +46,6 @@ public class UserService {
             acao = "Cadastro de usuário",
             categoria = CategoriaLog.ADMIN
     )
-    @Transactional
     public void createUser(@RequestBody @Valid CreateUser data) {
         /// VALIDANDO USERNAME
         if (validateUsername(data.getUsername())) throw new UsernameDuplicatedException(data.getUsername());
@@ -65,10 +65,16 @@ public class UserService {
                 .cargo(data.getCargo())
                 .tenantId(tenantId) // Associa o usuário ao tenant atual
                 .build();
-        repository.save(user);
-        /// VALIDANDO QUANTIDADE DE USUÁRIOS DE ACORDO COM O PLANO
-        /// LANÇA ERRO COM AVISO DE LIMITE ATINGIDO E EXECUTA ROLLBACK CASO O LIMITE SEJA ESTOURADO
-        if (data.getRole().equals(Role.EMPLOYEE)) validarPlano();
+        User savedUser = repository.save(user);
+        /// VALIDANDO QUANTIDADE DE USUÁRIOS ATIVOS DE ACORDO COM O PLANO
+        try {
+            if (data.getRole().equals(Role.EMPLOYEE)) validarPlano();
+        } catch (LimiteFuncionarioAtivosException e) {
+            /// DELETANDO USUÁRIO CASO TENHA ULTRAPASSADO O LIMITE
+            repository.delete(savedUser);
+            throw new LimiteFuncionarioAtivosException(e.getMessage());
+        }
+
         detalhes.setDetalhes("Cadastro de usuário feito por administrador");
     }
 
@@ -118,9 +124,9 @@ public class UserService {
             acao = "Alteração de dados do usuário",
             categoria = CategoriaLog.ADMIN
     )
-    @Transactional
     public String editUser(Long id, UpdateUserDTO data) {
         String message = "";
+        boolean deveValidar = false;
         var user = repository.findById(id).orElse(null);
         if (user == null) {
             throw new UsernameNotFoundException("Usuário não encontrado");
@@ -135,11 +141,9 @@ public class UserService {
         if (StringUtils.isNotBlank(data.getNome())) user.setNome(data.getNome());
         if (StringUtils.isNotBlank(data.getPassword())) user.setPassword(encoder.encode(data.getPassword()));
         if (data.getAtivo() != null && !data.getAtivo().equals(user.getAtivo())) {
+            deveValidar = data.getAtivo();
             /// ALTERANDO SITUAÇÃO DO CADASTRO
             user.setAtivo(data.getAtivo());
-            /// VALIDANDO QUANTIDADE DE USUÁRIOS DE ACORDO COM O PLANO
-            /// LANÇA ERRO COM AVISO DE LIMITE ATINGIDO E EXECUTA ROLLBACK CASO O LIMITE SEJA ESTOURADO
-            if (data.getAtivo()) validarPlano();
             if (data.getAtivo()) {
                 if (user.getAtivacoes() > 3) throw new UsuarioBloqueadoException();
                 user.setAtivacoes(user.getAtivacoes() + 1);
@@ -150,6 +154,17 @@ public class UserService {
         if (data.getConsentGeoloc() != null) user.setConsentGeoloc(data.getConsentGeoloc());
         if (StringUtils.isNotBlank(data.getCargo())) user.setCargo(data.getCargo());
         if (StringUtils.isNotBlank(data.getCpf())) user.setCpf(data.getCpf());
+        repository.save(user);
+        /// VALIDANDO QUANTIDADE DE USUÁRIOS ATIVOS DE ACORDO COM O PLANO
+        if (deveValidar) {
+            try {
+                validarPlano();
+            } catch (LimiteFuncionarioAtivosException e) {
+                user.setAtivo(false);
+                repository.save(user);
+                throw new LimiteFuncionarioAtivosException(e.getMessage());
+            }
+        }
         detalhes.setDetalhes("Usuário " + user.getUsername() + " teve seus dados alterados pelo administrador");
         return message;
     }
@@ -292,17 +307,15 @@ public class UserService {
     private void validarPlano() {
         Plano plano = configEmpresaService.findPlanoEmpresa();
         if (!plano.equals(Plano.ENTERPRISE)) {
-            int qtdFuncionariosAtivos = repository.coutUserEmployeeAtivo();
+            long qtdFuncionariosAtivos = repository.countAtivos();
             if (plano.equals(Plano.FREEMIUM) && qtdFuncionariosAtivos > 3)
                 throw new LimiteFuncionarioAtivosException(
                         "Seu plano FREEMIUM permite até 3 funcionários ativos. Faça upgrade para o plano BÁSICO (até 15 funcionários)."
                 );
-
             if (plano.equals(Plano.BASICO) && qtdFuncionariosAtivos > 15)
                 throw new LimiteFuncionarioAtivosException(
                         "Seu plano BÁSICO permite até 15 funcionários ativos. Faça upgrade para o plano PREMIUM (até 29 funcionários)."
                 );
-
             if (plano.equals(Plano.PREMIUM) && qtdFuncionariosAtivos > 29)
                 throw new LimiteFuncionarioAtivosException(
                         "Seu plano PREMIUM permite até 29 funcionários ativos. Entre em contato para contratar o plano ilimitado."

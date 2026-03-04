@@ -44,7 +44,6 @@ public class RegistroPontoService {
     @Auditado(
             acao = "Registro de ponto",
             categoria = CategoriaLog.PONTO)
-    @Transactional
     public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
 
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
@@ -90,11 +89,19 @@ public class RegistroPontoService {
         repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request)));
         /// VALIDANDO QUE FOI SALVO APENAS UM REGISTRO
         /// O  QUERY METHOD LANÇA UM ERRO CASO SEJAM ENCONTRADOS MAIS DE UM, CAUSANDO UM ROLLBACK
-        var registroCriado = repository.findByUserAndTipoAndTimestampBetween(
-                user, data.getTipo(),
-                LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX)
-        );
+        validarRegistrosSimultaneos(user, data.getTipo());
         detalhes.setDetalhes("Usuário registrou ponto de " + data.getTipo().getText());
+    }
+
+    /// EXCLUINDO POSSÍVEIS REGISTROS SIMULTÂNEOS
+    private void validarRegistrosSimultaneos(User user, TipoRegistro tipo) {
+        try {
+            var registros = repository.findByUserAndTipoAndTimestampBetweenOrderByTimestamp(user, tipo, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX));
+            registros.remove(0);
+            repository.deleteAll(registros);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
 
@@ -216,8 +223,8 @@ public class RegistroPontoService {
 
         // VALIDAÇÃO DE ORDEM PARA REGISTROS SUBSEQUENTES (código original ajustado)
         // Permite SAIDA diretamente após ENTRADA (sem necessidade de intervalo de descanso)
-        if (ultimoTipoRegistro.equals(TipoRegistro.ENTRADA) && 
-            !tipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) && 
+        if (ultimoTipoRegistro.equals(TipoRegistro.ENTRADA) &&
+            !tipoRegistro.equals(TipoRegistro.INICIO_DESCANSO) &&
             !tipoRegistro.equals(TipoRegistro.SAIDA))
             throw new RegistroPontoSequenciaInvalidaException(TipoRegistro.INICIO_DESCANSO);
 
@@ -484,8 +491,5 @@ public class RegistroPontoService {
             var horasPassadas = ChronoUnit.HOURS.between(registro.get().getTimestamp(), LocalDateTime.now());
             if (horasPassadas < 8) throw new CicloPontoFinalizadoException();
         }
-
-
     }
-
 }
