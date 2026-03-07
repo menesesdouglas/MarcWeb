@@ -183,7 +183,7 @@ public class FolhaPontoService {
             if (i == registros.size() - 1) {
                 /// BUSSCANDO OS REGISTROS FINAIS , CASO ELES TENHAM CAÍDO NO MÊS SEGUINTE (SE O ULTIMO REGISTRO NAO FOI DE SAÍDA)
                 if (!registroAtual.getTipo().equals(TipoRegistro.SAIDA)) {
-                    List<RegistroPonto> registrosFaltantes = registroPontoService.findByExpedienteIdAndTimestampGreaterThan(registroAtual.getExpedienteId(), registroAtual.getTimestamp());
+                    List<RegistroPonto> registrosFaltantes = registroPontoService.findByExpedienteIdAndTimestampGreaterThan(registroAtual.getUser().getId(), registroAtual.getExpedienteId(), registroAtual.getTimestamp());
                     listaPorDia.addAll(registrosFaltantes);
                 }
                 listaFinal.add(listaPorDia);
