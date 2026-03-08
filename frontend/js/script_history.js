@@ -38,7 +38,7 @@ function configurarMesAnoPadrao() {
     const anoAtual = hoje.getFullYear();
 
     const mesFormatado = mesAtual < 10 ? `0${mesAtual}` : `${mesAtual}`;
-    //document.getElementById('mesAno').value = `${anoAtual}-${mesFormatado}`;
+    document.getElementById('mesAno').value = `${anoAtual}-${mesFormatado}`;
 }
 
 async function carregarHistorico() {
@@ -150,12 +150,14 @@ function renderPunchs(registros) {
         // Armazenar o ID do registro no elemento
         tr.dataset.registroId = registro.id || '';
 
+        alert(JSON.stringify(registro))
+
         const [data, hora] = registro.timestamp.split("T");
         const [ano, mes, dia] = data.split("-");
         tr.innerHTML = `
         <td>${dia}/${mes}/${ano}</td>
         <td> <span class="tipo-badge tipo-${registro.tipo.toLowerCase()}">${registro.tipo}</span></td>
-        <td>${hora}</td>
+        <td>${hora.split('.')[0]}</td>
         `;
         tr.addEventListener("click", () => {
             const registroId = tr.dataset.registroId;

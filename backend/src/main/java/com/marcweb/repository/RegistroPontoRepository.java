@@ -18,7 +18,7 @@ import java.util.UUID;
 public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Long> {
 
     @Query("""
-            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.id, r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
              from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             """)
     List<RegistroPontoResponse> findByUserAndTimestampBetween(User user, LocalDateTime start, LocalDateTime end);
@@ -31,9 +31,13 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             """)
     List<RegistroPonto> buscarRegistrosEmIntervaloDeData(User user, LocalDateTime start, LocalDateTime end);
 
-    /// BUSCANDO REGISTROS QUE FECHAM UM EXPEDIENTE, PORÉM NÃO VIERAM NA PRIMEIRA CONSULTA
-    @Query("Select r from RegistroPonto r where r.expedienteId = :expedienteId and r.timestamp > :lastTimestamp")
-    List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(@Param("expedienteId") UUID expedienteId, @Param("lastTimestamp") LocalDateTime lastTimestamp);
+    /// USADO PARA BUSCAR REGISTROS QUE FECHAM UM EXPEDIENTE, PORÉM NÃO VIERAM NA PRIMEIRA CONSULTA (TIMESTAMP -> GREATERTHAN)
+    @Query("Select r from RegistroPonto r where r.user.id = :userId and r.expedienteId = :expedienteId and r.timestamp > :lastTimestamp")
+    List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(@Param("userId") Long userId, @Param("expedienteId") UUID expedienteId, @Param("lastTimestamp") LocalDateTime lastTimestamp);
+
+    /// USADO PARA BUSCAR REGISTROS QUE FECHAM UM EXPEDIENTE, PORÉM NÃO VIERAM NA PRIMEIRA CONSULTA (TIMESTAMP -> LESSTHAN)
+    @Query("Select r from RegistroPonto r where r.user.id = :userId and r.expedienteId = :expedienteId and r.timestamp < :lastTimestamp")
+    List<RegistroPonto> findByExpedienteIdAndTimestampLessThan(@Param("userId") Long userId, @Param("expedienteId") UUID expedienteId, @Param("lastTimestamp") LocalDateTime lastTimestamp);
 
     /// EU IA SOBRESCREVER, PORÉM GERAVA ERRO NOS TESTES, ENTÃO APENAS MARQUEI COMO DEPRECIADO
     /// BUSCANDO ULTIMO TIPO DE REGISTRO DE UM USUÁRIO
@@ -53,7 +57,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO COM PAGINAÇÃO
     @Query("""
-            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.id, r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
             from RegistroPonto r where r.user = :user
             order by r.timestamp Desc
             """)
@@ -61,7 +65,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // CONSULTA OTIMIZADA: REGISTROS DE PONTO POR PERÍODO COM PAGINAÇÃO
     @Query("""
-            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
+            Select new com.marcweb.dto.ponto.RegistroPontoResponse(r.id, r.tipo, r.user.nome, r.user.username, r.ip, r.justificativa, r.timestamp, r.expedienteId)
             from RegistroPonto r where r.user = :user and r.timestamp between :start and :end
             order by r.timestamp Desc
             """)

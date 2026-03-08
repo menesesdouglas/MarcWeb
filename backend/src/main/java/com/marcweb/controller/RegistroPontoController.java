@@ -48,10 +48,11 @@ public class RegistroPontoController {
         boolean hasIncompletePreviousDay = service.temRegistroIncompletoAnterior(userId);
 
         // Registrar o ponto
-        service.registrarPonto(data, request);
+        Long idRegistroCriado = service.registrarPonto(data, request);
 
         // Retornar resposta com aviso se necessário
         RegistroPontoResponseWithWarning response = new RegistroPontoResponseWithWarning(
+                idRegistroCriado,
                 "Ponto batido com sucesso!!!",
                 hasIncompletePreviousDay
         );

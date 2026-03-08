@@ -44,7 +44,7 @@ public class RegistroPontoService {
     @Auditado(
             acao = "Registro de ponto",
             categoria = CategoriaLog.PONTO)
-    public void registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
+    public Long registrarPonto(CreateRegistroPonto data, HttpServletRequest request) {
 
         // COLETANDO O USUÁRIO NO CONTEXTO DE SEGURANÇA
         UserDetails userDetails = UserService.getUserDetailsBySecurityContext();
@@ -86,21 +86,22 @@ public class RegistroPontoService {
 
         // SALVANDO CASO PASSE NAS VALIDAÇÕES
         // O RegistroPonto deve receber os dados do DTO e o usuário, o timestamp é definido internamente
-        repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request)));
+        Long idRegistroCriado = repository.save(new RegistroPonto(data, user, expedienteId, getIpUser(request))).getId();
         /// VALIDANDO QUE FOI SALVO APENAS UM REGISTRO
         /// O  QUERY METHOD LANÇA UM ERRO CASO SEJAM ENCONTRADOS MAIS DE UM, CAUSANDO UM ROLLBACK
         validarRegistrosSimultaneos(user, data.getTipo());
         detalhes.setDetalhes("Usuário registrou ponto de " + data.getTipo().getText());
+        return idRegistroCriado;
     }
 
     /// EXCLUINDO POSSÍVEIS REGISTROS SIMULTÂNEOS
     private void validarRegistrosSimultaneos(User user, TipoRegistro tipo) {
-        try {
-            var registros = repository.findByUserAndTipoAndTimestampBetweenOrderByTimestamp(user, tipo, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX));
-            registros.remove(0);
+        var registros = repository.findByUserAndTipoAndTimestampBetweenOrderByTimestamp(user, tipo, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX));
+        registros.remove(0);
+        int lengthList = registros.size();
+        if (lengthList > 0) {
             repository.deleteAll(registros);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException("O ponto de ".concat(tipo.getText()).concat(" já foi batido!"));
         }
     }
 
@@ -251,9 +252,9 @@ public class RegistroPontoService {
         ///  QUE PORÉM NÃO VIERAM NA QUERY POR TEREM SIDO FINALIZADAS NO MÊS SEGUINTE
         List<RegistroPontoResponse> registros = repository.findByUserAndTimestampBetween(user, start, end);
         if (!registros.isEmpty()) {
-            var registrosFaltantes = completarLista(registros.get(registros.size() - 1));
+            var registrosFaltantes = completarLista(user.getId(), registros.get(registros.size() - 1));
             registros.addAll(registrosFaltantes);
-            /// REMOVENDO OS PRIMEIROS REGISTROS ATÉ ENCONTRAR O PRIMEIRO PONTO DE 'ENTRADA' ENCONTRADO
+            /// REMOVENDO OS PRIMEIROS REGISTROS ATÉ ENCONTRAR O PRIMEIRO PONTO DE 'ENTRADA' DO MÊS
             for (int i = 0; i < 3; i++) {
                 if (!registros.isEmpty() && !registros.get(0).getTipo().equals(TipoRegistro.ENTRADA))
                     registros.remove(0);
@@ -267,11 +268,11 @@ public class RegistroPontoService {
 
     /// USADO PARA BUSCAR REGISTROS QUE NÃO VIERAM NA PRIMEIRA CONSULTA
     /// POR CONTA DO EXPEDIENTE TER SIDO FINALIZADO NO MÊS SEGUINTE
-    private List<RegistroPontoResponse> completarLista(RegistroPontoResponse ultimoRegistro) {
+    private List<RegistroPontoResponse> completarLista(Long userId, RegistroPontoResponse ultimoRegistro) {
         if (!ultimoRegistro.getTipo().equals(TipoRegistro.SAIDA)) {
-            List<RegistroPonto> registrosFaltantes = findByExpedienteIdAndTimestampGreaterThan(ultimoRegistro.getIdExpediente(), ultimoRegistro.getTimestamp());
+            List<RegistroPonto> registrosFaltantes = findByExpedienteIdAndTimestampGreaterThan(userId, ultimoRegistro.getIdExpediente(), ultimoRegistro.getTimestamp());
             List<RegistroPontoResponse> resgistrosResponse = registrosFaltantes.stream().map(r ->
-                            new RegistroPontoResponse(r.getTipo(), r.getUser().getNome(), r.getUser().getUsername(), r.getIp(), r.getJustificativa(), r.getTimestamp(), r.getExpedienteId()))
+                            new RegistroPontoResponse(r.getId(), r.getTipo(), r.getUser().getNome(), r.getUser().getUsername(), r.getIp(), r.getJustificativa(), r.getTimestamp(), r.getExpedienteId()))
                     .toList();
             return resgistrosResponse;
         }
@@ -365,6 +366,24 @@ public class RegistroPontoService {
         var user = userService.findByUsername(userDetails.getUsername());
         ///  BUSCANDO REGISTROS DE UMA DATA ESPECÍFICA EM QUALQUER HORÁRIO DO DIA
         List<RegistroPonto> pontosRecentesEntity = repository.buscarRegistrosEmIntervaloDeData(user, date.atStartOfDay(), date.atTime(LocalTime.MAX));
+
+        /// VERIFICANDO SE É NECESSÁRIO BUSCAR MAIS REGISTROS
+        boolean containsEntrada = false;
+        for (int i = 0; i < pontosRecentesEntity.size(); i++) {
+            if (pontosRecentesEntity.get(i).getTipo().equals(TipoRegistro.ENTRADA)) {
+                containsEntrada = true;
+                break;
+            }
+        }
+        /// BUSCANDO PRIMEIROS REGISTROS CASO TENHAM ACONTECIDO NO DIA ANTERIOR
+        if (!containsEntrada) {
+            var primeiroRegistro = pontosRecentesEntity.get(0);
+            List<RegistroPonto> pontosFaltantes = repository.findByExpedienteIdAndTimestampLessThan(user.getId(), primeiroRegistro.getExpedienteId(), primeiroRegistro.getTimestamp());
+            /// PERCORRENDO A LISTA AO CONTRÁRIO PARA MANTER A ORDEM
+            for (int i = pontosFaltantes.size() - 1; i >= 0; i--) {
+                pontosRecentesEntity.add(0, pontosFaltantes.get(i));
+            }
+        }
         List<PontosRecentes> pontosRecentesDTO = pontosRecentesEntity.stream().map(r -> {
             String horario = r.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm"));
             return new PontosRecentes(r.getId(), r.getTipo().getText(), horario);
@@ -412,6 +431,7 @@ public class RegistroPontoService {
             log.info("Encontrados {} registros de ajustes", ajustes.size());
             return ajustes.stream().map(r -> {
                 return new RegistroPontoResponse(
+                        r.getId(),
                         r.getTipo(),
                         r.getUser().getNome(), // Nome do usuário
                         r.getUser().getUsername(),
@@ -479,8 +499,8 @@ public class RegistroPontoService {
         };
     }
 
-    public List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(UUID expedienteId, LocalDateTime timestamp) {
-        return repository.findByExpedienteIdAndTimestampGreaterThan(expedienteId, timestamp);
+    public List<RegistroPonto> findByExpedienteIdAndTimestampGreaterThan(Long userId, UUID expedienteId, LocalDateTime timestamp) {
+        return repository.findByExpedienteIdAndTimestampGreaterThan(userId, expedienteId, timestamp);
     }
 
 

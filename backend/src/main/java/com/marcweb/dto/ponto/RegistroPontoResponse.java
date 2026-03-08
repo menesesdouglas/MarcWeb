@@ -13,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 public class RegistroPontoResponse {
+    private Long id;
     private TipoRegistro tipo;
     private String nomeUsuario;
     private String username;

@@ -8,11 +8,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegistroPontoResponseWithWarning {
+    private Long id;
     private String message;
     private boolean hasIncompletePreviousDay;
     private String warningMessage;
 
-    public RegistroPontoResponseWithWarning(String message, boolean hasIncompletePreviousDay) {
+    public RegistroPontoResponseWithWarning(Long id, String message, boolean hasIncompletePreviousDay) {
+        this.id = id;
         this.message = message;
         this.hasIncompletePreviousDay = hasIncompletePreviousDay;
         this.warningMessage = hasIncompletePreviousDay ?

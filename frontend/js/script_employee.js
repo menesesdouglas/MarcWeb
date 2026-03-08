@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function registerPunch(type, time, value) {
         const confirmacao = confirm(`Bater ponto de ${type}??`);
-        if(!confirmacao) return;
+        if (!confirmacao) return;
         // Validar token JWT
         if (!auth.token || auth.token.trim() === '') {
             showToast('Token de autenticação inválido. Por favor, faça login novamente.', 'error');
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Obter geolocalização real do usuário (com retry automático)
         const firstGeoData = await getGeolocationWithRetry(2);
-        
+
         if (!firstGeoData.success) {
             // Mostrar opções ao usuário
             const tentarNovamente = confirm(`${firstGeoData.message}\n\nDeseja tentar novamente?`);
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Dados a serem enviados para a API
         // Obter geolocalização real do usuário (com retry automático)
         const geoData = await getGeolocationWithRetry(2);
-        
+
         if (!geoData.success) {
             // Mostrar opções ao usuário
             const tentarNovamente = confirm(`${geoData.message}\n\nDeseja tentar novamente?`);
@@ -196,14 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="item-time">${time}</span>
                 `;
 
-        li.addEventListener("click", () => {
-            const registroId = li.dataset.registroId;
-            if (registroId) {
-                baixarPdfPonto(registroId);
-            } else {
-                showToast('ID do registro não disponível', 'error');
-            }
-        });
+                li.addEventListener("click", () => {
+                    const registroId = response.id;
+                    if (registroId) {
+                        baixarPdfPonto(registroId);
+                    } else {
+                        showToast('ID do registro não disponível', 'error');
+                    }
+                });
                 // Adicionar ao topo da lista
                 punchList.append(li);
 
@@ -443,9 +443,9 @@ async function loadTodayPunches() {
     try {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
-
-        const response = await fetch(`/back/ponto/historico?date=${dateStr}`, {
+        const [dia, mes, ano] = today.toLocaleString("pt-BR").split(',')[0].split("/");
+        alert(`${ano}-${mes}-${dia}`);
+        const response = await fetch(`/back/ponto/historico?date=${ano}-${mes}-${dia}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`
             }
@@ -476,15 +476,15 @@ function renderPunchHistory(punches) {
         li.style.cursor = 'pointer';
         li.style.opacity = '0';
         li.style.transform = 'translateY(10px)';
-        
+
         // Armazenar o ID do registro no elemento
         li.dataset.registroId = punch.id || '';
-        
+
         li.innerHTML = `
             <span class="item-type">${punch.tipo}</span>
             <span class="item-time">${punch.horario}</span>
         `;
-        
+
         li.addEventListener("click", () => {
             const registroId = li.dataset.registroId;
             if (registroId) {
@@ -493,9 +493,9 @@ function renderPunchHistory(punches) {
                 showToast('ID do registro não disponível', 'error');
             }
         });
-        
+
         container.appendChild(li);
-        
+
         // Animação de entrada
         setTimeout(() => {
             li.style.opacity = '1';
@@ -515,7 +515,6 @@ function baixarPdfPonto(registroId) {
 async function gerarComprovantePonto(registroId) {
     try {
         showToast('Gerando comprovante PDF...', 'info');
-        
         const auth = JSON.parse(localStorage.getItem("auth"));
         const response = await fetch(`/back/ponto/${registroId}/pdf`, {
             method: 'GET',
@@ -526,13 +525,13 @@ async function gerarComprovantePonto(registroId) {
 
         if (response.ok) {
             const pdfBase64 = await response.text();
-            
+
             // Cria um link para download do PDF
             const link = document.createElement('a');
             link.href = `data:application/pdf;base64,${pdfBase64}`;
             link.download = `comprovante_ponto_${registroId}.pdf`;
             link.click();
-            
+
             showToast('Comprovante PDF gerado e baixado com sucesso!', 'success');
         } else {
             let errorMessage = 'Erro ao gerar comprovante PDF';
@@ -671,22 +670,22 @@ function getGeolocation(timeout = 30000) {
  * @returns {Promise<{success: boolean, latitude?: number, longitude?: number, precisao?: number, message?: string}>}
  */
 async function getGeolocationWithRetry(maxRetries = 2) {
-    let lastError = 'Erro desconhecido';  
+    let lastError = 'Erro desconhecido';
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         console.log(`Tentativa ${attempt} de ${maxRetries} para obter geolocalização...`);
         const result = await getGeolocation(30000); // 30 segundos de timeout
         if (result.success) {
             return result;
         }
-        
+
         lastError = result.message;
-        
+
         // Se não foi o último intento, espera um pouco e tenta novamente
         if (attempt < maxRetries) {
             console.log(`Tentativa ${attempt} falhou. Tentando novamente em 2 segundos...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
-    }   
+    }
     return {
         success: false,
         message: `Não foi possível obter a localização após ${maxRetries} tentativas. ${lastError}`
@@ -709,8 +708,8 @@ function calcularDistanciaHaversine(lat1, lon1, lat2, lon2) {
     const Δλ = (lon2 - lon1) * Math.PI / 180;
 
     const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        Math.cos(φ1) * Math.cos(φ2) *
+        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
