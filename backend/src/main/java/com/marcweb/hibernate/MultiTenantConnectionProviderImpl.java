@@ -145,6 +145,13 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
                 // Coluna pode já existir
             }
             
+            // Migration V13 - Adicionar coluna plano para configs_empresa
+            try {
+                stmt.execute("ALTER TABLE configs_empresa ADD COLUMN IF NOT EXISTS plano VARCHAR(30) DEFAULT 'BASICO'");
+            } catch (SQLException e) {
+                // Coluna pode já existir
+            }
+            
             log.debug("Colunas da tabela folhas_ponto verificadas para tenant {}", tenantId);
         }
         // Não precisa restaurar o schema aqui, pois o releaseConnection já faz isso

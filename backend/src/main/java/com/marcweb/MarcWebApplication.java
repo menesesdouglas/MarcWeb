@@ -1,6 +1,7 @@
 package com.marcweb;
 
 import com.marcweb.entity.ConfigEmpresa;
+import com.marcweb.entity.Plano;
 import com.marcweb.entity.Role;
 import com.marcweb.entity.User;
 import com.marcweb.repository.ConfigEmpresaRepository;
@@ -73,6 +74,7 @@ public class MarcWebApplication implements CommandLineRunner { // Implementa Com
                     .longCentro(-38.9668) // Coordenada padrão (Feira de Santana)
                     .raioGeoloc(100) // Raio padrão em metros
                     .geolocAtiva(false) // Geolocalização desativada por padrão
+                    .plano(Plano.FREEMIUM) // Plano padrão
                     .build();
             configEmpresaRepository.save(configPadrao); // Salva a configuração no banco
             System.out.println("Configuração da empresa padrão criada.");
