@@ -1,9 +1,6 @@
 package com.marcweb.service;
 
-import com.marcweb.auditoria.Auditado;
-import com.marcweb.auditoria.Detalhes;
 import com.marcweb.dto.config_empresa.DataConfigEmpresa;
-import com.marcweb.entity.CategoriaLog;
 import com.marcweb.entity.ConfigEmpresa;
 import com.marcweb.entity.Plano;
 import com.marcweb.exceptions.ConfigEmpresaNotFoundException;
@@ -16,11 +13,9 @@ import org.springframework.stereotype.Service;
 public class ConfigEmpresaService {
 
     private final ConfigEmpresaRepository repository;
-    private final Detalhes detalhes;
 
-    @Auditado(
-            acao = "Editando configurações da empresa ",
-            categoria = CategoriaLog.ADMIN)
+
+    @Deprecated
     public void updateConfigEmpresa(DataConfigEmpresa data) {
         Long idConfigEmpresa = repository.findFirst().orElseThrow(ConfigEmpresaNotFoundException::new)
                 .getId();
@@ -33,20 +28,15 @@ public class ConfigEmpresaService {
                 .raioGeoloc(data.getRaioGeoloc())
                 .build();
         repository.save(configEmpresa);
-        detalhes.setDetalhes("Admnistrador realizando edição de dados da empresa");
     }
 
 
-    @Auditado(
-            acao = "Visualizando configurações da empresa ",
-            categoria = CategoriaLog.ADMIN)
     public DataConfigEmpresa findConfigsEmpresa() {
-        detalhes.setDetalhes("Usuário realizando visualização de dados da empresa");
         var configEmpresa = repository.findFirst().orElseThrow(ConfigEmpresaNotFoundException::new);
         return new DataConfigEmpresa(configEmpresa);
     }
 
-    public Plano findPlanoEmpresa(){
+    public Plano findPlanoEmpresa() {
         return repository.findPlano();
     }
 }

@@ -11,6 +11,7 @@ import com.marcweb.repository.LogAuditoriaRepository;
 import com.marcweb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class LogAuditoriaService {
     }
 
     public List<LogAuditoriaResponse> buscarLogsPorUsuario(Long userId) {
-        return repository.findByUserId(userId);
+        return repository.findByUserId(userId, PageRequest.of(0, 10)).toList();
     }
 
     public List<LogAuditoriaResponse> buscarLogsPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
@@ -65,6 +66,6 @@ public class LogAuditoriaService {
         User user = userRepository.findByUsernameIgnoreCase(userDetails.getUsername()).orElseThrow(
                 () -> new RuntimeException("Usuário não encontrado")
         );
-        return repository.findByUserId(user.getId());
+        return repository.findByUserId(user.getId(), PageRequest.of(0, 10)).toList();
     }
 }

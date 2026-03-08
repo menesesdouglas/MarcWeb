@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 
@@ -59,10 +60,10 @@ class LogAuditoriaServiceTest {
         Long userId = 1L;
 
         // When
-        service.buscarLogsPorUsuario(userId);
+        var logs = service.buscarLogsPorUsuario(userId);
 
         // Then
-        verify(repository).findByUserId(userId);
+        verify(repository).findByUserId(userId, PageRequest.of(0, 10));
     }
 
     @Test

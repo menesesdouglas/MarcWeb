@@ -18,8 +18,8 @@ import java.util.List;
 public interface LogAuditoriaRepository extends JpaRepository<LogAuditoria, Long> {
     List<LogAuditoria> findByUserAndTimestampBetweenOrderByTimestampDesc(User user, LocalDateTime start, LocalDateTime end);
 
-    @Query("Select new com.marcweb.dto.LogAuditoriaResponse(l) from LogAuditoria l where l.user.id = :userId ")
-    List<LogAuditoriaResponse> findByUserId(@Param("userId") Long userId);
+    @Query("Select new com.marcweb.dto.LogAuditoriaResponse(l) from LogAuditoria l where l.user.id = :userId ORDER BY ID DESC")
+    Page<LogAuditoriaResponse> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Query("Select new com.marcweb.dto.LogAuditoriaResponse(l) from LogAuditoria l where l.timestamp between :inicio and :fim")
     List<LogAuditoriaResponse> findByTimestampBetween(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);

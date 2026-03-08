@@ -444,7 +444,6 @@ async function loadTodayPunches() {
         const auth = JSON.parse(localStorage.getItem("auth"));
         const today = new Date();
         const [dia, mes, ano] = today.toLocaleString("pt-BR").split(',')[0].split("/");
-        alert(`${ano}-${mes}-${dia}`);
         const response = await fetch(`/back/ponto/historico?date=${ano}-${mes}-${dia}`, {
             headers: {
                 "Authorization": `Bearer ${auth.token}`

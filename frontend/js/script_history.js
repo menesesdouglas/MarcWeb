@@ -150,7 +150,6 @@ function renderPunchs(registros) {
         // Armazenar o ID do registro no elemento
         tr.dataset.registroId = registro.id || '';
 
-        alert(JSON.stringify(registro))
 
         const [data, hora] = registro.timestamp.split("T");
         const [ano, mes, dia] = data.split("-");
