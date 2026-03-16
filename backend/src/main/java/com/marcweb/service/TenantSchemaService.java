@@ -142,7 +142,7 @@ public class TenantSchemaService {
      * Cria um novo schema no banco de dados
      */
     private void createSchema(Connection connection, String schemaName) throws SQLException {
-        String sql = "CREATE SCHEMA " + schemaName;
+String sql = "CREATE SCHEMA IF NOT EXISTS " + schemaName;
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
         }
@@ -279,9 +279,6 @@ public class TenantSchemaService {
             addMissingColumns(stmt);
 
             log.debug("Tabelas verificadas/criadas com sucesso no schema {}", schemaName);
-        } finally {
-            // Restaurar para schema público
-            connection.setSchema("public");
         }
     }
 
@@ -358,7 +355,6 @@ public class TenantSchemaService {
     private void createDefaultAdminUser(Connection connection, String schemaName, String tenantId) throws SQLException {
         connection.setSchema(schemaName);
         
-        try {
             // Codificar a senha com BCrypt
             String encodedPassword = passwordEncoder.encode("admin123");
             
@@ -374,9 +370,6 @@ public class TenantSchemaService {
             }
             
             log.debug("Usuário admin padrão verificado/criado para tenant {}", tenantId);
-        } finally {
-            connection.setSchema("public");
-        }
     }
 
     /**
