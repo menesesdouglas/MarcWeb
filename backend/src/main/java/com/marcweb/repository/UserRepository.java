@@ -40,7 +40,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllAtivosWithPagination(org.springframework.data.domain.Pageable pageable);
 
     // CONSULTA OTIMIZADA: CONTAGEM DE USUÁRIOS ATIVOS
-    @Query("SELECT COUNT(u) FROM User u WHERE u.ativo = true")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.ativo = true and role = 'EMPLOYEE' ")
     long countAtivos();
 
     // CONSULTA OTIMIZADA: BUSCA POR NOME (LIKE)
