@@ -74,18 +74,18 @@ public class FolhaPontoService {
             throw new SemRegistrosException();
 
 
-        ///  LISTA DE REGISTROS DE PONTO SEPARDOS POR DIA
-        List<List<RegistroPonto>> registrosPorDia = agruparRegistrosPorDia(pontosBatidosNoMes);
+        ///  LISTA DE REGISTROS DE PONTO SEPARDOS POR EXPEDIENTE
+        List<List<RegistroPonto>> registrosPorExpediente = agruparRegistrosPorDia(pontosBatidosNoMes);
 
 
         // A QUANTIDADE DE LISTAS DE REGISTRO É IGUAL A QUANTIDADE DE DIAS TRABALHADOS
         // JÁ QUE CADA LISTA FOI SEPARADA POR DIA
-        var diasTrabalhados = registrosPorDia.size();
-        ///  OBJETO QE FARÁ PARTE DO JSON ( COLOQUEI AQUI EM CIMA PARA QUE ELE PUDESSSE SE APROVEITAR DO 'getDiasFalta')
+        var diasTrabalhados = registrosPorExpediente.size();
+        ///  OBJETO QUE FARÁ PARTE DO JSON COM INFORMAÇÕES DO PERIODO DA DA FOLHA DE PONTO
         Periodo periodo = new Periodo(mes, ano, diasTrabalhados);
         var diasFalta = getDiasFalta(userId, diasTrabalhados, inicioDoMes, finalMes, periodo);
 
-        var horasTrabalhadasPorDia = calcularHorarTrabalhadas(registrosPorDia);
+        var horasTrabalhadasPorDia = calcularHorarTrabalhadas(registrosPorExpediente);
         var horasTotais = somarHorasTrabalhadas(horasTrabalhadasPorDia);
 
 
@@ -98,13 +98,13 @@ public class FolhaPontoService {
 
         /// ------ TODAS AS DATAS EM QUE O USUÁRIO FOLGOU NO MES  ----- ///
         List<LocalDate> datasFolga = getAllDaysFolgas(registrosDeFolgaNoMes);
-        var dias = getDias(registrosPorDia, horasTrabalhadasPorDia, datasFolga);
+        var dias = getDias(registrosPorExpediente, horasTrabalhadasPorDia, datasFolga);
         dadosFolha.setDias(dias);
         ///  ORDENANDO A LISTA DE DIAS EM ORDEM CRESCENTE
         dadosFolha.organizarDias();
 
         /// CALCULANDO HORAS EXTRAS E DÉBITO
-        BigDecimal horasExtras = calcularHorasExtras(horasTrabalhadasPorDia, registrosPorDia.size());
+        BigDecimal horasExtras = calcularHorasExtras(horasTrabalhadasPorDia, registrosPorExpediente.size());
         BigDecimal horasDebito = calcularHorasDebito(horasTrabalhadasPorDia, diasFalta);
         BigDecimal saldoHoras = horasExtras.subtract(horasDebito);
 
@@ -205,31 +205,32 @@ public class FolhaPontoService {
         List<BigDecimal> horasTrabalhadasPorDia = new ArrayList<>();
         for (List<RegistroPonto> registros : registrosSeparadosPorDia) {
             int minutosTrabalhados = 0;
-
+            int i = 0;
             LocalDateTime timesTampEntrada = null;
             LocalDateTime timesTampInicioDescanso = null;
             LocalDateTime timesTampFimDescanso = null;
             LocalDateTime timesSaida = null;
-            for (int i = 0; i < registros.size(); i++) {
+            while (i < registros.size()) {
                 if (i == 0) {
                     timesTampEntrada = registros.get(0).getTimestamp();
                 } else if (i == 1) {
                     timesTampInicioDescanso = registros.get(1).getTimestamp();
+                    timesSaida = timesTampInicioDescanso;
                 } else if (i == 2) {
                     timesTampFimDescanso = registros.get(2).getTimestamp();
-
                 } else if (i == 3) {
                     timesSaida = registros.get(3).getTimestamp();
-
                 }
+                i += 1;
             }
-            /// VERIFICANDO SE CALCULO É VIÁVEL
-            if (timesTampEntrada != null && timesTampInicioDescanso != null) {
 
+            if (i > 1) {
                 // CALCULANDO HORAS TRABALHADAS NO DIA COM BASE NOS REGISTROS
-                minutosTrabalhados = (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
-                                     (timesTampFimDescanso != null && timesSaida != null ?
-                                             (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida) : 0);
+                minutosTrabalhados = i < 4 ? (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesSaida)
+                        :
+                        (int) ChronoUnit.MINUTES.between(timesTampEntrada, timesTampInicioDescanso) +
+                        (int) ChronoUnit.MINUTES.between(timesTampFimDescanso, timesSaida);
+
             }
 
             // CONVERTENDO MINUTOS PARA HORAS (FORMATO DECIMAL)
