@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const body = encodeURIComponent(formatEmailBody(formData));
 
         // Create mailto link
-        const mailtoLink = `mailto:techhub.financeiro@gmail.com?subject=${subject}&body=${body}`;
+        const mailtoLink = `mailto:financeiro.techhub@gmail.com?subject=${subject}&body=${body}`;
 
         // Open mail client after a short delay to show loading state
         setTimeout(() => {
