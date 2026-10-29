@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Clock, FileText, ShieldAlert, LayoutDashboard, Edit3 } from "lucide-react";
+import { LogOut, User, Clock, FileText, ShieldAlert, LayoutDashboard, Edit3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Layout() {
@@ -15,6 +15,7 @@ export default function Layout() {
     ...(isAdm
       ? [
           { label: "Cadastro de usuarios", href: "/cadastro", icon: <User size={18} /> },
+          { label: "Ajustes pendentes", href: "/ajustes-pendentes", icon: <CheckCircle2 size={18} /> },
           { label: "Dashboard ADM", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
         ]
       : []),

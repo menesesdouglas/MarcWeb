@@ -62,7 +62,11 @@ def atualizar_status_ajuste(
     status: str,
     observacao_adm: Optional[str] = None,
 ) -> Optional[AjustePonto]:
-    """Aprova ou rejeita um ajuste (apenas ADM)."""
+    """Aprova ou rejeita um ajuste (apenas ADM).
+
+    Bloqueia reprocessamento: um ajuste ja aprovado ou rejeitado nao pode
+    ter o status alterado novamente (S2.05).
+    """
     ajuste = (
         db.query(AjustePonto)
         .filter(AjustePonto.id == ajuste_id)
@@ -70,6 +74,12 @@ def atualizar_status_ajuste(
     )
     if not ajuste:
         return None
+    if ajuste.status != "pendente":
+        raise ValueError(
+            f"Ajuste #{ajuste_id} ja foi processado (status: {ajuste.status})."
+        )
+    if status not in ("aprovado", "rejeitado"):
+        raise ValueError("Status invalido. Use 'aprovado' ou 'rejeitado'.")
     ajuste.status = status
     ajuste.observacao_adm = observacao_adm
     db.commit()

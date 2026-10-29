@@ -31,6 +31,13 @@ class AjusteOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AjusteStatusUpdate(BaseModel):
+    """Payload para aprovar ou rejeitar um ajuste de ponto (apenas ADM)."""
+
+    status: str
+    observacao_adm: Optional[str] = None
+
+
 class AjusteListOut(BaseModel):
     """Extrato resumido de ajustes do usuario (para listagem)."""
 

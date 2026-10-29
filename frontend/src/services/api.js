@@ -60,4 +60,10 @@ export const pontoService = {
 export const ajusteService = {
   solicitar: (data) => api.post("/api/v1/ajustes/solicitar", data),
   listarMeus: () => api.get("/api/v1/ajustes/meus"),
+  listarPendentes: () => api.get("/api/v1/ajustes/pendentes"),
+  atualizarStatus: (id, status, observacao_adm) =>
+    api.patch(`/api/v1/ajustes/${id}/status`, {
+      status,
+      observacao_adm,
+    }),
 };

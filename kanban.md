@@ -72,9 +72,6 @@ Cada Sprint (Semana) contém as tarefas organizadas em colunas:
 | S2.01 | Implementar as quatro marcações | Entrada, saída intervalo, retorno intervalo, saída final, com validação de sequência | Backend | Done |
 | S2.02 | Validação de sequência de marcações | Bloquear: saída sem entrada anterior no mesmo dia; duas entradas consecutivas sem saída; marcações com data futura; exclusão de registros | Backend | Done |
 | S2.03 | Tela de solicitação de ajuste de ponto | Formulário com justificativa obrigatória, seleção do registro a ser ajustado ou indicação de nova marcação | Frontend | Done |
-| S2.04 | Fluxo de aprovação/rejeição pelo ADM | Tela do ADM com lista de ajustes pendentes; ações de aprovar ou rejeitar com opcional observação | Backend + Frontend | To Do |
-| S2.05 | Validações de negócio do ajuste | Bloquear ajuste sem justificativa; status: pendente → aprovado ou rejeitado | Backend | To Do |
-| S2.06 | Notificação visual de status do ajuste | Funcionário acompanha status dos próprios ajustes (pendente, aprovado, rejeitado) | Frontend | To Do |
 
 ### In Progress
 
@@ -93,6 +90,9 @@ Cada Sprint (Semana) contém as tarefas organizadas em colunas:
 | S2.01 | Implementar as quatro marcações | 2026-10-29 |
 | S2.02 | Validação de sequência de marcações | 2026-10-29 |
 | S2.03 | Tela de solicitação de ajuste de ponto | 2026-10-29 |
+| S2.04 | Fluxo de aprovação/rejeição pelo ADM | 2026-10-29 |
+| S2.05 | Validações de negócio do ajuste | 2026-10-29 |
+| S2.06 | Notificação visual de status do ajuste | 2026-10-29 |
 
 ### Blocked
 

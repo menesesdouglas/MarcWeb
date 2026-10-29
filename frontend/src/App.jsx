@@ -7,6 +7,7 @@ import Marcacao from "./pages/Marcacao";
 import Extrato from "./pages/Extrato";
 import Cadastro from "./pages/Cadastro";
 import SolicitarAjuste from "./pages/SolicitarAjuste";
+import AprovarAjuste from "./pages/AprovarAjuste";
 
 function App() {
   return (
@@ -24,6 +25,10 @@ function App() {
                   <Route path="/extrato" element={<Extrato />} />
                   <Route path="/cadastro" element={<Cadastro />} />
                   <Route path="/ajuste" element={<SolicitarAjuste />} />
+                  <Route
+                    path="/ajustes-pendentes"
+                    element={<AprovarAjuste />}
+                  />
                 </Routes>
               </Layout>
             }

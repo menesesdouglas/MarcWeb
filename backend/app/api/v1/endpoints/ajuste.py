@@ -11,7 +11,12 @@ from app.crud.ajuste import (
     get_ajustes_pendentes,
     atualizar_status_ajuste,
 )
-from app.schemas.ajuste import AjusteCreate, AjusteListOut, AjusteOut
+from app.schemas.ajuste import (
+    AjusteCreate,
+    AjusteListOut,
+    AjusteOut,
+    AjusteStatusUpdate,
+)
 
 router = APIRouter()
 
@@ -79,21 +84,29 @@ def atualizar_status_ajuste_endpoint(
     db: DbSession,
     current_adm: CurrentAdm,
     ajuste_id: int,
-    status: str,
-    observacao_adm: str | None = None,
+    ajuste_in: AjusteStatusUpdate,
 ) -> AjusteOut:
-    """Aprova ou rejeita um ajuste de ponto (apenas ADM)."""
-    if status not in ("aprovado", "rejeitado"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Status invalido. Use 'aprovado' ou 'rejeitado'.",
+    """Aprova ou rejeita um ajuste de ponto (apenas ADM).
+
+    Bloqueia reprocessamento de ajuste ja aprovado ou rejeitado (S2.05).
+    """
+    try:
+        ajuste = atualizar_status_ajuste(
+            db=db,
+            ajuste_id=ajuste_id,
+            status=ajuste_in.status,
+            observacao_adm=ajuste_in.observacao_adm,
         )
-    ajuste = atualizar_status_ajuste(
-        db=db,
-        ajuste_id=ajuste_id,
-        status=status,
-        observacao_adm=observacao_adm,
-    )
+    except ValueError as exc:
+        if "nao encontrado" in str(exc):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ajuste nao encontrado",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        )
     if not ajuste:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
