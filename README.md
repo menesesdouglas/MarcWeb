@@ -78,7 +78,7 @@ O objetivo do MVP é oferecer:
 | Autenticação | JWT (JSON Web Token) | Stateless, adequado para API separada do frontend. |
 | Hash de senha | bcrypt / Argon2 | Armazenamento seguro de credenciais. |
 | Migrações | Alembic | Controle de versão do esquema do banco de dados. |
-| Contêineres | Docker e Docker Compose | Padronização de ambiente de desenvolvimento e deploy. |
+| Execução | Python (uvicorn) + Node (Vite) | Execução direta no host, sem dependência de contêineres. |
 
 ---
 
@@ -268,7 +268,7 @@ Registra ações críticas para rastreabilidade e compliance.
 
 ### Semana 1 — Fundação e marcacao basica [SPRINT 1 - CONCLUIDA]
 
-- Configuracao do repositorio, Docker, Docker Compose, FastAPI, PostgreSQL e Alembic. (S1.01, S1.02, S1.03)
+- Configuracao do repositorio, FastAPI, PostgreSQL e Alembic. (S1.01, S1.02, S1.03)
 - Implementacao de autenticacao JWT e hash de senha. (S1.04)
 - Cadastro de usuarios (apenas ADM cria funcionarios). (S1.05)
 - Telas de login e cadastro. (S1.06)
@@ -371,19 +371,20 @@ Exemplos de variaveis esperadas:
 ### Desenvolvimento
 
 1. Copie `.env.example` para `.env` e ajuste os valores.
-2. Execute: `docker compose up --build`
-3. O backend roda em `http://localhost:8000` (documentacao em `/docs`).
-4. O frontend roda em `http://localhost:5173`.
-5. O banco PostgreSQL roda na porta `5432`.
+2. Execute o backend: `uvicorn app.main:app --host 0.0.0.0 --port 8000` (no diretório `backend/`)
+3. Execute o frontend: `npm run dev` (no diretório `frontend/`)
+4. O backend roda em `http://localhost:8000` (documentacao em `/docs`).
+5. O frontend roda em `http://localhost:5173`.
+6. Certifique-se de que um PostgreSQL esteja disponível na porta `5432`.
 
-As migracoes Alembic sao aplicadas automaticamente na inicializacao do backend (`alembic upgrade head`).
+Antes de iniciar o backend, aplique as migrações: `alembic upgrade head` (no diretório `backend/`).
 O primeiro usuario ADM e criado automaticamente via seed (consulte `.env.example` para credenciais padrao).
 
 ### Producao
 
 - Build do frontend gerando arquivos estaticos.
 - Backend rodando com servidor ASGI (ex: Uvicorn) atras de proxy reverso (Nginx ou similar).
-- Banco de dados PostgreSQL em instancia gerenciada ou contenedor com volume persistente.
+- Banco de dados PostgreSQL em instancia gerenciada ou serviço hospedado com volume persistente.
 - HTTPS obrigatorio (certificado SSL/TLS).
 - Variaveis de ambiente injetadas via ambiente de execucao ou secrets da plataforma de nuvem.
 

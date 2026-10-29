@@ -54,8 +54,6 @@ env/
 .env.local
 .env.*.local
 
-# Docker
-.dockerignore
 
 # Node / frontend
 node_modules/

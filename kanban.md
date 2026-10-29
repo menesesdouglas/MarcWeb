@@ -31,7 +31,7 @@ Cada Sprint (Semana) contém as tarefas organizadas em colunas:
 | ID | Tarefa | Detalhe / Critério de aceitação | Responsável | Status |
 |----|--------|----------------------------------|-------------|--------|
 | S1.01 | Configurar repositório e versionamento | Estrutura de pastas frontend/backend, .gitignore, README atualizado | Dev | Done |
-| S1.02 | Configurar Docker e Docker Compose | Containers de backend (FastAPI), banco (PostgreSQL) e frontend rodando com `docker compose up` | DevOps/Dev | Done |
+| S1.02 | Configurar execução local (sem Docker) | Backend com uvicorn, banco PostgreSQL local e frontend com Vite rodando no host | DevOps/Dev | Done |
 | S1.03 | Configurar Alembic | Migrações de banco versionadas e aplicáveis na inicialização | Dev | Done |
 | S1.04 | Implementar autenticação JWT | Login/logout, emissão de token, middleware de autenticação, hash de senha (bcrypt/Argon2) | Backend | Done |
 | S1.05 | Cadastro de usuários (apenas ADM) | Criação de funcionário: nome, e-mail, CPF, matrícula, perfil. Validação de unicidade de e-mail e matrícula | Backend | Done |
@@ -147,7 +147,7 @@ Cada Sprint (Semana) contém as tarefas organizadas em colunas:
 | S4.02 | Consulta de logs de auditoria pelo ADM | Tela para o ADM investigar alterações no sistema | Backend + Frontend | To Do |
 | S4.03 | Revisão de regras de segurança e conformidade | Senhas com hash criptográfico, HTTPS obrigatório em produção, JWT com expiração curta, proteção contra acesso a dados de outros usuários, validação de entrada em todos os endpoints | Backend | To Do |
 | S4.04 | Documentação de uso | Guia para funcionário e para ADM (login, marcação, extrato, solicitação de ajuste, relatórios) | Produto/Tech Writer | To Do |
-| S4.05 | Deploy em ambiente de nuvem | Deploy em Railway, Render ou VPS próprio com Docker Compose, backend com Uvicorn atrás de proxy reverso (Nginx), PostgreSQL com volume persistente, HTTPS | DevOps | To Do |
+| S4.05 | Deploy em ambiente de nuvem | Deploy em Railway, Render ou VPS próprio, backend com Uvicorn atrás de proxy reverso (Nginx), PostgreSQL com volume persistente, HTTPS | DevOps | To Do |
 | S4.06 | Validação final com piloto | Teste com poucos usuários reais, validação do fluxo end-to-end | QA + Produto | To Do |
 
 ### In Progress
