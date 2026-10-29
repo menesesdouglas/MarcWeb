@@ -1,1 +1,0 @@
-alter table  registros_ponto add column expediente_id UUID not null;

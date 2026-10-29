@@ -1,0 +1,1 @@
+# Módulo core: configurações, segurança e banco de dados

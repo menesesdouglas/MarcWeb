@@ -1,0 +1,1 @@
+# Schemas Pydantic (validação de requisição e resposta da API)
