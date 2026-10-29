@@ -37,6 +37,9 @@ class Usuario(Base):
     registros_ponto: Mapped[list["RegistroPonto"]] = relationship(
         "RegistroPonto", back_populates="usuario", cascade="all, delete-orphan"
     )
+    ajustes_ponto: Mapped[list["AjustePonto"]] = relationship(
+        "AjustePonto", back_populates="usuario", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Usuario(id={self.id}, email={self.email}, perfil={self.perfil})>"

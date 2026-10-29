@@ -46,7 +46,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    usuario = db.query(Usuario).filter(Usuario.id == int(token_data.sub)).first()
+    usuario = db.query(Usuario).filter(Usuario.id == int(token_data.sub)).first() if token_data.sub else None
     if not usuario:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -46,8 +46,14 @@ def criar_usuario(db: Session, usuario_in: UsuarioCreate) -> Usuario:
 
 
 def atualizar_usuario(db: Session, db_usuario: Usuario, usuario_in: UsuarioUpdate) -> Usuario:
+    # Campos que podem ser atualizados diretamente. senha_hash, perfil e status
+    # nao sao alterados por este endpoint para evitar escalação de privilégio
+    # e bypass do hash de senha.
+    CAMPOS_PERMITIDOS = {"nome", "email", "cpf", "matricula"}
     update_data = usuario_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
+        if field not in CAMPOS_PERMITIDOS:
+            continue
         setattr(db_usuario, field, value)
     db.add(db_usuario)
     db.commit()

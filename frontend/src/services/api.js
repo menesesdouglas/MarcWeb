@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+// O Vite proxy encaminha "/api" para "http://localhost:8000" (vite.config.js).
+// Os endpoints do backend estão montados em "/api/v1", então os caminhos
+// absolutos "/api/v1/..." abaixo são suficientes; não prefixamos "/api" duas vezes.
+const API_BASE = "/api";
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -52,4 +55,9 @@ export const pontoService = {
     return api.get("/api/v1/ponto/extrato", { params });
   },
   resumo: () => api.get("/api/v1/ponto/resumo"),
+};
+
+export const ajusteService = {
+  solicitar: (data) => api.post("/api/v1/ajustes/solicitar", data),
+  listarMeus: () => api.get("/api/v1/ajustes/meus"),
 };

@@ -9,12 +9,14 @@ from sqlalchemy.orm import Session
 from app.api.deps import DbSession, CurrentAdm
 from app.crud.usuario import (
     criar_usuario,
+    atualizar_usuario,
+    desativar_usuario,
     get_usuario_by_email,
     get_usuario_by_matricula,
     get_usuario_by_id,
     get_usuarios,
 )
-from app.schemas.usuario import UsuarioCreate, UsuarioListOut, UsuarioOut
+from app.schemas.usuario import UsuarioCreate, UsuarioListOut, UsuarioOut, UsuarioUpdate
 
 router = APIRouter()
 
@@ -83,3 +85,57 @@ def obter_usuario(
             detail="Usuario nao encontrado",
         )
     return usuario
+
+
+@router.put(
+    "/{usuario_id}",
+    response_model=UsuarioOut,
+    summary="Edita dados de um usuario (apenas ADM)",
+)
+def editar_usuario(
+    usuario_id: int,
+    db: DbSession,
+    current_adm: CurrentAdm,
+    usuario_in: UsuarioUpdate,
+) -> Any:
+    """Atualiza nome, email, cpf e/ou matricula de um usuario."""
+    usuario = get_usuario_by_id(db, usuario_id)
+    if not usuario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario nao encontrado",
+        )
+    # Se email/matricula forem alterados, garante unicidade.
+    if usuario_in.email is not None and usuario_in.email != usuario.email:
+        if get_usuario_by_email(db, usuario_in.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email ja cadastrado",
+            )
+    if usuario_in.matricula is not None and usuario_in.matricula != usuario.matricula:
+        if get_usuario_by_matricula(db, usuario_in.matricula):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Matricula ja cadastrada",
+            )
+    return atualizar_usuario(db, usuario, usuario_in)
+
+
+@router.patch(
+    "/{usuario_id}/desativar",
+    response_model=UsuarioOut,
+    summary="Desativa um usuario (apenas ADM)",
+)
+def desativar_usuario_endpoint(
+    usuario_id: int,
+    db: DbSession,
+    current_adm: CurrentAdm,
+) -> Any:
+    """Marca o usuario como inativo (nao exclui o registro)."""
+    usuario = get_usuario_by_id(db, usuario_id)
+    if not usuario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario nao encontrado",
+        )
+    return desativar_usuario(db, usuario)

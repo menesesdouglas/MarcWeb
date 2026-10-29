@@ -4,6 +4,34 @@ import { pontoService } from "../services/api";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { Clock, Play, LogOut, CheckCircle2, AlertCircle } from "lucide-react";
 
+const TIPO_LABEL = {
+  entrada: "Entrada",
+  saida_intervalo: "Saída Intervalo",
+  retorno_intervalo: "Retorno Intervalo",
+  saida: "Saída Final",
+};
+
+const TIPO_COR = {
+  entrada: "bg-green-600 hover:bg-green-700 text-white",
+  saida_intervalo: "bg-amber-600 hover:bg-amber-700 text-white",
+  retorno_intervalo: "bg-blue-600 hover:bg-blue-700 text-white",
+  saida: "bg-red-600 hover:bg-red-700 text-white",
+};
+
+const TIPO_COR_TEXTO = {
+  entrada: "text-green-600",
+  saida_intervalo: "text-amber-600",
+  retorno_intervalo: "text-blue-600",
+  saida: "text-red-600",
+};
+
+const TIPO_ICON = {
+  entrada: Play,
+  saida_intervalo: Clock,
+  retorno_intervalo: Clock,
+  saida: LogOut,
+};
+
 export default function Marcacao() {
   const { user } = useAuth();
   const [resumo, setResumo] = useState(null);
@@ -36,7 +64,7 @@ export default function Marcacao() {
       const resposta = await pontoService.marcar(tipo);
       setTipoMensagem("sucesso");
       setMensagem(
-        `Marcacao de ${tipo === "entrada" ? "entrada" : "saida"} realizada com sucesso!`
+        `Marcacao de ${TIPO_LABEL[tipo]} realizada com sucesso!`
       );
       await carregarDados();
     } catch (err) {
@@ -49,8 +77,8 @@ export default function Marcacao() {
     }
   }
 
-  const podeEntrar = !resumo || resumo.proximo_tipo_esperado === "entrada";
-  const podeSair = !resumo || resumo.proximo_tipo_esperado === "saida";
+  const podeMarcar = (tipo) =>
+    !resumo || resumo.proximo_tipo_esperado === tipo;
 
   return (
     <ProtectedRoute>
@@ -88,31 +116,27 @@ export default function Marcacao() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Registrar ponto</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={() => handleMarcar("entrada")}
-              disabled={!podeEntrar || carregando}
-              className={`w-full py-4 rounded-lg font-semibold transition-all disabled:opacity-50 ${
-                podeEntrar
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-gray-200 text-gray-400"
-              }`}
-            >
-              <Play size={20} className="mr-2" />
-              Entrada
-            </button>
-
-            <button
-              onClick={() => handleMarcar("saida")}
-              disabled={!podeSair || carregando}
-              className={`w-full py-4 rounded-lg font-semibold transition-all disabled:opacity-50 ${
-                podeSair
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "bg-gray-200 text-gray-400"
-              }`}
-            >
-              <LogOut size={20} className="mr-2" />
-              Saida
-            </button>
+            {["entrada", "saida_intervalo", "retorno_intervalo", "saida"].map(
+              (tipo) => {
+                const Icon = TIPO_ICON[tipo];
+                const pode = podeMarcar(tipo);
+                return (
+                  <button
+                    key={tipo}
+                    onClick={() => handleMarcar(tipo)}
+                    disabled={!pode || carregando}
+                    className={`w-full py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+                      pode
+                        ? TIPO_COR[tipo]
+                        : "bg-gray-200 text-gray-400"
+                    }`}
+                  >
+                    <Icon size={20} className="mr-2" />
+                    {TIPO_LABEL[tipo]}
+                  </button>
+                );
+              }
+            )}
           </div>
 
           {resumo && (
@@ -162,11 +186,9 @@ export default function Marcacao() {
                   extrato.map((r) => (
                     <tr key={r.id}>
                       <td className="px-6 py-3 text-sm font-medium">
-                        {r.tipo === "entrada" ? (
-                          <span className="text-green-600">Entrada</span>
-                        ) : (
-                          <span className="text-red-600">Saida</span>
-                        )}
+                        <span className={`${TIPO_COR_TEXTO[r.tipo]} font-medium`}>
+                          {TIPO_LABEL[r.tipo]}
+                        </span>
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-700">
                         {new Date(r.timestamp).toLocaleString("pt-BR", {

@@ -1,5 +1,5 @@
 """
-Endpoints de marcacao de ponto e extrato (S1.07, S1.08).
+Endpoints de marcacao de ponto e extrato (S1.07, S1.08, S2.02).
 """
 from datetime import date
 
@@ -22,7 +22,10 @@ from app.schemas.registro_ponto import (
 router = APIRouter()
 
 TIPO_PROXIMO_ESPERADO = {
-    "entrada": "saida",
+    None: "entrada",
+    "entrada": "saida_intervalo",
+    "saida_intervalo": "retorno_intervalo",
+    "retorno_intervalo": "saida",
     "saida": "entrada",
 }
 
@@ -31,7 +34,7 @@ TIPO_PROXIMO_ESPERADO = {
     "/marcar",
     response_model=RegistroPontoOut,
     status_code=status.HTTP_201_CREATED,
-    summary="Marca ponto de entrada ou saida",
+    summary="Marca ponto (entrada, saida intervalo, retorno intervalo ou saida final)",
 )
 def marcar_ponto(
     *,
@@ -41,18 +44,25 @@ def marcar_ponto(
     request: Request,
 ) -> RegistroPontoOut:
     """
-    Registra uma marcacao de ponto (entrada ou saida).
+    Registra uma marcacao de ponto entre os quatro tipos padrao.
     O timestamp e gerado exclusivamente pelo servidor.
     Endereco IP e capturado da requisicao.
+    Valida a sequencia de marcacoes do usuario (S2.02).
     """
     ip_origem = request.client.host if request.client else None
 
-    registro = criar_registro_ponto(
-        db=db,
-        usuario=current_user,
-        tipo=registro_in.tipo,
-        ip_origem=ip_origem,
-    )
+    try:
+        registro = criar_registro_ponto(
+            db=db,
+            usuario=current_user,
+            tipo=registro_in.tipo,
+            ip_origem=ip_origem,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        )
     return registro
 
 

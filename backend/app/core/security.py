@@ -2,7 +2,7 @@
 Segurança: hash de senha (bcrypt via passlib) e geração/validação de JWT (S1.04).
 """
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext

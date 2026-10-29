@@ -7,6 +7,7 @@ from app.core.database import Base
 from app.core.config import settings
 import app.models.usuario  # noqa: F401  garante que os modelos sejam registrados
 import app.models.registro_ponto  # noqa: F401
+import app.models.ajuste  # noqa: F401
 
 config = context.config
 

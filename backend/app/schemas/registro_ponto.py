@@ -11,7 +11,10 @@ class RegistroPontoCreate(BaseModel):
     Apenas o tipo de marcação é enviado pelo frontend.
     O timestamp é gerado exclusivamente pelo servidor (README Seção 5, regra 1).
     """
-    tipo: str = Field(..., pattern="^(entrada|saida)$")
+    tipo: str = Field(
+        ...,
+        pattern="^(entrada|saida_intervalo|retorno_intervalo|saida)$",
+    )
 
 
 class RegistroPontoOut(BaseModel):

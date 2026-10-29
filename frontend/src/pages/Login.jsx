@@ -17,36 +17,26 @@ export default function Login() {
     setCarregando(true);
     try {
       // OAuth2PasswordRequestForm espera application/x-www-form-urlencoded
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", senha);
+      const resposta = await authService.login(email, senha);
+      const token = resposta.data.access_token;
 
-      const resposta = await fetch(
-        "http://localhost:8000/api/v1/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData,
-        }
-      );
-
-      if (!resposta.ok) {
-        throw new Error("Email ou senha incorretos");
+      // Decodifica o payload do JWT para preencher dados básicos do usuário.
+      // Em fallback, armazena ao menos o id e o e-mail informado no login.
+      let usuario = { id: "", email };
+      try {
+        const payloadBase64 = token.split(".")[1];
+        const payload = JSON.parse(atob(payloadBase64));
+        usuario = { id: payload.sub, email };
+      } catch (_) {
+        // token malformado: mantém usuario parcial; o backend ainda valida o JWT
       }
-
-      const data = await resposta.json();
-      const token = data.access_token;
-
-      // Busca dados do usuario (simplificado: decodifica o token ou usa endpoint /me)
-      // Aqui armazenamos apenas o token e um perfil generico
-      const payloadBase64 = token.split(".")[1];
-      const payload = JSON.parse(atob(payloadBase64));
-      const usuario = { id: payload.sub, email };
 
       login(token, usuario);
       navigate("/marcacao");
     } catch (err) {
-      setErro(err.message || "Erro ao fazer login");
+      setErro(
+        err.response?.data?.detail || err.message || "Erro ao fazer login"
+      );
     } finally {
       setCarregando(false);
     }

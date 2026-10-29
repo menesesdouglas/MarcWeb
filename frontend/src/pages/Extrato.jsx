@@ -3,6 +3,20 @@ import { useAuth } from "../context/AuthContext";
 import { pontoService } from "../services/api";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 
+const TIPO_LABEL = {
+  entrada: "Entrada",
+  saida_intervalo: "Saída Intervalo",
+  retorno_intervalo: "Retorno Intervalo",
+  saida: "Saída Final",
+};
+
+const TIPO_COR_TEXTO = {
+  entrada: "text-green-600",
+  saida_intervalo: "text-amber-600",
+  retorno_intervalo: "text-blue-600",
+  saida: "text-red-600",
+};
+
 export default function Extrato() {
   const { user } = useAuth();
   const [registros, setRegistros] = useState([]);
@@ -91,11 +105,9 @@ export default function Extrato() {
                   registros.map((r) => (
                     <tr key={r.id}>
                       <td className="px-6 py-3 text-sm font-medium">
-                        {r.tipo === "entrada" ? (
-                          <span className="text-green-600">Entrada</span>
-                        ) : (
-                          <span className="text-red-600">Saida</span>
-                        )}
+                        <span className={`text-sm font-medium ${TIPO_COR_TEXTO[r.tipo] || "text-gray-600"}`}>
+                          {TIPO_LABEL[r.tipo] || r.tipo}
+                        </span>
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-700">
                         {new Date(r.timestamp).toLocaleString("pt-BR", {
